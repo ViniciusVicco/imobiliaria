@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 import 'module.dart';
@@ -28,6 +30,7 @@ class ModuleAppState extends State<ModuleApp> {
   late Module _mainModule;
   late List<Module> _childModules;
   late Widget _mainModuleWidget;
+  Future<void>? _shutdownFuture;
 
   @override
   void initState() {
@@ -37,9 +40,7 @@ class ModuleAppState extends State<ModuleApp> {
 
   void _initModules() {
     _mainModule = widget.mainModuleBuilder();
-    _childModules = widget.childModuleBuilders
-        .map((builder) => builder())
-        .toList();
+    _childModules = widget.childModuleBuilders.map((builder) => builder()).toList();
 
     _registerModule(_mainModule);
 
@@ -88,8 +89,7 @@ class ModuleAppState extends State<ModuleApp> {
       );
     });
 
-    await _disposeModules();
-    await _unregisterModulesFromGlobal();
+    await _shutdownModules();
 
     _initModules();
     if (!mounted) return;
@@ -111,9 +111,9 @@ class ModuleAppState extends State<ModuleApp> {
 
     int index = 0;
     while (routeBuilder == null && index < _childModules.length) {
-      routeBuilder = _childModules.elementAt(index).getRoute(routeName);
+      routeBuilder = _childModules[index].resolveRouteBuilder(routeName);
       if (routeBuilder != null) {
-        _childModules.elementAt(index).start();
+        _childModules[index].start();
       }
       index++;
     }
@@ -123,9 +123,19 @@ class ModuleAppState extends State<ModuleApp> {
 
   @override
   void dispose() {
-    _disposeModules();
-    _unregisterModulesFromGlobal();
+    unawaited(_shutdownModules());
     super.dispose();
   }
-}
 
+  Future<void> _shutdownModules() {
+    if (_shutdownFuture != null) return _shutdownFuture!;
+
+    _shutdownFuture = () async {
+      await _disposeModules();
+      await _unregisterModulesFromGlobal();
+      _shutdownFuture = null;
+    }();
+
+    return _shutdownFuture!;
+  }
+}

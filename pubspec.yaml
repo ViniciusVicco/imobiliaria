@@ -4,16 +4,30 @@ publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: ^3.11.5
+  sdk: ^3.9.2
 
 dependencies:
   flutter:
     sdk: flutter
+  legend_core:
+    path: packages/core
+  design_system:
+    path: packages/design_system
+
+  go_router: ^15.1.2
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.7
+  intl: ^0.20.2
+  url_launcher: ^6.3.2
+  shared_preferences: ^2.5.3
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.5.4
+  json_serializable: ^6.11.1
 
 flutter:
   uses-material-design: true

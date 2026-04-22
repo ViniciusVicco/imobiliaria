@@ -1,20 +1,18 @@
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:imobiliaria/app/presentation/main/main_module.dart';
+import 'package:legend_core/legend_core.dart';
 
 void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+  runApp(
+    ModuleApp(
+      mainModuleBuilder: MainModule.new,
+      childModuleBuilders: const <Module Function()>[],
+      app: (home) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        builder: DSResponsiveAppBuilder.build,
+        home: home,
       ),
-    );
-  }
+    ),
+  );
 }

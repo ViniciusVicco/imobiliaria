@@ -1,0 +1,15 @@
+name: design_system
+description: Shared design and layout package for the Imobiliaria app.
+version: 0.1.0
+publish_to: "none"
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  responsive_framework: ^1.5.1
+  flutter_svg: ^2.2.0
+  cached_network_image: ^3.4.1
