@@ -5,6 +5,7 @@ import 'package:imobiliaria/app/domain/property_segments/entities/home_brand_con
 import 'package:imobiliaria/app/domain/property_segments/entities/property_search_filters_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/youtube_embed.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySegmentsHomePage extends StatefulWidget {
@@ -125,7 +126,7 @@ class _PropertySegmentsHomePageState
                           ),
                           const SizedBox(height: DSSpacing.xl),
                           _VideoSection(
-                            videoUrl: brandContent?.videoUrl ?? '',
+                            content: brandContent,
                             onPressed: () => controller.onVideoPressed(),
                           ),
                           const SizedBox(height: DSSpacing.xl),
@@ -929,13 +930,17 @@ class _FactChip extends StatelessWidget {
 }
 
 class _VideoSection extends StatelessWidget {
-  const _VideoSection({required this.videoUrl, required this.onPressed});
+  const _VideoSection({required this.content, required this.onPressed});
 
-  final String videoUrl;
+  final HomeBrandContentEntity? content;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final videoUrl = content?.videoUrl ?? '';
+    final videoTitle = content?.videoTitle ?? 'Video da Seletta';
+    final embedUrl = _toYoutubeEmbedUrl(videoUrl);
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: DSColors.surfaceContainer,
@@ -944,35 +949,106 @@ class _VideoSection extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(DSSpacing.lg),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'Video da Seletta',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: DSSpacing.sm),
-                  Text(
-                    'Conheca nossa forma de apresentar oportunidades e acompanhar cada decisao.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: DSColors.onSurfaceVariant,
+            Text(videoTitle, style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: DSSpacing.sm),
+            Text(
+              'Conheca nossa forma de apresentar oportunidades e acompanhar cada decisao.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: DSColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: DSSpacing.md),
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: ClipRRect(
+                borderRadius: DSRadius.md,
+                child: ColoredBox(
+                  color: DSColors.surfaceContainerHigh,
+                  child: YoutubeEmbed(
+                    embedUrl: embedUrl,
+                    title: videoTitle,
+                    fallback: _VideoFallback(
+                      thumbnailUrl: content?.videoThumbnailUrl ?? '',
+                      onPressed: onPressed,
+                      enabled: videoUrl.isNotEmpty,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(width: DSSpacing.md),
-            FilledButton.icon(
-              onPressed: videoUrl.isEmpty ? null : onPressed,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Assistir'),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  String _toYoutubeEmbedUrl(String url) {
+    final videoId = _extractYoutubeVideoId(url);
+    if (videoId == null) return '';
+    return 'https://www.youtube.com/embed/$videoId?rel=0&modestbranding=1';
+  }
+
+  String? _extractYoutubeVideoId(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return null;
+
+    if (uri.host.contains('youtu.be') && uri.pathSegments.isNotEmpty) {
+      return uri.pathSegments.first;
+    }
+
+    if (uri.host.contains('youtube.com')) {
+      final videoId = uri.queryParameters['v'];
+      if (videoId != null && videoId.isNotEmpty) return videoId;
+
+      final embedIndex = uri.pathSegments.indexOf('embed');
+      if (embedIndex != -1 && uri.pathSegments.length > embedIndex + 1) {
+        return uri.pathSegments[embedIndex + 1];
+      }
+    }
+
+    return null;
+  }
+}
+
+class _VideoFallback extends StatelessWidget {
+  const _VideoFallback({
+    required this.thumbnailUrl,
+    required this.onPressed,
+    required this.enabled,
+  });
+
+  final String thumbnailUrl;
+  final VoidCallback onPressed;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        if (thumbnailUrl.isNotEmpty)
+          CachedNetworkImage(
+            imageUrl: thumbnailUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) =>
+                const ColoredBox(color: DSColors.surfaceContainerHigh),
+            errorWidget: (context, url, error) =>
+                const ColoredBox(color: DSColors.surfaceContainerHigh),
+          )
+        else
+          const ColoredBox(color: DSColors.surfaceContainerHigh),
+        ColoredBox(color: DSColors.surface.withValues(alpha: 0.34)),
+        Center(
+          child: FilledButton.icon(
+            onPressed: enabled ? onPressed : null,
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('Assistir no YouTube'),
+          ),
+        ),
+      ],
     );
   }
 }

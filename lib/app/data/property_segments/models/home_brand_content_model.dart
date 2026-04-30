@@ -5,6 +5,9 @@ class HomeBrandContentModel extends HomeBrandContentEntity {
     required super.mission,
     required super.about,
     required super.contact,
+    required super.videoProvider,
+    required super.videoTitle,
+    required super.videoThumbnailUrl,
     required super.videoUrl,
   });
 
@@ -14,6 +17,9 @@ class HomeBrandContentModel extends HomeBrandContentEntity {
       mission: json['mission'] as String,
       about: json['about'] as String,
       contact: HomeContactModel.fromJson(contact),
+      videoProvider: json['videoProvider'] as String? ?? 'youtube',
+      videoTitle: json['videoTitle'] as String? ?? 'Video da Seletta',
+      videoThumbnailUrl: json['videoThumbnailUrl'] as String? ?? '',
       videoUrl: json['videoUrl'] as String,
     );
   }

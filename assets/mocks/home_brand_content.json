@@ -1,0 +1,13 @@
+{
+  "mission": "Conectar pessoas a imoveis em Palmas com clareza, criterio e acompanhamento humano.",
+  "about": "A Seletta atua na curadoria de oportunidades residenciais, comerciais e de investimento em Palmas e regiao.",
+  "contact": {
+    "phone": "(63) 3000-0000",
+    "email": "contato@seletta.com.br",
+    "whatsapp": "(63) 99999-0000"
+  },
+  "videoProvider": "youtube",
+  "videoTitle": "Conheca a Seletta",
+  "videoThumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+  "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"
+}

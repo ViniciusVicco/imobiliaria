@@ -1,0 +1,47 @@
+[
+  {
+    "id": "prop_001",
+    "title": "Apartamento com varanda gourmet",
+    "segment": "residential",
+    "propertyType": "Apartamento",
+    "city": "Palmas",
+    "neighborhood": "706 Sul",
+    "coverUrl": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+    "areaM2": 82,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "garageSpaces": 1,
+    "propertyAgeYears": 4,
+    "price": 850000
+  },
+  {
+    "id": "prop_002",
+    "title": "Sala comercial pronta para receber clientes",
+    "segment": "commercial",
+    "propertyType": "Sala comercial",
+    "city": "Palmas",
+    "neighborhood": "Plano Diretor Sul",
+    "coverUrl": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80",
+    "areaM2": 54,
+    "bedrooms": null,
+    "bathrooms": 2,
+    "garageSpaces": 1,
+    "propertyAgeYears": 7,
+    "price": 620000
+  },
+  {
+    "id": "prop_003",
+    "title": "Projeto na planta com lazer completo",
+    "segment": "investments",
+    "propertyType": "Oportunidades na planta",
+    "city": "Palmas",
+    "neighborhood": "Orla",
+    "coverUrl": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80",
+    "areaM2": 68,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "garageSpaces": 1,
+    "propertyAgeYears": 0,
+    "price": 560000
+  }
+]
