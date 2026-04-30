@@ -1,9 +1,7 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:legend_core/legend_core.dart';
-
-import 'module.dart';
 
 abstract class ModuleInjector<M extends Module> {
   final _injectionsDispose = <void Function()>[];

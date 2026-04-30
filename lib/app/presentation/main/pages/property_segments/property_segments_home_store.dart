@@ -1,7 +1,14 @@
+import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
+import 'package:imobiliaria/app/domain/property_segments/entities/home_brand_content_entity.dart';
+import 'package:imobiliaria/app/domain/property_segments/entities/property_search_filters_entity.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySegmentsHomeStore extends Store {
   final AppState state = AppState();
+  PropertySearchFiltersEntity filters = const PropertySearchFiltersEntity();
+  List<FeaturedPropertyEntity> featuredProperties =
+      const <FeaturedPropertyEntity>[];
+  HomeBrandContentEntity? brandContent;
   String? _errorMessage;
 
   void setLoading() {
@@ -12,6 +19,20 @@ class PropertySegmentsHomeStore extends Store {
   void setSuccess() {
     _errorMessage = null;
     state.updateState(newState: AppStateEnum.hasSuccess);
+  }
+
+  void setHomeContent({
+    required List<FeaturedPropertyEntity> featuredProperties,
+    required HomeBrandContentEntity brandContent,
+  }) {
+    this.featuredProperties = featuredProperties;
+    this.brandContent = brandContent;
+    setSuccess();
+  }
+
+  void setFilters(PropertySearchFiltersEntity filters) {
+    this.filters = filters;
+    state.updateState(newState: state.value);
   }
 
   void setError(String message) {

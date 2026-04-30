@@ -22,11 +22,12 @@ class SegmentDetailsPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: DSColors.surfaceContainer,
             borderRadius: DSRadius.md,
-            border: Border.all(
-              color: DSColors.outline.withOpacity(0.2),
-            ),
+            border: Border.all(color: DSColors.outline),
           ),
-          child: Text(description, style: Theme.of(context).textTheme.bodyLarge),
+          child: Text(
+            description,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
         ),
       ),
     );

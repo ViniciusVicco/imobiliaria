@@ -1,5 +1,8 @@
 import 'package:imobiliaria/app/data/property_segments/datasources/property_segments_datasource.dart';
 import 'package:imobiliaria/app/data/property_segments/repositories/property_segments_repository.dart';
+import 'package:imobiliaria/app/domain/property_segments/usecases/build_property_search_query_use_case.dart';
+import 'package:imobiliaria/app/domain/property_segments/usecases/get_featured_properties_use_case.dart';
+import 'package:imobiliaria/app/domain/property_segments/usecases/get_home_brand_content_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/resolve_property_segment_route_use_case.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_controller.dart';
@@ -13,6 +16,9 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => PropertySegmentsHomeController(
         store: get<PropertySegmentsHomeStore>(),
         resolveSegmentRoute: get<ResolvePropertySegmentRouteUseCase>(),
+        buildPropertySearchQuery: get<BuildPropertySearchQueryUseCase>(),
+        getFeaturedProperties: get<GetFeaturedPropertiesUseCase>(),
+        getHomeBrandContent: get<GetHomeBrandContentUseCase>(),
         navigator: get<AppNavigator>(),
       ),
     );
@@ -46,6 +52,21 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
   void usecases() {
     registerFactory(
       () => ResolvePropertySegmentRouteUseCase(
+        repository: get<PropertySegmentsRepository>(),
+      ),
+    );
+    registerFactory(
+      () => BuildPropertySearchQueryUseCase(
+        repository: get<PropertySegmentsRepository>(),
+      ),
+    );
+    registerFactory(
+      () => GetFeaturedPropertiesUseCase(
+        repository: get<PropertySegmentsRepository>(),
+      ),
+    );
+    registerFactory(
+      () => GetHomeBrandContentUseCase(
         repository: get<PropertySegmentsRepository>(),
       ),
     );

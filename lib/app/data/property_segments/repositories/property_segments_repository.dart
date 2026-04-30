@@ -1,6 +1,12 @@
 import 'package:imobiliaria/app/data/property_segments/datasources/property_segments_datasource.dart';
+import 'package:imobiliaria/app/data/property_segments/failures/home_showcase_failure.dart';
 import 'package:imobiliaria/app/data/property_segments/failures/segment_route_failure.dart';
+import 'package:imobiliaria/app/data/property_segments/models/featured_property_model.dart';
+import 'package:imobiliaria/app/data/property_segments/models/home_brand_content_model.dart';
 import 'package:imobiliaria/app/data/property_segments/models/property_segment_route_model.dart';
+import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
+import 'package:imobiliaria/app/domain/property_segments/entities/home_brand_content_entity.dart';
+import 'package:imobiliaria/app/domain/property_segments/entities/property_search_filters_entity.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySegmentsRepository {
@@ -26,6 +32,58 @@ class PropertySegmentsRepository {
     } catch (_) {
       return ErrorResponse<Failure, PropertySegmentRouteModel>(
         SegmentRouteFailure(),
+      );
+    }
+  }
+
+  Future<DualResponse<Failure, Uri>> buildPropertySearchUri({
+    required PropertySearchFiltersEntity filters,
+  }) async {
+    try {
+      return SuccessResponse<Failure, Uri>(
+        Uri(path: '/search', queryParameters: filters.toQueryParameters()),
+      );
+    } catch (_) {
+      return ErrorResponse<Failure, Uri>(HomeShowcaseFailure());
+    }
+  }
+
+  Future<DualResponse<Failure, List<FeaturedPropertyEntity>>>
+  getFeaturedProperties() async {
+    try {
+      final response = await datasource.getFeaturedProperties();
+      if (!response.hasSuccess) {
+        return ErrorResponse<Failure, List<FeaturedPropertyEntity>>(
+          HomeShowcaseFailure(),
+        );
+      }
+
+      return SuccessResponse<Failure, List<FeaturedPropertyEntity>>(
+        response.data.map(FeaturedPropertyModel.fromJson).toList(),
+      );
+    } catch (_) {
+      return ErrorResponse<Failure, List<FeaturedPropertyEntity>>(
+        HomeShowcaseFailure(),
+      );
+    }
+  }
+
+  Future<DualResponse<Failure, HomeBrandContentEntity>>
+  getHomeBrandContent() async {
+    try {
+      final response = await datasource.getHomeBrandContent();
+      if (!response.hasSuccess) {
+        return ErrorResponse<Failure, HomeBrandContentEntity>(
+          HomeShowcaseFailure(),
+        );
+      }
+
+      return SuccessResponse<Failure, HomeBrandContentEntity>(
+        HomeBrandContentModel.fromJson(response.data),
+      );
+    } catch (_) {
+      return ErrorResponse<Failure, HomeBrandContentEntity>(
+        HomeShowcaseFailure(),
       );
     }
   }

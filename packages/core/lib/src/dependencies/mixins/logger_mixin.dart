@@ -3,7 +3,6 @@
 mixin CustomCoreLogger {
   ///Used when initializing core objects
   void initializeObject(String objectName) {
-    Logger().i("ðŸ§© Core ðŸ§© Initialialized $objectName");
+    Logger().i("Core Initialialized $objectName");
   }
 }
-

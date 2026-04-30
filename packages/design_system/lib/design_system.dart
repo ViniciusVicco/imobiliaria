@@ -1,5 +1,3 @@
-library design_system;
-
 export 'package:cached_network_image/cached_network_image.dart';
 export 'package:flutter_svg/flutter_svg.dart';
 export 'package:responsive_framework/responsive_framework.dart';

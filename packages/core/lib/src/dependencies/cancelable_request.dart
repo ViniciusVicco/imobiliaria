@@ -1,4 +1,4 @@
-﻿import 'package:dio/dio.dart';
+import 'package:dio/dio.dart';
 import 'dual_response.dart';
 
 class CancelableRequest<E, S> {
@@ -18,7 +18,7 @@ class CancelableRequest<E, S> {
     required dynamic Function(E error) onError,
     required dynamic Function(int cancelRequestId) onCancel,
   }) async {
-    this._onCancel = onCancel;
+    _onCancel = onCancel;
 
     try {
       final response = await future(_token);
@@ -34,4 +34,3 @@ class CancelableRequest<E, S> {
     _onCancel.call(cancelRequestId);
   }
 }
-

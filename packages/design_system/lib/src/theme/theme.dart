@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 
+import 'design_tokens.dart';
+
 abstract final class DSColors {
-  static const Color surface = Color(0xFF121414);
-  static const Color surfaceContainerLowest = Color(0xFF0C0F0F);
-  static const Color surfaceContainer = Color(0xFF1E2020);
-  static const Color surfaceContainerHigh = Color(0xFF282A2B);
-  static const Color onSurface = Color(0xFFE2E2E2);
-  static const Color onSurfaceVariant = Color(0xFFD0C5AF);
-  static const Color outline = Color(0xFF99907C);
-  static const Color primary = Color(0xFFF2CA50);
-  static const Color onPrimary = Color(0xFF3C2F00);
+  static const Color surface = Color(0xFF030E22);
+  static const Color surfaceContainerLowest = Color(0xFF030E22);
+  static const Color surfaceContainer = Color(0xFF111C31);
+  static const Color surfaceContainerHigh = Color(0xFF17233A);
+  static const Color surfaceContainerHighest = Color(0xFF1F2B43);
+  static const Color onSurface = Color(0xFFFFFFFF);
+  static const Color onSurfaceVariant = Color(0xFFE2E2E2);
+  static const Color outline = Color(0xFF2D3748);
+  static const Color outlineVariant = Color(0xFF3B4658);
+  static const Color primary = Color(0xFFD4AF37);
+  static const Color onPrimary = Color(0xFF030E22);
   static const Color secondary = Color(0xFFBBC6E2);
   static const Color onSecondary = Color(0xFF253046);
   static const Color tertiary = Color(0xFFC4CEEB);
   static const Color onTertiary = Color(0xFF263046);
   static const Color error = Color(0xFFFFB4AB);
   static const Color onError = Color(0xFF690005);
-  static const Color background = Color(0xFF121414);
+  static const Color background = Color(0xFF030E22);
 }
 
 abstract final class DSTheme {
@@ -45,10 +49,124 @@ abstract final class DSTheme {
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
     ),
-    textTheme: ThemeData.dark(useMaterial3: true).textTheme.apply(
-          bodyColor: DSColors.onSurface,
-          displayColor: DSColors.onSurface,
+    textTheme: _textTheme,
+    inputDecorationTheme: const InputDecorationTheme(
+      filled: true,
+      fillColor: DSColors.surfaceContainer,
+      border: OutlineInputBorder(
+        borderRadius: DSRadius.sm,
+        borderSide: BorderSide(color: DSColors.outline),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: DSRadius.sm,
+        borderSide: BorderSide(color: DSColors.outline),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: DSRadius.sm,
+        borderSide: BorderSide(color: DSColors.primary),
+      ),
+      labelStyle: TextStyle(color: DSColors.onSurfaceVariant),
+      hintStyle: TextStyle(color: DSColors.onSurfaceVariant),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: DSColors.primary,
+        foregroundColor: DSColors.onPrimary,
+        shape: const RoundedRectangleBorder(borderRadius: DSRadius.sm),
+        textStyle: const TextStyle(
+          fontFamily: 'Manrope',
+          fontWeight: FontWeight.w700,
         ),
-    dividerColor: DSColors.outline.withOpacity(0.25),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: DSColors.primary,
+        side: const BorderSide(color: DSColors.primary),
+        shape: const RoundedRectangleBorder(borderRadius: DSRadius.sm),
+        textStyle: const TextStyle(
+          fontFamily: 'Manrope',
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: DSColors.onSurface,
+        shape: const RoundedRectangleBorder(borderRadius: DSRadius.sm),
+        textStyle: const TextStyle(
+          fontFamily: 'Manrope',
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ),
+    chipTheme: const ChipThemeData(
+      backgroundColor: DSColors.surfaceContainerHigh,
+      labelStyle: TextStyle(
+        color: DSColors.onSurface,
+        fontFamily: 'Manrope',
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: DSRadius.sm,
+        side: BorderSide(color: DSColors.outline),
+      ),
+    ),
+    dividerColor: DSColors.outline.withValues(alpha: 0.25),
   );
+
+  static final TextTheme _textTheme = ThemeData.dark(useMaterial3: true)
+      .textTheme
+      .apply(bodyColor: DSColors.onSurface, displayColor: DSColors.onSurface)
+      .copyWith(
+        displaySmall: const TextStyle(
+          fontFamily: 'Noto Serif',
+          fontSize: 48,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+        ),
+        headlineMedium: const TextStyle(
+          fontFamily: 'Noto Serif',
+          fontSize: 32,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
+        ),
+        headlineSmall: const TextStyle(
+          fontFamily: 'Noto Serif',
+          fontSize: 24,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
+        ),
+        titleLarge: const TextStyle(
+          fontFamily: 'Noto Serif',
+          fontSize: 24,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
+        ),
+        titleMedium: const TextStyle(
+          fontFamily: 'Manrope',
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          height: 1.4,
+        ),
+        bodyLarge: const TextStyle(
+          fontFamily: 'Manrope',
+          fontSize: 18,
+          fontWeight: FontWeight.w400,
+          height: 1.6,
+        ),
+        bodyMedium: const TextStyle(
+          fontFamily: 'Manrope',
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          height: 1.6,
+        ),
+        bodySmall: const TextStyle(
+          fontFamily: 'Manrope',
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+        ),
+      );
 }
