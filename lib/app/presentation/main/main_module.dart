@@ -33,5 +33,10 @@ class MainModule extends Module {
       description:
           'Catalog for investment opportunities and upcoming projects.',
     ),
+    MainRoutes.announceProperty: (_, __) => const SegmentDetailsPage(
+      title: 'Anunciar meu imovel',
+      description:
+          'Area para proprietarios cadastrarem anuncios, adicionarem fotos e receberem propostas.',
+    ),
   };
 }

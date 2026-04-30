@@ -9,3 +9,4 @@ export 'src/layout/layout_context_extension.dart';
 export 'src/layout/responsive_app_builder.dart';
 export 'src/layout/page_layout_container.dart';
 export 'src/theme/design_tokens.dart';
+export 'src/theme/theme.dart';

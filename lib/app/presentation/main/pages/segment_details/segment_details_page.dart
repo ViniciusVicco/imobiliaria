@@ -19,9 +19,12 @@ class SegmentDetailsPage extends StatelessWidget {
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(DSSpacing.lg),
-          decoration: const BoxDecoration(
-            color: Color(0xFFF7F7F7),
+          decoration: BoxDecoration(
+            color: DSColors.surfaceContainer,
             borderRadius: DSRadius.md,
+            border: Border.all(
+              color: DSColors.outline.withOpacity(0.2),
+            ),
           ),
           child: Text(description, style: Theme.of(context).textTheme.bodyLarge),
         ),

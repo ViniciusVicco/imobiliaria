@@ -1,13 +1,14 @@
 # Arquitetura e Entrega Incremental (Spec-Driven Development)
 
 ## 1) Objetivo do produto
-Plataforma web responsiva (desktop e mobile web) para vitrine de imoveis com 3 frentes:
+Plataforma responsiva para vitrine de imoveis, com quatro entradas iniciais:
 
-- Comprar
-- Alugar
-- Anunciar
+- Residencial
+- Comercial
+- Investimentos
+- Anunciar imovel
 
-Escopo de negocio: imoveis de diferentes tipos (terrenos, apartamentos, casas e alto padrao).
+Escopo de negocio: imoveis de diferentes tipos, como apartamentos, casas, salas comerciais, lojas e oportunidades de investimento.
 
 ## 2) Pilares obrigatorios
 1. Responsividade real: mesma base de codigo com comportamento consistente em celular e desktop.
@@ -22,7 +23,7 @@ Regra de ouro:
 - O design/layout responsivo foi centralizado no `packages/design_system`.
 - O core modular (`packages/core`) continua como base de DI, modulo e ciclo de vida.
 - O fluxo de dominio foi padronizado em `data/domain/presentation` dentro de `lib/app`.
-- Rotas principais em ingles, alinhadas com URL web.
+- Rotas principais em ingles, alinhadas com a estrategia web do modulo.
 
 ## 4) Padrao oficial de pastas
 ### 4.1) Packages
@@ -70,20 +71,21 @@ Detalhamento:
 - Nao renderiza UI.
 
 ### DataSource
-- Apenas acesso externo (REST, cache, storage).
+- Apenas acesso externo, cache, storage ou adaptacao de payload.
 - Sem regra de negocio de tela.
 
-## 6) Roteamento web e modulos (estado atual)
-- Rotas principais do modulo: `/home`, `/commercial`, `/residential`, `/investments`.
-- Home renderiza grid com 3 botoes e navega pelos 3 segmentos.
-- Navegacao segue fluxo de negocio (botao -> controller -> usecase -> repository -> datasource -> route).
+## 6) Roteamento e modulos (estado atual)
+- Rotas principais do modulo: `/home`, `/commercial`, `/residential`, `/investments`, `/announce-property`.
+- Home renderiza grid com 4 cards de entrada e navega pelos segmentos.
+- Navegacao segue fluxo de negocio: botao -> controller -> usecase -> repository -> datasource -> rota.
+- A pagina de detalhe de segmento ainda e placeholder, ate as specs de catalogo e anuncio evoluirem.
 
 Regra para novos modulos:
 - Declarar rotas em `<module>_routes.dart`.
 - Declarar mapa de rotas em `<module>_module.dart`.
 - Nunca navegar direto de widget para datasource/API.
 
-## 7) Injeção e ciclo de vida (GetIt)
+## 7) Injecao e ciclo de vida (GetIt)
 Regra critica confirmada:
 - Nao instanciar injector em campo `final` com acesso precoce a `Module.get<T>()`.
 - O injector deve ser resolvido sob demanda no getter `injector` do modulo.
@@ -101,24 +103,28 @@ Motivo:
 Padrao de uso:
 - `MaterialApp(builder: DSResponsiveAppBuilder.build, ...)`
 - `DSPageLayoutContainer` para largura maxima e padding consistente.
-- `context.isDesktopLayout`/`context.isMobileLayout` para decisao de grid/coluna.
+- `context.isDesktopLayout`/`context.isMobileLayout` estao disponiveis para decisao de grid/coluna.
 - Tokens de espacamento e radius via `DSSpacing` e `DSRadius`.
 
 ## 9) Dependencias por responsabilidade
 ### 9.1) App principal
 - `legend_core`
 - `design_system`
-- Dependencias nao visuais e de app (`go_router`, `flutter_bloc`, `equatable`, `intl`, `url_launcher`, `shared_preferences`, etc.).
+- Dependencias de produto devem ficar no app apenas quando houver uso real na feature.
 
 ### 9.2) Design system
 - Dependencias de layout/design: `responsive_framework`, `flutter_svg`, `cached_network_image`, `cupertino_icons`.
 
+### 9.3) Core
+- Dependencias estruturais do core ficam em `packages/core`, como `dio` para requests cancelaveis e `logger` para mixins de log.
+
 ## 10) Backlog spec-driven (proximas fases)
-- Spec 1: Home vitrine com dados reais e filtros iniciais.
-- Spec 2: Fluxo Comprar.
-- Spec 3: Fluxo Alugar.
-- Spec 4: Fluxo Anunciar.
-- Spec 5: Observabilidade, performance web e testes.
+- Spec 1: Home showcase com dados reais e filtros iniciais.
+- Spec 2: Catalogo residencial.
+- Spec 3: Catalogo comercial.
+- Spec 4: Investimentos na planta.
+- Spec 5: Fluxo Anunciar imovel.
+- Spec 6: Observabilidade, performance web e testes.
 
 ## 11) Template de spec
 ```md
@@ -164,6 +170,6 @@ Padrao de uso:
 - Fluxo arquitetural respeitado (`widget -> controller -> useCase -> repository -> datasource`).
 - Nenhum acesso HTTP direto em widget/controller.
 - Funciona em viewport mobile e desktop.
-- Rotas web funcionando com URL amigavel.
+- Rotas nomeadas funcionando e alinhadas com a estrategia web do modulo.
 - Erros mapeados em `Failure`.
 - Criterios de aceite cobertos por testes.

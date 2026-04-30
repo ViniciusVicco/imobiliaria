@@ -11,6 +11,7 @@ void main() {
       app: (home) => MaterialApp(
         debugShowCheckedModeBanner: false,
         builder: DSResponsiveAppBuilder.build,
+        theme: DSTheme.dark,
         home: home,
       ),
     ),

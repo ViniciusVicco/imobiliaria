@@ -1,6 +1,4 @@
-﻿library legend_core;
-
-export 'src/dependencies/app_navigator.dart';
+﻿export 'src/dependencies/app_navigator.dart';
 export 'src/dependencies/cancelable_request.dart';
 export 'src/dependencies/controller.dart';
 export 'src/dependencies/data_source_response.dart';
@@ -21,4 +19,3 @@ export 'src/module/module/module_injector.dart';
 export 'src/module/module/module_window_widget.dart';
 export 'src/module/module/quick_actions.dart';
 export 'src/state/app_state.dart';
-

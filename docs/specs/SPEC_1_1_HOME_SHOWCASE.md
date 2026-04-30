@@ -1,7 +1,7 @@
 # Spec 1.1 - Home Showcase with Real Data and Initial Filters
 
 ## Context
-A home page is already available with 3 segment entry points (`commercial`, `residential`, `investments`).
+A home page is already available with 4 entry points (`commercial`, `residential`, `investments`, `announce-property`).
 Now we need to evolve this page into a real showcase with property data and initial filters, while preserving the architecture flow:
 `widget -> controller -> useCase -> repository -> datasource`.
 
@@ -9,7 +9,7 @@ Now we need to evolve this page into a real showcase with property data and init
 - In scope:
   - Fetch and render real property cards on Home.
   - Add initial filters (city, neighborhood, property type, segment).
-  - Keep segment navigation grid visible as entry point.
+  - Keep the segment/announcement navigation grid visible as entry point.
   - Add loading, success, empty, and error states on Home.
 - Out of scope:
   - Full advanced filter panel.
