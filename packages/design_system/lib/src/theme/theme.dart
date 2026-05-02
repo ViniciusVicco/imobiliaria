@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'design_tokens.dart';
+import 'design_typography.dart';
 
 abstract final class DSColors {
   static const Color surface = Color(0xFF030E22);
@@ -116,57 +117,8 @@ abstract final class DSTheme {
     dividerColor: DSColors.outline.withValues(alpha: 0.25),
   );
 
-  static final TextTheme _textTheme = ThemeData.dark(useMaterial3: true)
-      .textTheme
-      .apply(bodyColor: DSColors.onSurface, displayColor: DSColors.onSurface)
-      .copyWith(
-        displaySmall: const TextStyle(
-          fontFamily: 'Noto Serif',
-          fontSize: 48,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
-        ),
-        headlineMedium: const TextStyle(
-          fontFamily: 'Noto Serif',
-          fontSize: 32,
-          fontWeight: FontWeight.w600,
-          height: 1.3,
-        ),
-        headlineSmall: const TextStyle(
-          fontFamily: 'Noto Serif',
-          fontSize: 24,
-          fontWeight: FontWeight.w500,
-          height: 1.4,
-        ),
-        titleLarge: const TextStyle(
-          fontFamily: 'Noto Serif',
-          fontSize: 24,
-          fontWeight: FontWeight.w500,
-          height: 1.4,
-        ),
-        titleMedium: const TextStyle(
-          fontFamily: 'Manrope',
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          height: 1.4,
-        ),
-        bodyLarge: const TextStyle(
-          fontFamily: 'Manrope',
-          fontSize: 18,
-          fontWeight: FontWeight.w400,
-          height: 1.6,
-        ),
-        bodyMedium: const TextStyle(
-          fontFamily: 'Manrope',
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          height: 1.6,
-        ),
-        bodySmall: const TextStyle(
-          fontFamily: 'Manrope',
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          height: 1.5,
-        ),
-      );
+  static final TextTheme _textTheme = const DSTypographyTokens().textTheme.apply(
+    bodyColor: DSColors.onSurface,
+    displayColor: DSColors.onSurface,
+  );
 }

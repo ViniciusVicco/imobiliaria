@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:imobiliaria/app/assets/custom_assets.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySegmentsDatasource {
@@ -15,7 +16,7 @@ class PropertySegmentsDatasource {
 
   Future<DataSourceResponse<List<Map<String, dynamic>>>>
   getFeaturedProperties() async {
-    final data = await _loadJsonList('assets/mocks/featured_properties.json');
+    final data = await _loadJsonList(CustomAssets.mocks.featuredProperties);
     return DataSourceResponse<List<Map<String, dynamic>>>(
       data: data,
       hasSuccess: true,
@@ -23,7 +24,7 @@ class PropertySegmentsDatasource {
   }
 
   Future<DataSourceResponse<Map<String, dynamic>>> getHomeBrandContent() async {
-    final data = await _loadJsonMap('assets/mocks/home_brand_content.json');
+    final data = await _loadJsonMap(CustomAssets.mocks.homeBrandContent);
     return DataSourceResponse<Map<String, dynamic>>(
       data: data,
       hasSuccess: true,

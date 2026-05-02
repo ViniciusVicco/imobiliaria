@@ -1,0 +1,28 @@
+<svg width="512" height="1024" viewBox="0 0 512 1024" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ícone Seletta completo">
+  <g stroke="#C7922E" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter" vector-effect="non-scaling-stroke">
+    <!-- Linhas superiores cruzadas -->
+    <path d="M198 60 L426 206" opacity="0.95"/>
+    <path d="M498 92 L198 272" opacity="0.78"/>
+
+    <!-- Linha vertical esquerda de fundo -->
+    <path d="M43 414 L43 952" opacity="0.62"/>
+
+    <!-- Moldura externa esquerda / base -->
+    <path d="M43 952 L330 952 L330 704" opacity="0.95"/>
+
+    <!-- Moldura frontal principal -->
+    <path d="M197 264 L426 128 L426 892 L197 892 Z" opacity="0.98"/>
+
+    <!-- Moldura interna -->
+    <path d="M123 348 L330 224 L330 840 L123 840 Z" opacity="0.95"/>
+
+    <!-- Linha vertical direita de fundo -->
+    <path d="M502 88 L502 1020" opacity="0.5"/>
+
+    <!-- Base inferior direita de profundidade -->
+    <path d="M197 1020 L502 1020 L502 892" opacity="0.95"/>
+
+    <!-- Linha vertical central de profundidade -->
+    <path d="M197 892 L197 1020" opacity="0.95"/>
+  </g>
+</svg>

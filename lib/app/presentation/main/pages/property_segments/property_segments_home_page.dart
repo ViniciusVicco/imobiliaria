@@ -22,14 +22,13 @@ class _PropertySegmentsHomePageState
           MainModule,
           PropertySegmentsHomePage,
           PropertySegmentsHomeController
-        > {
+        >
+    with DesignSystemMixin {
   final _contactKey = GlobalKey();
   final _aboutKey = GlobalKey();
   final _missionKey = GlobalKey();
   late final TextEditingController _queryController;
   late final TextEditingController _blockOrNeighborhoodController;
-  late final TextEditingController _priceMinController;
-  late final TextEditingController _priceMaxController;
 
   @override
   void initState() {
@@ -38,12 +37,6 @@ class _PropertySegmentsHomePageState
     _queryController = TextEditingController(text: filters.query);
     _blockOrNeighborhoodController = TextEditingController(
       text: filters.blockOrNeighborhood,
-    );
-    _priceMinController = TextEditingController(
-      text: filters.priceMin?.toString() ?? '',
-    );
-    _priceMaxController = TextEditingController(
-      text: filters.priceMax?.toString() ?? '',
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -55,8 +48,6 @@ class _PropertySegmentsHomePageState
   void dispose() {
     _queryController.dispose();
     _blockOrNeighborhoodController.dispose();
-    _priceMinController.dispose();
-    _priceMaxController.dispose();
     super.dispose();
   }
 
@@ -110,11 +101,10 @@ class _PropertySegmentsHomePageState
                           const SizedBox(height: DSSpacing.lg),
                           _SearchPanel(
                             filters: controller.store.filters,
+                            properties: controller.store.featuredProperties,
                             queryController: _queryController,
                             blockOrNeighborhoodController:
                                 _blockOrNeighborhoodController,
-                            priceMinController: _priceMinController,
-                            priceMaxController: _priceMaxController,
                             onFiltersChanged: controller.updateFilters,
                             onSegmentChanged: controller.updateSegment,
                             onSubmit: () => controller.onSearchSubmitted(),
@@ -279,20 +269,18 @@ class _BrandMessage extends StatelessWidget {
 class _SearchPanel extends StatefulWidget {
   const _SearchPanel({
     required this.filters,
+    required this.properties,
     required this.queryController,
     required this.blockOrNeighborhoodController,
-    required this.priceMinController,
-    required this.priceMaxController,
     required this.onFiltersChanged,
     required this.onSegmentChanged,
     required this.onSubmit,
   });
 
   final PropertySearchFiltersEntity filters;
+  final List<FeaturedPropertyEntity> properties;
   final TextEditingController queryController;
   final TextEditingController blockOrNeighborhoodController;
-  final TextEditingController priceMinController;
-  final TextEditingController priceMaxController;
   final ValueChanged<PropertySearchFiltersEntity> onFiltersChanged;
   final ValueChanged<PropertySegment> onSegmentChanged;
   final VoidCallback onSubmit;
@@ -442,83 +430,62 @@ class _SearchPanelState extends State<_SearchPanel> {
                         ? 2
                         : 1;
 
-                    return _ResponsiveFieldGrid(
-                      columns: columns,
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        TextField(
-                          controller: widget.queryController,
-                          decoration: const InputDecoration(
-                            labelText: 'Palavra-chave',
-                            hintText: 'Ex: varanda gourmet',
-                            border: OutlineInputBorder(
-                              borderRadius: DSRadius.sm,
+                        _ResponsiveFieldGrid(
+                          columns: columns,
+                          children: <Widget>[
+                            TextField(
+                              controller: widget.queryController,
+                              decoration: const InputDecoration(
+                                labelText: 'Palavra-chave',
+                                hintText: 'Ex: varanda gourmet',
+                                border: OutlineInputBorder(
+                                  borderRadius: DSRadius.sm,
+                                ),
+                              ),
+                              onChanged: (value) => widget.onFiltersChanged(
+                                widget.filters.copyWith(query: value),
+                              ),
                             ),
-                          ),
-                          onChanged: (value) => widget.onFiltersChanged(
-                            widget.filters.copyWith(query: value),
-                          ),
+                            _MinCountDropdown(
+                              label: 'Quartos',
+                              value: widget.filters.bedroomsMin,
+                              onChanged: (value) => widget.onFiltersChanged(
+                                widget.filters.copyWith(
+                                  bedroomsMin: value,
+                                  clearBedrooms: value == null,
+                                ),
+                              ),
+                            ),
+                            _MinCountDropdown(
+                              label: 'Banheiros',
+                              value: widget.filters.bathroomsMin,
+                              onChanged: (value) => widget.onFiltersChanged(
+                                widget.filters.copyWith(
+                                  bathroomsMin: value,
+                                  clearBathrooms: value == null,
+                                ),
+                              ),
+                            ),
+                            _MinCountDropdown(
+                              label: 'Vagas',
+                              value: widget.filters.garageSpacesMin,
+                              onChanged: (value) => widget.onFiltersChanged(
+                                widget.filters.copyWith(
+                                  garageSpacesMin: value,
+                                  clearGarageSpaces: value == null,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        _MinCountDropdown(
-                          label: 'Quartos',
-                          value: widget.filters.bedroomsMin,
-                          onChanged: (value) => widget.onFiltersChanged(
-                            widget.filters.copyWith(
-                              bedroomsMin: value,
-                              clearBedrooms: value == null,
-                            ),
-                          ),
-                        ),
-                        _MinCountDropdown(
-                          label: 'Banheiros',
-                          value: widget.filters.bathroomsMin,
-                          onChanged: (value) => widget.onFiltersChanged(
-                            widget.filters.copyWith(
-                              bathroomsMin: value,
-                              clearBathrooms: value == null,
-                            ),
-                          ),
-                        ),
-                        _MinCountDropdown(
-                          label: 'Vagas',
-                          value: widget.filters.garageSpacesMin,
-                          onChanged: (value) => widget.onFiltersChanged(
-                            widget.filters.copyWith(
-                              garageSpacesMin: value,
-                              clearGarageSpaces: value == null,
-                            ),
-                          ),
-                        ),
-                        TextField(
-                          controller: widget.priceMinController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Valor minimo',
-                            border: OutlineInputBorder(
-                              borderRadius: DSRadius.sm,
-                            ),
-                          ),
-                          onChanged: (value) => widget.onFiltersChanged(
-                            widget.filters.copyWith(
-                              priceMin: int.tryParse(value),
-                              clearPriceMin: value.isEmpty,
-                            ),
-                          ),
-                        ),
-                        TextField(
-                          controller: widget.priceMaxController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Valor maximo',
-                            border: OutlineInputBorder(
-                              borderRadius: DSRadius.sm,
-                            ),
-                          ),
-                          onChanged: (value) => widget.onFiltersChanged(
-                            widget.filters.copyWith(
-                              priceMax: int.tryParse(value),
-                              clearPriceMax: value.isEmpty,
-                            ),
-                          ),
+                        const SizedBox(height: DSSpacing.md),
+                        _PriceRangeSlider(
+                          properties: widget.properties,
+                          filters: widget.filters,
+                          onChanged: widget.onFiltersChanged,
                         ),
                       ],
                     );
@@ -757,6 +724,153 @@ class _MinCountDropdown extends StatelessWidget {
   }
 }
 
+class _PriceRangeSlider extends StatelessWidget with DesignSystemMixin {
+  const _PriceRangeSlider({
+    required this.properties,
+    required this.filters,
+    required this.onChanged,
+  });
+
+  final List<FeaturedPropertyEntity> properties;
+  final PropertySearchFiltersEntity filters;
+  final ValueChanged<PropertySearchFiltersEntity> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (properties.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final prices = properties.map((property) => property.price).toList();
+    final minPrice = prices.reduce(
+      (value, element) => value < element ? value : element,
+    );
+    final maxPrice = prices.reduce(
+      (value, element) => value > element ? value : element,
+    );
+
+    if (minPrice == maxPrice) {
+      return _PriceRangeSummary(
+        label: 'Valor',
+        value: _formatSliderCurrency(minPrice),
+      );
+    }
+
+    final selectedMin = (filters.priceMin ?? minPrice).clamp(
+      minPrice,
+      maxPrice,
+    );
+    final selectedMax = (filters.priceMax ?? maxPrice).clamp(
+      minPrice,
+      maxPrice,
+    );
+    final rangeStart = selectedMin <= selectedMax ? selectedMin : selectedMax;
+    final rangeEnd = selectedMin <= selectedMax ? selectedMax : selectedMin;
+    final values = RangeValues(rangeStart.toDouble(), rangeEnd.toDouble());
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: DSColors.surfaceContainerHigh,
+        borderRadius: DSRadius.sm,
+        border: Border.all(color: DSColors.outline),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DSSpacing.md,
+          DSSpacing.sm,
+          DSSpacing.md,
+          DSSpacing.md,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Faixa de valor',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: DSSpacing.xs),
+            Text(
+              '${_formatSliderCurrency(values.start.round())} - ${_formatSliderCurrency(values.end.round())}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: DSColors.onSurfaceVariant,
+              ),
+            ),
+            RangeSlider(
+              min: minPrice.toDouble(),
+              max: maxPrice.toDouble(),
+              values: values,
+              labels: RangeLabels(
+                _formatSliderCurrency(values.start.round()),
+                _formatSliderCurrency(values.end.round()),
+              ),
+              onChanged: (value) {
+                onChanged(
+                  filters.copyWith(
+                    priceMin: value.start.round(),
+                    priceMax: value.end.round(),
+                  ),
+                );
+              },
+            ),
+            Text(
+              "* A faixa apresenta o imóvel mais acessível ao mais caro que possuímos.",
+              style: typography.body.sm.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PriceRangeSummary extends StatelessWidget {
+  const _PriceRangeSummary({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: DSColors.surfaceContainerHigh,
+        borderRadius: DSRadius.sm,
+        border: Border.all(color: DSColors.outline),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(DSSpacing.md),
+        child: Row(
+          children: <Widget>[
+            Text(label, style: Theme.of(context).textTheme.labelLarge),
+            const Spacer(),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: DSColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _formatSliderCurrency(int price) {
+  final text = price.toString();
+  final buffer = StringBuffer();
+  for (var index = 0; index < text.length; index++) {
+    final positionFromEnd = text.length - index;
+    buffer.write(text[index]);
+    if (positionFromEnd > 1 && positionFromEnd % 3 == 1) {
+      buffer.write('.');
+    }
+  }
+  return 'R\$ ${buffer.toString()}';
+}
+
 class _FeaturedPropertiesSection extends StatelessWidget {
   const _FeaturedPropertiesSection({
     required this.properties,
@@ -871,7 +985,7 @@ class _FeaturedPropertyCard extends StatelessWidget {
                           _FactChip(label: '${property.bedrooms} quartos'),
                         _FactChip(label: '${property.bathrooms} banheiros'),
                         _FactChip(label: '${property.garageSpaces} vagas'),
-                        _FactChip(label: '${property.propertyAgeYears} anos'),
+                        _FactChip(label: _formatPropertyAge(property)),
                       ],
                     ),
                     const Spacer(),
@@ -909,6 +1023,11 @@ class _FeaturedPropertyCard extends StatelessWidget {
       }
     }
     return 'R\$ ${buffer.toString()}';
+  }
+
+  String _formatPropertyAge(FeaturedPropertyEntity property) {
+    if (property.propertyAgeYears <= 1) return 'Lançamento';
+    return '${property.propertyAgeYears} anos';
   }
 }
 
