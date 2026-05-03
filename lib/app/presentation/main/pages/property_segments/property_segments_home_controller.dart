@@ -1,3 +1,4 @@
+import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/property_search_filters_entity.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/build_property_search_query_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_featured_properties_use_case.dart';
@@ -88,6 +89,45 @@ class PropertySegmentsHomeController extends Controller {
     if (!wasOpened) {
       store.setError('Nao foi possivel abrir o video da Seletta.');
     }
+  }
+
+  Future<void> onWhatsappPressed() async {
+    await _openWhatsappWithMessage(
+      'Olá, vi seus destaques do site e quero falar com a Seletta sobre imoveis em Palmas.',
+    );
+  }
+
+  Future<void> onPropertyWhatsappPressed(FeaturedPropertyEntity property) async {
+    await _openWhatsappWithMessage(
+      'Vi uma oportunidade ${property.title} - ${property.id} e gostaria de saber mais',
+    );
+  }
+
+  Future<void> _openWhatsappWithMessage(String message) async {
+    final rawWhatsapp = store.brandContent?.contact.whatsapp;
+    final whatsappNumber = _normalizeBrazilianWhatsapp(rawWhatsapp);
+    if (whatsappNumber == null) {
+      store.setError('Nao foi possivel encontrar o WhatsApp da Seletta.');
+      return;
+    }
+
+    final uri = Uri.https('wa.me', '/$whatsappNumber', <String, String>{
+      'text': message,
+    });
+    final wasOpened = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!wasOpened) {
+      store.setError('Nao foi possivel abrir o WhatsApp da Seletta.');
+    }
+  }
+
+  String? _normalizeBrazilianWhatsapp(String? rawWhatsapp) {
+    final digits = rawWhatsapp?.replaceAll(RegExp(r'\D'), '');
+    if (digits == null || digits.isEmpty) return null;
+    if (digits.startsWith('55')) return digits;
+    return '55$digits';
   }
 
   Future<void> onSegmentPressed({required String targetRoute}) async {

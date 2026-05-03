@@ -1,10 +1,13 @@
+import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:imobiliaria/app/assets/custom_assets.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/home_brand_content_entity.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/property_search_filters_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/weighted_field.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/youtube_embed.dart';
 import 'package:legend_core/legend_core.dart';
 
@@ -54,6 +57,12 @@ class _PropertySegmentsHomePageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => controller.onWhatsappPressed(),
+        tooltip: 'Contato rapido pelo WhatsApp',
+        icon: const Icon(BootstrapIcons.whatsapp),
+        label: const Text('Contato rapido'),
+      ),
       body: ValueListenableBuilder<AppStateEnum>(
         valueListenable: controller.store.state,
         builder: (context, state, child) {
@@ -72,6 +81,11 @@ class _PropertySegmentsHomePageState
           }
 
           final brandContent = controller.store.brandContent;
+          final featuredProperties = controller.store.featuredProperties;
+          final filteredFeaturedProperties = _filterFeaturedPropertiesByPrice(
+            featuredProperties,
+            controller.store.filters,
+          );
 
           return Stack(
             children: <Widget>[
@@ -84,6 +98,7 @@ class _PropertySegmentsHomePageState
                       onContactPressed: () => _scrollTo(_contactKey),
                       onAboutPressed: () => _scrollTo(_aboutKey),
                       onMissionPressed: () => _scrollTo(_missionKey),
+                      onWhatsappPressed: () => controller.onWhatsappPressed(),
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -97,11 +112,10 @@ class _PropertySegmentsHomePageState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          _BrandMessage(content: brandContent),
                           const SizedBox(height: DSSpacing.lg),
                           _SearchPanel(
                             filters: controller.store.filters,
-                            properties: controller.store.featuredProperties,
+                            properties: featuredProperties,
                             queryController: _queryController,
                             blockOrNeighborhoodController:
                                 _blockOrNeighborhoodController,
@@ -111,8 +125,9 @@ class _PropertySegmentsHomePageState
                           ),
                           const SizedBox(height: DSSpacing.xl),
                           _FeaturedPropertiesSection(
-                            properties: controller.store.featuredProperties,
-                            onSimilarSearch: _searchSimilar,
+                            properties: filteredFeaturedProperties,
+                            onMoreInfoPressed: (property) =>
+                                controller.onPropertyWhatsappPressed(property),
                           ),
                           const SizedBox(height: DSSpacing.xl),
                           _VideoSection(
@@ -156,16 +171,6 @@ class _PropertySegmentsHomePageState
     );
   }
 
-  void _searchSimilar(FeaturedPropertyEntity property) {
-    final segment = switch (property.segment) {
-      'commercial' => PropertySegment.commercial,
-      'investments' => PropertySegment.investments,
-      _ => PropertySegment.residential,
-    };
-
-    controller.updateSegment(segment);
-    controller.onSearchSubmitted();
-  }
 }
 
 class _TopNavigation extends StatelessWidget {
@@ -174,12 +179,14 @@ class _TopNavigation extends StatelessWidget {
     required this.onContactPressed,
     required this.onAboutPressed,
     required this.onMissionPressed,
+    required this.onWhatsappPressed,
   });
 
   final VoidCallback onNewDevelopmentsPressed;
   final VoidCallback onContactPressed;
   final VoidCallback onAboutPressed;
   final VoidCallback onMissionPressed;
+  final VoidCallback onWhatsappPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -189,42 +196,54 @@ class _TopNavigation extends StatelessWidget {
         padding: const EdgeInsets.all(DSSpacing.md),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: DSColors.surfaceContainer,
+            color: DSColors.brandLogoBackground,
             borderRadius: DSRadius.md,
             border: Border.all(color: DSColors.outline),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: DSSpacing.md,
-              vertical: DSSpacing.sm,
+              vertical: DSSpacing.md,
             ),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              runSpacing: DSSpacing.xs,
-              children: <Widget>[
-                TextButton(
-                  onPressed: onNewDevelopmentsPressed,
-                  child: const Text('Novidades na planta'),
-                ),
-                Wrap(
-                  spacing: DSSpacing.xs,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 820;
+                final logo = _LogoMark(isCompact: isCompact);
+                final links = _NavigationLinks(
+                  isCompact: isCompact,
+                  onNewDevelopmentsPressed: onNewDevelopmentsPressed,
+                  onContactPressed: onContactPressed,
+                  onAboutPressed: onAboutPressed,
+                  onMissionPressed: onMissionPressed,
+                );
+                final whatsappButton = _WhatsappButton(
+                  onPressed: onWhatsappPressed,
+                );
+
+                if (isCompact) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Center(child: logo),
+                      const SizedBox(height: DSSpacing.sm),
+                      Center(child: whatsappButton),
+                      const SizedBox(height: DSSpacing.md),
+                      links,
+                    ],
+                  );
+                }
+
+                return Row(
                   children: <Widget>[
-                    TextButton(
-                      onPressed: onContactPressed,
-                      child: const Text('Contatos'),
-                    ),
-                    TextButton(
-                      onPressed: onAboutPressed,
-                      child: const Text('Sobre nos'),
-                    ),
-                    TextButton(
-                      onPressed: onMissionPressed,
-                      child: const Text('Missao'),
-                    ),
+                    SizedBox(height: 220, child: logo),
+                    const SizedBox(width: DSSpacing.lg),
+                    Expanded(child: Center(child: links)),
+                    const SizedBox(width: DSSpacing.lg),
+                    whatsappButton,
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
         ),
@@ -233,35 +252,148 @@ class _TopNavigation extends StatelessWidget {
   }
 }
 
-class _BrandMessage extends StatelessWidget {
-  const _BrandMessage({required this.content});
+List<FeaturedPropertyEntity> _filterFeaturedPropertiesByPrice(
+  List<FeaturedPropertyEntity> properties,
+  PropertySearchFiltersEntity filters,
+) {
+  return properties.where((property) {
+    final price = property.price;
+    final min = filters.priceMin;
+    final max = filters.priceMax;
 
-  final HomeBrandContentEntity? content;
+    if (min != null && price < min) return false;
+    if (max != null && price > max) return false;
+    return true;
+  }).toList();
+}
+
+class _LogoMark extends StatelessWidget {
+  const _LogoMark({required this.isCompact});
+
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'Seletta Imobiliaria',
-          style: Theme.of(
-            context,
-          ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800),
+    if (isCompact) {
+      return SizedBox(
+        height: 80,
+        child: SvgPicture.asset(CustomAssets.icons.selettaIcon),
+      );
+    }
+    return Image.asset(
+      CustomAssets.logo.logoSelettaClean,
+      fit: BoxFit.fitHeight,
+      filterQuality: FilterQuality.high,
+    );
+  }
+}
+
+class _NavigationLinks extends StatelessWidget {
+  const _NavigationLinks({
+    required this.isCompact,
+    required this.onNewDevelopmentsPressed,
+    required this.onContactPressed,
+    required this.onAboutPressed,
+    required this.onMissionPressed,
+  });
+
+  final bool isCompact;
+  final VoidCallback onNewDevelopmentsPressed;
+  final VoidCallback onContactPressed;
+  final VoidCallback onAboutPressed;
+  final VoidCallback onMissionPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final linkButtons = <Widget>[
+      _NavigationLinkButton(
+        onPressed: onNewDevelopmentsPressed,
+        label: 'Novidades na planta',
+      ),
+      _NavigationLinkButton(onPressed: onContactPressed, label: 'Contatos'),
+      _NavigationLinkButton(onPressed: onAboutPressed, label: 'Sobre nos'),
+      _NavigationLinkButton(onPressed: onMissionPressed, label: 'Missao'),
+    ];
+
+    if (isCompact) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final itemWidth = (constraints.maxWidth - DSSpacing.xs) / 2;
+          return Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: DSSpacing.xs,
+            runSpacing: DSSpacing.xs,
+            children: linkButtons
+                .map((button) => SizedBox(width: itemWidth, child: button))
+                .toList(),
+          );
+        },
+      );
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: DSSpacing.md,
+      runSpacing: DSSpacing.xs,
+      children: linkButtons,
+    );
+  }
+}
+
+class _NavigationLinkButton extends StatelessWidget {
+  const _NavigationLinkButton({required this.onPressed, required this.label});
+
+  final VoidCallback onPressed;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(0, 44),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DSSpacing.md,
+          vertical: DSSpacing.sm,
         ),
-        const SizedBox(height: DSSpacing.sm),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 780),
-          child: Text(
-            content?.mission ??
-                'Curadoria de imoveis para morar, investir e expandir negocios.',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: DSColors.onSurfaceVariant,
-              height: 1.45,
-            ),
-          ),
+        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w800,
         ),
-      ],
+      ),
+      child: Text(
+        label,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+class _WhatsappButton extends StatelessWidget {
+  const _WhatsappButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 46),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DSSpacing.lg,
+          vertical: DSSpacing.sm,
+        ),
+        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: DSColors.onPrimary,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      icon: const Icon(BootstrapIcons.whatsapp),
+      label: const Text('Contate-nos'),
     );
   }
 }
@@ -292,8 +424,19 @@ class _SearchPanel extends StatefulWidget {
 class _SearchPanelState extends State<_SearchPanel> {
   bool _showAdvancedFilters = false;
 
+  bool get isWide => MediaQuery.of(context).size.width >= 920;
+
+  Widget buildVerticalPadding({required Widget child}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final neighborhoodOptions = _buildNeighborhoodOptions(widget.properties);
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: DSColors.surfaceContainer,
@@ -303,6 +446,7 @@ class _SearchPanelState extends State<_SearchPanel> {
       child: Padding(
         padding: const EdgeInsets.all(DSSpacing.lg),
         child: Column(
+          spacing: 2,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
@@ -312,43 +456,42 @@ class _SearchPanelState extends State<_SearchPanel> {
             const SizedBox(height: DSSpacing.md),
             LayoutBuilder(
               builder: (context, constraints) {
-                final isWide = constraints.maxWidth >= 920;
-                final mainFields = <_WeightedField>[
-                  _WeightedField(
+                final mainFields = <WeightedField>[
+                  WeightedField(
                     flex: 3,
-                    child: TextField(
-                      controller: widget.blockOrNeighborhoodController,
-                      decoration: const InputDecoration(
-                        labelText: 'Bairro, quadra ou condominio',
-                        hintText:
-                            'Ex: 706 Sul, Arse 72, Plano Diretor Sul, Mirante do Lago',
-                        border: OutlineInputBorder(borderRadius: DSRadius.sm),
-                      ),
-                      onChanged: (value) => widget.onFiltersChanged(
-                        widget.filters.copyWith(blockOrNeighborhood: value),
+                    builder: (context) => buildVerticalPadding(
+                      child: _NeighborhoodDropdown(
+                        controller: widget.blockOrNeighborhoodController,
+                        value: widget.filters.blockOrNeighborhood,
+                        options: neighborhoodOptions,
+                        onChanged: _updateNeighborhood,
                       ),
                     ),
                   ),
-                  _WeightedField(
+                  WeightedField(
                     flex: 2,
-                    child: _SegmentDropdown(
-                      value: widget.filters.segment,
-                      onChanged: widget.onSegmentChanged,
-                    ),
-                  ),
-                  _WeightedField(
-                    flex: 2,
-                    child: _PropertyTypeDropdown(
-                      value: widget.filters.propertyType,
-                      options: widget.filters.segment.propertyTypes,
-                      onChanged: (value) => widget.onFiltersChanged(
-                        widget.filters.copyWith(propertyType: value),
+                    builder: (context) => buildVerticalPadding(
+                      child: _SegmentDropdown(
+                        value: widget.filters.segment,
+                        onChanged: widget.onSegmentChanged,
                       ),
                     ),
                   ),
-                  _WeightedField(
+                  WeightedField(
+                    flex: 2,
+                    builder: (context) => buildVerticalPadding(
+                      child: _PropertyTypeDropdown(
+                        value: widget.filters.propertyType,
+                        options: widget.filters.segment.propertyTypes,
+                        onChanged: (value) => widget.onFiltersChanged(
+                          widget.filters.copyWith(propertyType: value),
+                        ),
+                      ),
+                    ),
+                  ),
+                  WeightedField(
                     flex: 0,
-                    child: SizedBox(
+                    builder: (context) => SizedBox(
                       height: 56,
                       child: FilledButton.icon(
                         onPressed: widget.onSubmit,
@@ -369,7 +512,7 @@ class _SearchPanelState extends State<_SearchPanel> {
                                   padding: const EdgeInsets.only(
                                     left: DSSpacing.sm,
                                   ),
-                                  child: field.child,
+                                  child: field,
                                 )
                               : Expanded(
                                   flex: field.flex,
@@ -377,7 +520,7 @@ class _SearchPanelState extends State<_SearchPanel> {
                                     padding: const EdgeInsets.only(
                                       right: DSSpacing.sm,
                                     ),
-                                    child: field.child,
+                                    child: field,
                                   ),
                                 ),
                         )
@@ -391,7 +534,7 @@ class _SearchPanelState extends State<_SearchPanel> {
                       .map(
                         (field) => Padding(
                           padding: const EdgeInsets.only(bottom: DSSpacing.sm),
-                          child: field.child,
+                          child: field,
                         ),
                       )
                       .toList(),
@@ -400,6 +543,7 @@ class _SearchPanelState extends State<_SearchPanel> {
             ),
             const SizedBox(height: DSSpacing.sm),
             _QuickFilterChips(
+              neighborhoodOptions: neighborhoodOptions,
               onLocationSelected: _selectLocation,
               onFiltersSelected: _selectQuickFilters,
             ),
@@ -506,11 +650,15 @@ class _SearchPanelState extends State<_SearchPanel> {
   }
 
   void _selectLocation(String value) {
+    _updateNeighborhood(value);
+    widget.onSubmit();
+  }
+
+  void _updateNeighborhood(String value) {
     widget.blockOrNeighborhoodController.text = value;
     widget.onFiltersChanged(
       widget.filters.copyWith(blockOrNeighborhood: value),
     );
-    widget.onSubmit();
   }
 
   void _selectQuickFilters(PropertySearchFiltersEntity filters) {
@@ -519,19 +667,68 @@ class _SearchPanelState extends State<_SearchPanel> {
   }
 }
 
-class _WeightedField {
-  const _WeightedField({required this.flex, required this.child});
+List<String> _buildNeighborhoodOptions(List<FeaturedPropertyEntity> properties) {
+  final neighborhoods = properties
+      .map((property) => property.subNeighborhood.trim())
+      .where((neighborhood) => neighborhood.isNotEmpty)
+      .toSet()
+      .toList();
+  neighborhoods.sort();
+  return neighborhoods;
+}
 
-  final int flex;
-  final Widget child;
+class _NeighborhoodDropdown extends StatelessWidget {
+  const _NeighborhoodDropdown({
+    required this.controller,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final String value;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedValue = value.trim();
+    final selectedValue = options.contains(normalizedValue)
+        ? normalizedValue
+        : null;
+
+    return DropdownButtonFormField<String>(
+      initialValue: selectedValue,
+      decoration: const InputDecoration(
+        labelText: 'Bairro, quadra ou condominio',
+        hintText: 'Selecione um bairro disponivel',
+        border: OutlineInputBorder(borderRadius: DSRadius.sm),
+      ),
+      items: options
+          .map(
+            (neighborhood) => DropdownMenuItem<String>(
+              value: neighborhood,
+              child: Text(neighborhood),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        controller.text = value;
+        onChanged(value);
+      },
+    );
+  }
 }
 
 class _QuickFilterChips extends StatelessWidget {
   const _QuickFilterChips({
+    required this.neighborhoodOptions,
     required this.onLocationSelected,
     required this.onFiltersSelected,
   });
 
+  final List<String> neighborhoodOptions;
   final ValueChanged<String> onLocationSelected;
   final ValueChanged<PropertySearchFiltersEntity> onFiltersSelected;
 
@@ -541,26 +738,11 @@ class _QuickFilterChips extends StatelessWidget {
       spacing: DSSpacing.xs,
       runSpacing: DSSpacing.xs,
       children: <Widget>[
-        _QuickFilterChip(
-          label: '706 Sul',
-          onPressed: () => onLocationSelected('706 Sul'),
-        ),
-        _QuickFilterChip(
-          label: 'Plano Diretor Sul',
-          onPressed: () => onLocationSelected('Plano Diretor Sul'),
-        ),
-        _QuickFilterChip(
-          label: 'Plano Diretor Norte',
-          onPressed: () => onLocationSelected('Plano Diretor Norte'),
-        ),
-        _QuickFilterChip(
-          label: 'Taquaralto',
-          onPressed: () => onLocationSelected('Taquaralto'),
-        ),
-        _QuickFilterChip(
-          label: 'Orla',
-          onPressed: () => onLocationSelected('Orla'),
-        ),
+        for (final neighborhood in neighborhoodOptions)
+          _QuickFilterChip(
+            label: neighborhood,
+            onPressed: () => onLocationSelected(neighborhood),
+          ),
         _QuickFilterChip(
           label: 'Casas em condominio',
           onPressed: () => onFiltersSelected(
@@ -871,22 +1053,40 @@ String _formatSliderCurrency(int price) {
   return 'R\$ ${buffer.toString()}';
 }
 
-class _FeaturedPropertiesSection extends StatelessWidget {
+class _FeaturedPropertiesSection extends StatefulWidget {
   const _FeaturedPropertiesSection({
     required this.properties,
-    required this.onSimilarSearch,
+    required this.onMoreInfoPressed,
   });
 
   final List<FeaturedPropertyEntity> properties;
-  final ValueChanged<FeaturedPropertyEntity> onSimilarSearch;
+  final ValueChanged<FeaturedPropertyEntity> onMoreInfoPressed;
+
+  @override
+  State<_FeaturedPropertiesSection> createState() =>
+      _FeaturedPropertiesSectionState();
+}
+
+class _FeaturedPropertiesSectionState
+    extends State<_FeaturedPropertiesSection> {
+  static const _collapsedLimit = 6;
+  static const _expandedLimit = 9;
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
+    final visibleLimit = _isExpanded ? _expandedLimit : _collapsedLimit;
+    final visibleProperties = widget.properties.take(visibleLimit).toList();
+    final canExpand = widget.properties.length > _collapsedLimit;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text('Destaques', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: DSSpacing.md),
+        if (widget.properties.isEmpty)
+          const _FeaturedPropertiesEmptyState()
+        else
         LayoutBuilder(
           builder: (context, constraints) {
             final columns = constraints.maxWidth >= 1040
@@ -897,7 +1097,7 @@ class _FeaturedPropertiesSection extends StatelessWidget {
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: properties.length,
+              itemCount: visibleProperties.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columns,
                 mainAxisSpacing: DSSpacing.md,
@@ -905,15 +1105,25 @@ class _FeaturedPropertiesSection extends StatelessWidget {
                 mainAxisExtent: 470,
               ),
               itemBuilder: (context, index) {
-                final property = properties[index];
+                final property = visibleProperties[index];
                 return _FeaturedPropertyCard(
                   property: property,
-                  onSimilarSearch: () => onSimilarSearch(property),
+                  onMoreInfoPressed: () => widget.onMoreInfoPressed(property),
                 );
               },
             );
           },
         ),
+        if (canExpand && !_isExpanded) ...<Widget>[
+          const SizedBox(height: DSSpacing.md),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() => _isExpanded = true),
+              icon: const Icon(Icons.expand_more),
+              label: const Text('Ver mais'),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -922,11 +1132,11 @@ class _FeaturedPropertiesSection extends StatelessWidget {
 class _FeaturedPropertyCard extends StatelessWidget {
   const _FeaturedPropertyCard({
     required this.property,
-    required this.onSimilarSearch,
+    required this.onMoreInfoPressed,
   });
 
   final FeaturedPropertyEntity property;
-  final VoidCallback onSimilarSearch;
+  final VoidCallback onMoreInfoPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -969,38 +1179,25 @@ class _FeaturedPropertyCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: DSSpacing.xs),
-                    Text(
-                      '${property.neighborhood}, ${property.city}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: DSColors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: DSSpacing.sm),
-                    Wrap(
-                      spacing: DSSpacing.xs,
-                      runSpacing: DSSpacing.xs,
-                      children: <Widget>[
-                        _FactChip(label: '${property.areaM2} m2'),
-                        if (property.bedrooms != null)
-                          _FactChip(label: '${property.bedrooms} quartos'),
-                        _FactChip(label: '${property.bathrooms} banheiros'),
-                        _FactChip(label: '${property.garageSpaces} vagas'),
-                        _FactChip(label: _formatPropertyAge(property)),
-                      ],
-                    ),
+                    _PropertyLocationText(property: property),
+                    const SizedBox(height: DSSpacing.md),
+                    _PropertyFacts(property: property),
                     const Spacer(),
                     Text(
                       _formatPrice(property.price),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: DSColors.primary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: DSSpacing.sm),
-                    OutlinedButton.icon(
-                      onPressed: onSimilarSearch,
-                      icon: const Icon(Icons.tune),
-                      label: const Text('Buscar similares'),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: onMoreInfoPressed,
+                        icon: const Icon(BootstrapIcons.whatsapp),
+                        label: const Text('Quero mais informacoes'),
+                      ),
                     ),
                   ],
                 ),
@@ -1024,28 +1221,158 @@ class _FeaturedPropertyCard extends StatelessWidget {
     }
     return 'R\$ ${buffer.toString()}';
   }
+}
+
+class _FeaturedPropertiesEmptyState extends StatelessWidget {
+  const _FeaturedPropertiesEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: DSColors.surfaceContainer,
+        borderRadius: DSRadius.md,
+        border: Border.all(color: DSColors.outline),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(DSSpacing.lg),
+        child: Row(
+          children: <Widget>[
+            const Icon(Icons.tune, color: DSColors.primary),
+            const SizedBox(width: DSSpacing.sm),
+            Expanded(
+              child: Text(
+                'Nenhum destaque encontrado nessa faixa de valor.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: DSColors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PropertyLocationText extends StatelessWidget {
+  const _PropertyLocationText({required this.property});
+
+  final FeaturedPropertyEntity property;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        const Icon(
+          Icons.location_on_outlined,
+          size: 17,
+          color: DSColors.onSurfaceVariant,
+        ),
+        const SizedBox(width: DSSpacing.xxs),
+        Expanded(
+          child: Text(
+            _formatPropertyLocation(property),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: DSColors.onSurfaceVariant,
+              height: 1.2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PropertyFacts extends StatelessWidget {
+  const _PropertyFacts({required this.property});
+
+  final FeaturedPropertyEntity property;
+
+  @override
+  Widget build(BuildContext context) {
+    final facts = <_PropertyFact>[
+      _PropertyFact(
+        icon: Icons.square_foot_outlined,
+        label: '${property.areaM2} m2',
+      ),
+      if (property.bedrooms != null)
+        _PropertyFact(
+          icon: Icons.bed_outlined,
+          label: '${property.bedrooms} quartos',
+        ),
+      _PropertyFact(
+        icon: Icons.bathtub_outlined,
+        label: '${property.bathrooms} banheiros',
+      ),
+      _PropertyFact(
+        icon: Icons.directions_car_outlined,
+        label: '${property.garageSpaces} vagas',
+      ),
+      _PropertyFact(
+        icon: Icons.calendar_month_outlined,
+        label: _formatPropertyAge(property),
+      ),
+    ];
+
+    return Wrap(
+      spacing: DSSpacing.md,
+      runSpacing: DSSpacing.sm,
+      children: facts
+          .map((fact) => _PropertyFactItem(icon: fact.icon, label: fact.label))
+          .toList(),
+    );
+  }
 
   String _formatPropertyAge(FeaturedPropertyEntity property) {
-    if (property.propertyAgeYears <= 1) return 'Lançamento';
+    if (property.propertyAgeYears <= 1) return 'Lancamento';
     return '${property.propertyAgeYears} anos';
   }
 }
 
-class _FactChip extends StatelessWidget {
-  const _FactChip({required this.label});
+class _PropertyFact {
+  const _PropertyFact({required this.icon, required this.label});
 
+  final IconData icon;
+  final String label;
+}
+
+class _PropertyFactItem extends StatelessWidget {
+  const _PropertyFactItem({required this.icon, required this.label});
+
+  final IconData icon;
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
-      backgroundColor: DSColors.surfaceContainerHigh,
-      side: const BorderSide(color: DSColors.outline),
-      shape: const RoundedRectangleBorder(borderRadius: DSRadius.sm),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, size: 16, color: DSColors.onSurfaceVariant),
+        const SizedBox(width: DSSpacing.xxs),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: DSColors.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
+}
+
+String _formatPropertyLocation(FeaturedPropertyEntity property) {
+  final locationParts = <String>[
+    if (property.subNeighborhood.trim().isNotEmpty)
+      property.subNeighborhood.trim(),
+    property.neighborhood.trim(),
+    property.city.trim(),
+  ].where((part) => part.isNotEmpty).toList();
+
+  return locationParts.join(' · ');
 }
 
 class _VideoSection extends StatelessWidget {
