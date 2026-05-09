@@ -106,19 +106,38 @@ Padrao de uso:
 - `context.isDesktopLayout`/`context.isMobileLayout` estao disponiveis para decisao de grid/coluna.
 - Tokens de espacamento e radius via `DSSpacing` e `DSRadius`.
 
-## 9) Dependencias por responsabilidade
-### 9.1) App principal
+## 9) Organizacao de widgets e componentes
+Regra de decisao:
+- Alta repeticao, pouca logica e nenhuma dependencia de dominio: mover para `packages/design_system`.
+- Logica de tela, entidades da feature, copy de negocio ou callbacks do controller: manter em `lib/app/presentation/<module>/pages/<feature>/widgets/`.
+- Logica pura de transformacao/filtro fica como helper local da feature; se virar regra de negocio compartilhada, mover para domain/usecase.
+
+### 9.1) Design system
+- Nao depende de entities, controllers, usecases, rotas, injectors ou assets do app.
+- Recebe dados por parametros primitivos, callbacks e widgets filhos.
+- Pode conter infraestrutura visual reutilizavel, como cards base, grids responsivos, wrappers de media/embed e componentes de layout.
+- Componentes publicos devem usar prefixo `DS` e ser exportados por `packages/design_system/lib/design_system.dart`.
+
+### 9.2) Widgets de feature
+- Podem conhecer entities, textos de negocio e decisoes especificas da tela.
+- Devem ser agrupados por contexto de uso, por exemplo `widgets/search`, `widgets/video`, `widgets/navigation` e `widgets/featured_properties`.
+- A page principal deve ficar como orquestradora: le estado, chama controller e compoe secoes.
+- Widgets continuam respeitando o fluxo `widget -> controller -> useCase -> repository -> datasource`.
+
+## 10) Dependencias por responsabilidade
+### 10.1) App principal
 - `legend_core`
 - `design_system`
 - Dependencias de produto devem ficar no app apenas quando houver uso real na feature.
 
-### 9.2) Design system
+### 10.2) Design system
 - Dependencias de layout/design: `responsive_framework`, `flutter_svg`, `cached_network_image`, `cupertino_icons`.
+- Dependencias de media/embed so entram aqui quando forem wrappers visuais reutilizaveis e nao carregarem regra de negocio do app.
 
-### 9.3) Core
+### 10.3) Core
 - Dependencias estruturais do core ficam em `packages/core`, como `dio` para requests cancelaveis e `logger` para mixins de log.
 
-## 10) Backlog spec-driven (proximas fases)
+## 11) Backlog spec-driven (proximas fases)
 - Spec 1: Home showcase com dados reais e filtros iniciais.
 - Spec 2: Catalogo residencial.
 - Spec 3: Catalogo comercial.
@@ -126,7 +145,7 @@ Padrao de uso:
 - Spec 5: Fluxo Anunciar imovel.
 - Spec 6: Observabilidade, performance web e testes.
 
-## 11) Template de spec
+## 12) Template de spec
 ```md
 # Spec X.Y - <titulo>
 
@@ -166,7 +185,7 @@ Padrao de uso:
 - Integracao:
 ```
 
-## 12) Definition of Done por spec
+## 13) Definition of Done por spec
 - Fluxo arquitetural respeitado (`widget -> controller -> useCase -> repository -> datasource`).
 - Nenhum acesso HTTP direto em widget/controller.
 - Funciona em viewport mobile e desktop.

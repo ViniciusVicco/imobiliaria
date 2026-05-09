@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-class WeightedField extends StatelessWidget {
-  const WeightedField({
+class DSWeightedField extends StatelessWidget {
+  const DSWeightedField({
     super.key,
     required this.flex,
     required this.builder,

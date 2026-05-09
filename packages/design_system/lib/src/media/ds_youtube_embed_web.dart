@@ -14,7 +14,7 @@ Widget buildYoutubeEmbed({
 }) {
   if (embedUrl.isEmpty) return fallback;
 
-  final viewType = 'youtube-embed-${embedUrl.hashCode}';
+  final viewType = 'ds-youtube-embed-${embedUrl.hashCode}';
   if (_registeredViewTypes.add(viewType)) {
     ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
       return html.IFrameElement()
