@@ -4,6 +4,7 @@ import 'package:imobiliaria/app/domain/property_segments/usecases/build_property
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_featured_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_home_brand_content_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/resolve_property_segment_route_use_case.dart';
+import 'package:imobiliaria/app/presentation/main/main_routes.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_store.dart';
 import 'package:legend_core/legend_core.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -56,6 +57,10 @@ class PropertySegmentsHomeController extends Controller {
 
   void updateSegment(PropertySegment segment) {
     store.setFilters(store.filters.copyWith(segment: segment));
+  }
+
+  void onLoginPressed() {
+    _navigator.pushNamed(MainRoutes.login);
   }
 
   Future<void> onSearchSubmitted() async {

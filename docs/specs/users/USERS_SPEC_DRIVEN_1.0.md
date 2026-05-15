@@ -150,9 +150,10 @@ Camadas previstas:
 - `lib/app/domain/users/usecases/`
 - `lib/app/data/users/datasources/`
 - `lib/app/data/users/repositories/`
-- `lib/app/presentation/main/pages/auth/`
+- `lib/app/presentation/authentication/`
 - `lib/app/presentation/main/pages/admin/`
 - `lib/app/presentation/main/pages/broker/`
+- `lib/app/presentation/main/widgets/auth/` para guards usados pelas areas restritas.
 
 ## Plano tecnico
 1. Configurar Firebase no Flutter Web com `firebase_core`, `firebase_auth`, `cloud_firestore` e `cloud_functions`.
@@ -165,6 +166,21 @@ Camadas previstas:
 8. Criar placeholders protegidos para `/broker` e `/admin`.
 9. Criar Cloud Functions administrativas para criar usuario, alterar role, ativar/desativar e sincronizar Custom Claims.
 10. Criar Firestore Security Rules bloqueando acesso indevido por role, `uid`, `brokerId` e `isActive`.
+
+## Steps iniciais de implementacao
+1. Validar `lib/firebase_options.dart` com as credenciais Web do projeto `seletta-imobiliaria`.
+2. Inicializar Firebase no `main.dart` antes do `ModuleApp`.
+3. Criar as camadas `users/auth` seguindo `widget -> controller -> useCase -> repository -> datasource`.
+4. Implementar login por email/senha com Firebase Auth.
+5. Montar a sessao atual com `uid`, `email`, `role` e `isActive` lendo o perfil em `users/{uid}`.
+6. Criar guard central para `/broker/*` e `/admin/*`, usando a sessao atual e matriz de permissoes.
+7. Criar `/login` e placeholders protegidos para `/broker` e `/admin`.
+8. Deixar CRUD de usuarios, Cloud Functions administrativas e rules completas para o proximo incremento.
+
+Decisao de modularizacao inicial:
+- Login e fluxo visual de autenticacao ficam em `AuthenticationModule`.
+- `MainModule` registra os use cases de sessao necessarios para guards de `/broker/*` e `/admin/*`.
+- `AuthenticationModule` usa o `AppNavigator` do `MainModule` para voltar ao destino protegido apos login.
 
 ## Regras de seguranca
 - O Flutter nunca pode escrever `role`, `isActive` ou claims diretamente sem passar por operacao administrativa protegida.

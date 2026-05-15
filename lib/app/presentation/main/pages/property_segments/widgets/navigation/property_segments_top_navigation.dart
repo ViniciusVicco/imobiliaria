@@ -11,6 +11,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
     required this.onAboutPressed,
     required this.onMissionPressed,
     required this.onWhatsappPressed,
+    required this.onLoginPressed,
   });
 
   final VoidCallback onNewDevelopmentsPressed;
@@ -18,6 +19,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
   final VoidCallback onAboutPressed;
   final VoidCallback onMissionPressed;
   final VoidCallback onWhatsappPressed;
+  final VoidCallback onLoginPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
                 final whatsappButton = _WhatsappButton(
                   onPressed: onWhatsappPressed,
                 );
+                final loginButton = _LoginButton(onPressed: onLoginPressed);
 
                 if (isCompact) {
                   return Column(
@@ -58,7 +61,12 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
                     children: <Widget>[
                       Center(child: logo),
                       const SizedBox(height: DSSpacing.sm),
-                      Center(child: whatsappButton),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: DSSpacing.sm,
+                        runSpacing: DSSpacing.xs,
+                        children: <Widget>[whatsappButton, loginButton],
+                      ),
                       const SizedBox(height: DSSpacing.md),
                       links,
                     ],
@@ -71,7 +79,14 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
                     const SizedBox(width: DSSpacing.lg),
                     Expanded(child: Center(child: links)),
                     const SizedBox(width: DSSpacing.lg),
-                    whatsappButton,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        whatsappButton,
+                        const SizedBox(width: DSSpacing.sm),
+                        loginButton,
+                      ],
+                    ),
                   ],
                 );
               },
@@ -210,6 +225,31 @@ class _WhatsappButton extends StatelessWidget {
       ),
       icon: const Icon(BootstrapIcons.whatsapp),
       label: const Text('Contate-nos'),
+    );
+  }
+}
+
+class _LoginButton extends StatelessWidget {
+  const _LoginButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 46),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DSSpacing.md,
+          vertical: DSSpacing.sm,
+        ),
+        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      icon: const Icon(Icons.login),
+      label: const Text('Entrar'),
     );
   }
 }
