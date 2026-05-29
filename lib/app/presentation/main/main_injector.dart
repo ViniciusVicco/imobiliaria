@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:imobiliaria/app/data/users/datasources/auth_datasource.dart';
 import 'package:imobiliaria/app/data/users/repositories/auth_repository.dart';
 import 'package:imobiliaria/app/data/property_segments/datasources/property_segments_datasource.dart';
@@ -15,6 +16,7 @@ import 'package:imobiliaria/app/presentation/main/pages/property_segments/proper
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_store.dart';
 import 'package:imobiliaria/app/presentation/main/widgets/auth/auth_guard_controller.dart';
 import 'package:imobiliaria/app/presentation/main/widgets/auth/auth_guard_store.dart';
+import 'package:imobiliaria/env/rest_base_enviroment.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
@@ -43,6 +45,15 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
   @override
   void core() {
     registerSingleton<AppNavigator>(Module.get<MainModule>().navigator);
+    registerFactory(
+      () => RestClient(
+        options: BaseOptions(
+          baseUrl: RestBaseEnviroment.baseEnv.baseUrl,
+          connectTimeout: const Duration(seconds: 2),
+          receiveTimeout: const Duration(seconds: 5),
+        ),
+      ),
+    );
   }
 
   @override
@@ -53,7 +64,9 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
 
   @override
   void datasources() {
-    registerFactory(() => PropertySegmentsDatasource());
+    registerFactory(
+      () => PropertySegmentsDatasource(restClient: get<RestClient>()),
+    );
     registerFactory(() => AuthDatasource());
   }
 
@@ -64,9 +77,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         datasource: get<PropertySegmentsDatasource>(),
       ),
     );
-    registerFactory(
-      () => AuthRepository(datasource: get<AuthDatasource>()),
-    );
+    registerFactory(() => AuthRepository(datasource: get<AuthDatasource>()));
   }
 
   @override
@@ -91,9 +102,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         repository: get<PropertySegmentsRepository>(),
       ),
     );
-    registerFactory(
-      () => LogoutUseCase(repository: get<AuthRepository>()),
-    );
+    registerFactory(() => LogoutUseCase(repository: get<AuthRepository>()));
     registerFactory(
       () => GetCurrentUserSessionUseCase(repository: get<AuthRepository>()),
     );

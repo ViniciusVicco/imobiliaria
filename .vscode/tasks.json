@@ -2,184 +2,49 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Launcher",
+      "label": "front-end-local",
       "type": "shell",
-      "command": "powershell",
+      "command": "flutter",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1"
+        "run",
+        "-d",
+        "chrome",
+        "--web-port",
+        "8080"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
+      "isBackground": true,
       "problemMatcher": [],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "focus": true,
+        "focus": false,
         "panel": "dedicated",
         "clear": true
       }
     },
     {
-      "label": "Flutter: Run Chrome",
+      "label": "back-end-local",
       "type": "shell",
-      "command": "powershell",
+      "command": "npm.cmd",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "run-chrome"
+        "run",
+        "dev"
       ],
       "options": {
-        "cwd": "${workspaceFolder}"
+        "cwd": "${workspaceFolder}/backend"
       },
-      "problemMatcher": []
-    },
-    {
-      "label": "Flutter: Run Windows",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "run-windows"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Flutter: Pub Get All",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "pub-get-all"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Dart: Analyze All",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "analyze-all"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": "$dart-analyzer"
-    },
-    {
-      "label": "Dart: Format Check",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "format-check"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Flutter: Test",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "test"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Flutter: Build Web",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "build-web"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Project: Verify All",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "verify"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": "$dart-analyzer"
-    },
-    {
-      "label": "Dart: Fix Dry Run",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/task-launcher.ps1",
-        "fix-dry-run"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ]
 }

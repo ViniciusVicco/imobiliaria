@@ -265,7 +265,7 @@ packages:
     source: path
     version: "0.1.0"
   dio:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: dio
       sha256: aff32c08f92787a557dd5c0145ac91536481831a01b4648136373cddb0e64f8c

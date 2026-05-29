@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  uid       String   @id
+  name      String
+  email     String   @unique
+  phone     String?
+  role      UserRole
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  updatedBy String?  @map("updated_by")
+
+  properties Property[] @relation("BrokerProperties")
+
+  @@map("users")
+}
+
+model BrandContent {
+  id                String   @id
+  mission           String
+  about             String
+  contactPhone      String   @map("contact_phone")
+  contactEmail      String   @map("contact_email")
+  contactWhatsapp   String   @map("contact_whatsapp")
+  videoProvider     String   @map("video_provider")
+  videoTitle        String   @map("video_title")
+  videoThumbnailUrl String   @map("video_thumbnail_url")
+  videoUrl          String   @map("video_url")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("brand_content")
+}
+
+model Property {
+  id               String         @id
+  brokerUid        String?        @map("broker_uid")
+  title            String
+  description      String?
+  segment          PropertySegment
+  propertyType     String         @map("property_type")
+  city             String
+  neighborhood     String
+  subNeighborhood  String?        @map("sub_neighborhood")
+  coverUrl         String         @map("cover_url")
+  areaM2           Int?           @map("area_m2")
+  bedrooms         Int?
+  bathrooms        Int?
+  garageSpaces     Int?           @map("garage_spaces")
+  propertyAgeYears Int?           @map("property_age_years")
+  price            Int?
+  status           PropertyStatus @default(draft)
+  isFeatured       Boolean        @default(false) @map("is_featured")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  broker User?           @relation("BrokerProperties", fields: [brokerUid], references: [uid])
+  media  PropertyMedia[]
+
+  @@index([status, isFeatured])
+  @@index([city, segment, propertyType])
+  @@index([neighborhood])
+  @@index([subNeighborhood])
+  @@map("properties")
+}
+
+model PropertyMedia {
+  id         String    @id
+  propertyId String    @map("property_id")
+  url        String
+  type       MediaType
+  sortOrder  Int       @default(0) @map("sort_order")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, sortOrder])
+  @@map("property_media")
+}
+
+enum UserRole {
+  admin
+  broker
+}
+
+enum PropertySegment {
+  residential
+  commercial
+  investments
+}
+
+enum PropertyStatus {
+  draft
+  published
+  sold
+  inactive
+}
+
+enum MediaType {
+  image
+  video
+  thumbnail
+}
