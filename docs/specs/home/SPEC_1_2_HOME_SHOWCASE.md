@@ -6,7 +6,8 @@
 - Reason for new version: the Home is no longer only a segment grid with initial filters. It becomes a brand showcase with a search entry point, featured properties, institutional sections, and a video block.
 - Historical rule: keep previous specs as context; create a new spec when product direction changes layout, routing, or user intent.
 - 2026-04-29 update: Home search was reduced for a local Palmas-TO experience. The Home now shows only the essential search controls by default and moves bedrooms, bathrooms, garage spaces, price, and keyword into `Mais filtros`.
-- 2026-05-29 update: Home data source moved from local mocks-first to HTTP API-first through `RestClient`, with mock fallback for local development when backend is offline.
+- 2026-05-29 update: Home data source moved from local mocks-first to HTTP API-first through `RestClient`.
+- 2026-05-30 update: official public segments were consolidated to `residential` and `commercial`; `Na planta` moved from segment/type to the `tag=na-planta` filter.
 
 ## Context
 The Home should present Seletta as a real estate brand before pushing the user into a full listing experience.
@@ -33,20 +34,20 @@ The product is local to Palmas, Tocantins. Search copy, quick filters, and hidde
   - Add quick local chips for common Palmas searches.
   - Keep advanced filters collapsed behind `Mais filtros`.
   - Navigate search submit to `/search` with query parameters.
-  - Make `Novidades na planta` navigate to the same search flow with investment/new-development filters preselected.
+  - Make `Novidades na planta` navigate to the same search flow with the `na-planta` tag preselected.
   - Render featured property cards on Home.
   - Add a Seletta video section using the initial YouTube URL.
   - Add lower-page cards for contact, about, and mission details.
 - Out of scope:
   - Full implementation of advanced `/search` page grid.
-  - SEO strategy for investment landing pages.
+  - SEO strategy for `Na planta` landing pages.
   - Lead capture, favorite, compare, financing simulation, and property detail page.
   - Real CMS/admin editing for institutional content.
 
 ## Routes
 - `/home`: showcase page.
 - `/search`: search results destination.
-- `/investments`: remains available for investment-related navigation, but `Novidades na planta` initially uses `/search` with preselected investment filters.
+- `/investments`: remains available temporarily for compatibility, but `Novidades na planta` uses `/search?city=Palmas&tag=na-planta`.
 
 ## Backend Integration
 Local backend base URL:
@@ -71,14 +72,15 @@ Flutter integration rules:
 - Endpoint paths are centralized in `PropertySegmentsEndpoints`.
 - Controller/usecase/repository boundaries remain unchanged.
 - Repository keeps mapping external errors to `Failure`.
-- Mocks under `assets/mocks/` remain as local fallback while the backend is optional during development.
+- Mocks under `assets/mocks/` remain in the repository as reference data only; API failures render an error state.
 
 ## Search Behavior
 ### Home Search Fields
 - `blockOrNeighborhood`: bairro, quadra ou condominio.
 - `city`: hidden and defaulted to `Palmas`.
-- `segment`: `residential`, `commercial`, `investments`.
+- `segment`: `residential`, `commercial`.
 - `propertyType`: enabled and option-driven by selected `segment`.
+- `tag`: optional visual/filter helper such as `na-planta`, `alta-rentabilidade`, or `entrada-reduzida`.
 
 Default visible controls:
 - `blockOrNeighborhood`
@@ -122,10 +124,6 @@ Collapsed advanced fields under `Mais filtros`:
 - Coworking
 - Consultorio
 
-#### Investments
-- Oportunidades na planta
-- Proximos de entregar
-
 ### Submit Contract
 When the user submits the Home search:
 - Controller validates and normalizes the selected filters.
@@ -145,7 +143,7 @@ Hidden city example:
 
 `Novidades na planta` behavior:
 ```txt
-/search?segment=investments&propertyType=new-development
+/search?city=Palmas&tag=na-planta
 ```
 
 ## Featured Cards
@@ -156,7 +154,8 @@ Each card should support:
 - Title.
 - Location summary.
 - Property type.
-- Segment: residential, commercial, or investments.
+- Segment: residential or commercial.
+- Tags: render up to 3 visual tags from `tags`, when present.
 - Area in square meters.
 - Bedrooms, when applicable.
 - Bathrooms.
@@ -169,7 +168,7 @@ For commercial cards, bedroom count can be omitted.
 
 ## Institutional Sections
 ### Top Navigation
-- `Novidades na planta`: navigates to `/search?segment=investments&propertyType=new-development`.
+- `Novidades na planta`: navigates to `/search?city=Palmas&tag=na-planta`.
 - `Contatos`: scrolls to the contact card near the bottom of Home.
 - `Sobre nos`: scrolls to the about card near the bottom of Home.
 - `Missao`: scrolls to the mission card near the bottom of Home.
@@ -205,20 +204,19 @@ These cards are the target of top navigation scroll actions.
 
 ## Functional Requirements
 1. Home displays top navigation with all required entries.
-2. Clicking `Novidades na planta` opens `/search` with investment/new-development filters selected.
+2. Clicking `Novidades na planta` opens `/search` with `tag=na-planta`.
 3. Clicking `Contatos`, `Sobre nos`, or `Missao` scrolls to the corresponding lower Home card.
 4. Home displays a short brand message before the search block.
 5. Home displays a search/filter block with the required fields.
 6. City field exists in the filter contract, defaults to `Palmas`, and is visually hidden.
 7. Selecting `residential` enables residential property types.
 8. Selecting `commercial` enables commercial property types.
-9. Selecting `investments` enables investment property types.
-10. Submitting search navigates to `/search` with route-safe query parameters.
-11. Home displays featured cards with cover photo and core property facts.
-12. Home displays a Seletta video section.
-13. Home displays lower explicit cards for contact, about, and mission.
-14. Home keeps advanced filters collapsed until the user clicks `Mais filtros`.
-15. Quick local chips apply filters and navigate to `/search`.
+9. Submitting search navigates to `/search` with route-safe query parameters.
+10. Home displays featured cards with cover photo, core property facts, and up to 3 tags.
+11. Home displays a Seletta video section.
+12. Home displays lower explicit cards for contact, about, and mission.
+13. Home keeps advanced filters collapsed until the user clicks `Mais filtros`.
+14. Quick local chips apply filters and navigate to `/search`.
 
 ## Non-Functional Requirements
 1. Responsive layout for mobile and desktop using `design_system`.
@@ -237,6 +235,7 @@ These cards are the target of top navigation scroll actions.
   "city": "Palmas",
   "segment": "residential",
   "propertyType": "apartment",
+  "tag": "",
   "bedroomsMin": 2,
   "bathroomsMin": 1,
   "garageSpacesMin": 1,
@@ -252,6 +251,7 @@ These cards are the target of top navigation scroll actions.
   "title": "Apartamento com varanda gourmet",
   "segment": "residential",
   "propertyType": "apartment",
+  "tags": ["pronto-para-morar"],
   "city": "Sao Paulo",
   "neighborhood": "Pinheiros",
   "coverUrl": "https://...",
@@ -280,18 +280,18 @@ These cards are the target of top navigation scroll actions.
 
 ## Acceptance Criteria (Given/When/Then)
 1. Given user opens `/home`, when the page renders, then top navigation, brand message, search block, featured cards, video, and lower brand cards are visible.
-2. Given user clicks `Novidades na planta`, when navigation completes, then `/search` opens with `segment=investments` and `propertyType=new-development`.
+2. Given user clicks `Novidades na planta`, when navigation completes, then `/search` opens with `city=Palmas` and `tag=na-planta`.
 3. Given user clicks `Missao`, when the action runs, then the page scrolls to the mission card.
 4. Given user selects `residential`, when property type options open, then only residential types are shown.
 5. Given user selects `commercial`, when property type options open, then only commercial types are shown.
-6. Given user selects `investments`, when property type options open, then only investment types are shown.
-7. Given city exists in state, when Home renders, then city is not shown as a visible control.
-8. Given user submits search, when filters are valid, then app navigates to `/search` with deterministic query params.
-9. Given mobile viewport, when Home renders, then search controls stack without overflow.
-10. Given desktop viewport, when Home renders, then featured cards use a multi-column layout.
-11. Given Home loads, when user has not opened advanced filters, then bedrooms, bathrooms, garage spaces, price, and keyword are hidden.
-12. Given user clicks `Mais filtros`, when the panel opens, then advanced filters are available without changing current filters.
-13. Given user clicks a local quick chip, when navigation completes, then `/search` opens with the chip filter applied.
+6. Given city exists in state, when Home renders, then city is not shown as a visible control.
+7. Given user submits search, when filters are valid, then app navigates to `/search` with deterministic query params.
+8. Given mobile viewport, when Home renders, then search controls stack without overflow.
+9. Given desktop viewport, when Home renders, then featured cards use a multi-column layout.
+10. Given Home loads, when user has not opened advanced filters, then bedrooms, bathrooms, garage spaces, price, and keyword are hidden.
+11. Given user clicks `Mais filtros`, when the panel opens, then advanced filters are available without changing current filters.
+12. Given user clicks a local quick chip, when navigation completes, then `/search` opens with the chip filter applied.
+13. Given a featured property has more than 3 tags, when the card renders, then only the first 3 are shown.
 
 ## Technical Plan
 - Affected layers:
@@ -335,7 +335,7 @@ These cards are the target of top navigation scroll actions.
 - Home search can become too dense for mobile.
 - Hidden city field may be forgotten in query mapping.
 - Local Palmas chips may become outdated as business priorities change.
-- Investment pages may need SEO-specific route strategy later.
+- `Na planta` pages may need SEO-specific route strategy later.
 - Commercial/residential filters share similar controls but differ in meaning.
 - YouTube embed may add performance cost if loaded immediately.
 
@@ -343,7 +343,7 @@ These cards are the target of top navigation scroll actions.
 - Use compact controls and progressive disclosure on mobile.
 - Keep a single filter entity with explicit defaults.
 - Keep quick chips as presentation-level shortcuts backed by the same filter entity.
-- Treat `/search` as functional route now and revisit `/investments` SEO strategy in a dedicated spec.
+- Treat `/search` as functional route now and revisit `/investments`/`Na planta` SEO strategy in a dedicated spec.
 - Allow card facts to be optional per segment.
 - Render video as thumbnail/CTA first; defer embed.
 
@@ -352,7 +352,7 @@ These cards are the target of top navigation scroll actions.
   - Search query use case maps filters to stable query params.
   - Residential property types are returned only for residential segment.
   - Commercial property types are returned only for commercial segment.
-  - Investment property types are returned only for investments segment.
+  - Tag shortcut `Na planta` maps to `/search?city=Palmas&tag=na-planta`.
   - Repository maps featured property payloads and errors to `DualResponse`.
 - Widget:
   - Home renders required sections.
@@ -365,7 +365,7 @@ These cards are the target of top navigation scroll actions.
   - Navigation links trigger expected controller actions.
 - Integration:
   - Submit Home search and land on `/search` with expected query params.
-  - Click `Novidades na planta` and land on `/search?segment=investments&propertyType=new-development`.
+  - Click `Novidades na planta` and land on `/search?city=Palmas&tag=na-planta`.
   - Click lower-section nav links and verify scroll target.
 
 ## Rollout Strategy
@@ -373,14 +373,14 @@ These cards are the target of top navigation scroll actions.
 2. Build Home layout sections with static/mock data through repository. [done]
 3. Add search query mapping and `/search` placeholder route. [done]
 4. Wire top navigation scroll and `Novidades na planta`. [done]
-5. Serve Home content from backend Node/PostgreSQL with mock fallback. [done]
+5. Serve Home content from backend Node/PostgreSQL with controlled error state when API is unavailable. [done]
 6. Integrate `/search` page with `GET /api/v1/properties/search`. [next]
 7. Validate mobile/desktop layout and accessibility basics.
 
 ## Definition of Done (Spec 1.2)
 - Home structure matches the sketch: nav, mission/message, search, highlights, video, brand cards.
 - Search submits to `/search` with stable query params.
-- `Novidades na planta` preselects investment/new-development filters.
+- `Novidades na planta` preselects `tag=na-planta`.
 - Segment selection controls property type options.
 - City exists in filter state/query contract as `Palmas` but is hidden.
 - Home search defaults to compact local Palmas controls.

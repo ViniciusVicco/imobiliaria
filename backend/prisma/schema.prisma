@@ -48,6 +48,7 @@ model Property {
   description      String?
   segment          PropertySegment
   propertyType     String         @map("property_type")
+  tagSlugs         String[]       @default([]) @map("tag_slugs")
   city             String
   neighborhood     String
   subNeighborhood  String?        @map("sub_neighborhood")
@@ -73,6 +74,17 @@ model Property {
   @@map("properties")
 }
 
+model PropertyTag {
+  slug        String  @id
+  label       String
+  description String
+  isActive    Boolean @default(true) @map("is_active")
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  @@index([isActive, sortOrder])
+  @@map("property_tags")
+}
+
 model PropertyMedia {
   id         String    @id
   propertyId String    @map("property_id")
@@ -95,7 +107,6 @@ enum UserRole {
 enum PropertySegment {
   residential
   commercial
-  investments
 }
 
 enum PropertyStatus {

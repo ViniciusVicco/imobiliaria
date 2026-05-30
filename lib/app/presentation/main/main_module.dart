@@ -62,9 +62,9 @@ class MainModule extends Module {
           'Catalog for houses, apartments and family-oriented properties.',
     ),
     MainRoutes.investments: (context, arguments) => const SegmentDetailsPage(
-      title: 'Investment Assets',
+      title: 'Novidades na planta',
       description:
-          'Catalog for investment opportunities and upcoming projects.',
+          'Rota temporaria para oportunidades com tag na planta. A busca publica usa /search?city=Palmas&tag=na-planta.',
     ),
     MainRoutes
         .announceProperty: (context, arguments) => const SegmentDetailsPage(

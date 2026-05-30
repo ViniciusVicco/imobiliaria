@@ -34,6 +34,8 @@ Firebase Auth continua como provedor de identidade no primeiro momento. O backen
 - Banco local validado com `seletta_local` e `seletta_shadow`.
 - Prisma migration e seed executados com sucesso.
 - Seed populou `brand_content` e 9 registros iniciais em `properties`.
+- Segmentos publicos foram consolidados em `residential` e `commercial`.
+- `Na planta` e demais destaques comerciais foram movidos para tags (`tag_slugs`) com catalogo `property_tags`.
 - VS Code possui tasks/launch:
   - `front-end-local`
   - `back-end-local`
@@ -149,6 +151,7 @@ Resposta:
       "title": "Apartamento com varanda gourmet",
       "segment": "residential",
       "propertyType": "Apartamento",
+      "tags": ["pronto-para-morar"],
       "city": "Palmas",
       "neighborhood": "Plano Diretor Sul",
       "subNeighborhood": "706 Sul",
@@ -170,8 +173,9 @@ Publico.
 
 Query params:
 - `city`: default `Palmas`.
-- `segment`: `residential`, `commercial`, `investments`.
+- `segment`: `residential`, `commercial`.
 - `propertyType`.
+- `tag`: filtra por slug visual, por exemplo `na-planta`.
 - `blockOrNeighborhood`.
 - `query`.
 - `bedroomsMin`.
@@ -186,6 +190,8 @@ Regra:
 - retornar apenas `status=published`.
 - `blockOrNeighborhood` deve buscar em `neighborhood` e `subNeighborhood`.
 - `query` deve buscar em titulo e descricao.
+- `segment=investments` deve ser aceito temporariamente e normalizado para `tag=na-planta`.
+- respostas publicas retornam no maximo 3 tags por imovel.
 
 Resposta:
 ```json
@@ -420,6 +426,7 @@ Regras:
 - `description`.
 - `segment`.
 - `property_type`.
+- `tag_slugs`: array de slugs visuais, ex: `na-planta`, `alta-rentabilidade`.
 - `city`.
 - `neighborhood`.
 - `sub_neighborhood`.
@@ -441,6 +448,13 @@ Regras:
 - `type`.
 - `sort_order`.
 - `created_at`.
+
+### `property_tags`
+- `slug` primary key.
+- `label`.
+- `description`.
+- `is_active`.
+- `sort_order`.
 
 ### `brand_content`
 - `id` primary key.

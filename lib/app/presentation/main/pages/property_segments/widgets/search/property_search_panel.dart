@@ -32,6 +32,23 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
 
   bool get isWide => MediaQuery.of(context).size.width >= 920;
 
+  @override
+  void didUpdateWidget(covariant PropertySearchPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.filters.query != widget.filters.query &&
+        widget.queryController.text != widget.filters.query) {
+      widget.queryController.text = widget.filters.query;
+    }
+
+    if (oldWidget.filters.blockOrNeighborhood !=
+            widget.filters.blockOrNeighborhood &&
+        widget.blockOrNeighborhoodController.text !=
+            widget.filters.blockOrNeighborhood) {
+      widget.blockOrNeighborhoodController.text =
+          widget.filters.blockOrNeighborhood;
+    }
+  }
+
   Widget buildVerticalPadding({required Widget child}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -78,6 +95,7 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                     flex: 2,
                     builder: (context) => buildVerticalPadding(
                       child: _SegmentDropdown(
+                        key: ValueKey(widget.filters.segment.value),
                         value: widget.filters.segment,
                         onChanged: widget.onSegmentChanged,
                       ),
@@ -87,10 +105,17 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                     flex: 2,
                     builder: (context) => buildVerticalPadding(
                       child: _PropertyTypeDropdown(
+                        key: ValueKey(
+                          '${widget.filters.segment.value}-${widget.filters.propertyType.value}',
+                        ),
                         value: widget.filters.propertyType,
                         options: widget.filters.segment.propertyTypes,
                         onChanged: (value) => widget.onFiltersChanged(
-                          widget.filters.copyWith(propertyType: value),
+                          widget.filters.copyWith(
+                            propertyType: value,
+                            tag: '',
+                            tagOnly: false,
+                          ),
                         ),
                       ),
                     ),
@@ -153,6 +178,15 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
               onLocationSelected: _selectLocation,
               onFiltersSelected: _selectQuickFilters,
             ),
+            if (widget.filters.tag.trim().isNotEmpty) ...<Widget>[
+              const SizedBox(height: DSSpacing.sm),
+              _ActiveTagFilter(
+                tag: widget.filters.tag,
+                onDeleted: () => widget.onFiltersChanged(
+                  widget.filters.copyWith(tag: '', tagOnly: false),
+                ),
+              ),
+            ],
             const SizedBox(height: DSSpacing.sm),
             Align(
               alignment: Alignment.centerLeft,
@@ -263,11 +297,17 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
   void _updateNeighborhood(String value) {
     widget.blockOrNeighborhoodController.text = value;
     widget.onFiltersChanged(
-      widget.filters.copyWith(blockOrNeighborhood: value),
+      widget.filters.copyWith(
+        blockOrNeighborhood: value,
+        tag: '',
+        tagOnly: false,
+      ),
     );
   }
 
   void _selectQuickFilters(PropertySearchFiltersEntity filters) {
+    widget.queryController.text = filters.query;
+    widget.blockOrNeighborhoodController.text = filters.blockOrNeighborhood;
     widget.onFiltersChanged(filters);
     widget.onSubmit();
   }
@@ -355,6 +395,7 @@ class _QuickFilterChips extends StatelessWidget {
             const PropertySearchFiltersEntity(
               segment: PropertySegment.residential,
               propertyType: ResidentialPropertyType.condominiumHouse,
+              tagOnly: false,
             ),
           ),
         ),
@@ -362,8 +403,8 @@ class _QuickFilterChips extends StatelessWidget {
           label: 'Na planta',
           onPressed: () => onFiltersSelected(
             const PropertySearchFiltersEntity(
-              segment: PropertySegment.investments,
-              propertyType: InvestmentPropertyType.newDevelopment,
+              tag: 'na-planta',
+              tagOnly: true,
             ),
           ),
         ),
@@ -394,8 +435,41 @@ class _QuickFilterChip extends StatelessWidget {
   }
 }
 
+class _ActiveTagFilter extends StatelessWidget {
+  const _ActiveTagFilter({required this.tag, required this.onDeleted});
+
+  final String tag;
+  final VoidCallback onDeleted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: DSSpacing.xs,
+      runSpacing: DSSpacing.xs,
+      children: <Widget>[
+        Chip(
+          label: Text(_tagLabel(tag)),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: onDeleted,
+          side: const BorderSide(color: DSColors.outline),
+          shape: const RoundedRectangleBorder(borderRadius: DSRadius.sm),
+          backgroundColor: DSColors.primary,
+          labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: DSColors.onPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _SegmentDropdown extends StatelessWidget {
-  const _SegmentDropdown({required this.value, required this.onChanged});
+  const _SegmentDropdown({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
 
   final PropertySegment value;
   final ValueChanged<PropertySegment> onChanged;
@@ -426,6 +500,7 @@ class _SegmentDropdown extends StatelessWidget {
 
 class _PropertyTypeDropdown extends StatelessWidget {
   const _PropertyTypeDropdown({
+    super.key,
     required this.value,
     required this.options,
     required this.onChanged,
@@ -634,4 +709,16 @@ String _formatCurrency(int price) {
     }
   }
   return 'R\$ ${buffer.toString()}';
+}
+
+String _tagLabel(String tag) {
+  return switch (tag) {
+    'na-planta' => 'Na planta',
+    'recem-entregue' => 'Recem entregue',
+    'alta-rentabilidade' => 'Alta rentabilidade',
+    'entrada-reduzida' => 'Entrada reduzida',
+    'exclusivo' => 'Exclusivo',
+    'pronto-para-morar' => 'Pronto para morar',
+    _ => tag,
+  };
 }

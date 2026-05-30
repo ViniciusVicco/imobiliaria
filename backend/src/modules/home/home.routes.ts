@@ -58,6 +58,7 @@ export async function homeRoutes(app: FastifyInstance) {
         neighborhood: property.neighborhood,
         subNeighborhood: property.subNeighborhood ?? '',
         coverUrl: property.coverUrl,
+        tags: property.tagSlugs.slice(0, 3),
         areaM2: property.areaM2,
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,

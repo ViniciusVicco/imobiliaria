@@ -13,6 +13,7 @@ class FeaturedPropertyEntity {
     required this.garageSpaces,
     required this.propertyAgeYears,
     required this.price,
+    this.tags = const <String>[],
     this.bedrooms,
   });
 
@@ -30,4 +31,5 @@ class FeaturedPropertyEntity {
   final int garageSpaces;
   final int propertyAgeYears;
   final int price;
+  final List<String> tags;
 }

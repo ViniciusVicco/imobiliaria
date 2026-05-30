@@ -81,6 +81,7 @@ Detalhamento:
 
 ## 6) Roteamento e modulos (estado atual)
 - Rotas principais do modulo: `/home`, `/commercial`, `/residential`, `/investments`, `/announce-property`.
+- Segmentos oficiais de imoveis: `residential` e `commercial`; `/investments` permanece apenas como rota temporaria/compatibilidade para oportunidades com `tag=na-planta`.
 - Home renderiza grid com 4 cards de entrada e navega pelos segmentos.
 - Navegacao segue fluxo de negocio: botao -> controller -> usecase -> repository -> datasource -> rota.
 - A pagina de detalhe de segmento ainda e placeholder, ate as specs de catalogo e anuncio evoluirem.

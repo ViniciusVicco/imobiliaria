@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/search_property_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/search/property_search_controller.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/property_tag_chips.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySearchPage extends StatefulWidget {
@@ -171,7 +172,7 @@ class _SearchSuccessState extends StatelessWidget {
                   crossAxisCount: columns,
                   mainAxisSpacing: DSSpacing.md,
                   crossAxisSpacing: DSSpacing.md,
-                  mainAxisExtent: 430,
+                  mainAxisExtent: 456,
                 ),
               );
             },
@@ -292,6 +293,10 @@ class _SearchPropertyCard extends StatelessWidget {
                     _PropertyLocationText(property: property),
                     const SizedBox(height: DSSpacing.md),
                     _PropertyFacts(property: property),
+                    if (property.tags.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: DSSpacing.md),
+                      PropertyTagChips(tags: property.tags),
+                    ],
                     const Spacer(),
                     Text(
                       _formatPrice(property.price),

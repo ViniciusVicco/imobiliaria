@@ -15,6 +15,7 @@ class SearchPropertyModel extends SearchPropertyEntity {
     required super.garageSpaces,
     required super.propertyAgeYears,
     required super.price,
+    super.tags,
     super.bedrooms,
   });
 
@@ -34,6 +35,9 @@ class SearchPropertyModel extends SearchPropertyEntity {
       garageSpaces: json['garageSpaces'] as int? ?? 0,
       propertyAgeYears: json['propertyAgeYears'] as int? ?? 0,
       price: json['price'] as int? ?? 0,
+      tags: (json['tags'] as List<dynamic>? ?? const <dynamic>[])
+          .map((tag) => tag.toString())
+          .toList(),
     );
   }
 }

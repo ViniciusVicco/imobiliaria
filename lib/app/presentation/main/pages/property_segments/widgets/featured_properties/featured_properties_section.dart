@@ -2,6 +2,7 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/property_tag_chips.dart';
 
 class FeaturedPropertiesSection extends StatefulWidget {
   const FeaturedPropertiesSection({
@@ -52,7 +53,7 @@ class _FeaturedPropertiesSectionState extends State<FeaturedPropertiesSection> {
                   crossAxisCount: columns,
                   mainAxisSpacing: DSSpacing.md,
                   crossAxisSpacing: DSSpacing.md,
-                  mainAxisExtent: 470,
+                  mainAxisExtent: 492,
                 ),
                 itemBuilder: (context, index) {
                   final property = visibleProperties[index];
@@ -133,6 +134,10 @@ class _FeaturedPropertyCard extends StatelessWidget {
                     _PropertyLocationText(property: property),
                     const SizedBox(height: DSSpacing.md),
                     _PropertyFacts(property: property),
+                    if (property.tags.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: DSSpacing.md),
+                      PropertyTagChips(tags: property.tags),
+                    ],
                     const Spacer(),
                     Text(
                       _formatPrice(property.price),

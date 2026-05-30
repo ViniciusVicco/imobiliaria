@@ -56,7 +56,9 @@ class PropertySegmentsHomeController extends Controller {
   }
 
   void updateSegment(PropertySegment segment) {
-    store.setFilters(store.filters.copyWith(segment: segment));
+    store.setFilters(
+      store.filters.copyWith(segment: segment, tag: '', tagOnly: false),
+    );
   }
 
   void onLoginPressed() {
@@ -74,9 +76,9 @@ class PropertySegmentsHomeController extends Controller {
 
   Future<void> onNewDevelopmentsPressed() async {
     store.setFilters(
-      store.filters.copyWith(
-        segment: PropertySegment.investments,
-        propertyType: InvestmentPropertyType.newDevelopment,
+      const PropertySearchFiltersEntity(
+        tag: 'na-planta',
+        tagOnly: true,
       ),
     );
     await onSearchSubmitted();

@@ -13,6 +13,7 @@ class SearchPropertyEntity {
     required this.garageSpaces,
     required this.propertyAgeYears,
     required this.price,
+    this.tags = const <String>[],
     this.bedrooms,
   });
 
@@ -30,6 +31,7 @@ class SearchPropertyEntity {
   final int garageSpaces;
   final int propertyAgeYears;
   final int price;
+  final List<String> tags;
 }
 
 class PropertySearchPaginationEntity {

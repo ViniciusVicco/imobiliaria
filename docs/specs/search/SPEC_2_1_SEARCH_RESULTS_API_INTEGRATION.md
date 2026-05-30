@@ -44,8 +44,9 @@ GET /api/v1/properties/search
 
 Query params aceitos:
 - `city`: default `Palmas`.
-- `segment`: `residential`, `commercial`, `investments`.
+- `segment`: `residential`, `commercial`.
 - `propertyType`.
+- `tag`: optional public tag filter, for example `na-planta`.
 - `blockOrNeighborhood`.
 - `query`.
 - `bedroomsMin`.
@@ -66,6 +67,7 @@ Resposta esperada:
       "title": "Apartamento com varanda gourmet",
       "segment": "residential",
       "propertyType": "Apartamento",
+      "tags": ["pronto-para-morar"],
       "city": "Palmas",
       "neighborhood": "Plano Diretor Sul",
       "subNeighborhood": "706 Sul",
@@ -89,6 +91,8 @@ Resposta esperada:
 
 Regra obrigatoria no backend:
 - retornar apenas `status=published` para endpoint publico.
+- `segment=investments` is accepted only as temporary legacy compatibility and is normalized to `tag=na-planta`.
+- public responses include at most 3 `tags` per property.
 
 ## Decisao De Normalizacao
 O app hoje usa valores de filtro em ingles/slug:
@@ -111,6 +115,7 @@ Para esta spec, o backend deve aceitar os slugs enviados pelo Flutter e normaliz
 
 - Manter o contrato publico da URL com slugs.
 - Normalizar no backend em uma funcao local de search.
+- Tratar `new-development` como compatibilidade temporaria para `tag=na-planta`.
 - Planejar migracao futura do banco para `property_type_slug` e `property_type_label`.
 
 ## Camadas Flutter Afetadas
@@ -164,7 +169,7 @@ O endpoint ja existe, mas precisa ser revisado para:
 ### Erro
 - Mensagem clara.
 - Botao `Tentar novamente`.
-- Se backend estiver fora durante desenvolvimento, pode mostrar fallback vazio ou erro controlado. Nao deve quebrar a tela.
+- Se backend estiver fora durante desenvolvimento, mostrar erro controlado com retry. Nao usar fallback para mocks.
 
 ## Criterios De Aceite
 1. Dado que usuario submete busca na Home, quando chega em `/search`, entao a pagina chama `GET /api/v1/properties/search` com os filtros da URL.
@@ -172,15 +177,18 @@ O endpoint ja existe, mas precisa ser revisado para:
 3. Dado que backend retorna lista vazia, quando a resposta chega, entao estado vazio e exibido.
 4. Dado que backend falha, quando a requisicao termina, entao erro com retry e exibido.
 5. Dado `propertyType=apartment`, quando busca executa, entao backend retorna imoveis do tipo Apartamento.
-6. Dado `segment=investments&propertyType=new-development`, quando busca executa, entao backend retorna oportunidades na planta publicadas.
-7. Dado mobile viewport, quando resultados renderizam, entao cards nao causam overflow.
-8. Dado desktop viewport, quando resultados renderizam, entao layout usa grade responsiva.
-9. Dado rota publica `/search`, quando usuario nao esta logado, entao busca funciona sem autenticacao.
+6. Dado `tag=na-planta`, quando busca executa, entao backend retorna oportunidades na planta publicadas.
+7. Dado URL antiga com `segment=investments`, quando busca executa, entao backend normaliza para `tag=na-planta`.
+8. Dado mobile viewport, quando resultados renderizam, entao cards nao causam overflow.
+9. Dado desktop viewport, quando resultados renderizam, entao layout usa grade responsiva.
+10. Dado rota publica `/search`, quando usuario nao esta logado, entao busca funciona sem autenticacao.
 
 ## Testes Obrigatorios
 ### Backend
 - Search com filtro por `segment`.
 - Search com filtro por `propertyType` slug.
+- Search com filtro por `tag=na-planta`.
+- Search legado com `segment=investments` retornando os mesmos resultados de `tag=na-planta`.
 - Search com `blockOrNeighborhood`.
 - Search com faixa de preco.
 - Search nao retorna `draft`, `inactive` ou `sold`.

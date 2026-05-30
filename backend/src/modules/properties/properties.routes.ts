@@ -8,6 +8,7 @@ const searchQuerySchema = z.object({
   city: z.string().trim().default('Palmas'),
   segment: z.enum(['residential', 'commercial', 'investments']).optional(),
   propertyType: z.string().trim().optional(),
+  tag: z.string().trim().optional(),
   blockOrNeighborhood: z.string().trim().optional(),
   query: z.string().trim().optional(),
   bedroomsMin: z.coerce.number().int().min(0).optional(),
@@ -45,6 +46,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
         neighborhood: property.neighborhood,
         subNeighborhood: property.subNeighborhood ?? '',
         coverUrl: property.coverUrl,
+        tags: property.tagSlugs.slice(0, 3),
         areaM2: property.areaM2,
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
@@ -107,6 +109,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
         propertyAgeYears: property.propertyAgeYears,
       },
       price: property.price,
+      tags: property.tagSlugs.slice(0, 3),
     };
   });
 }
@@ -114,13 +117,17 @@ export async function propertiesRoutes(app: FastifyInstance) {
 function buildPublishedPropertyWhere(
   query: z.infer<typeof searchQuerySchema>,
 ): Prisma.PropertyWhereInput {
+  const normalizedSegment =
+    query.segment === 'investments' ? undefined : query.segment;
+  const normalizedTag = normalizeSearchTag(query);
+  const normalizedPropertyType = normalizePropertyType(query.propertyType);
+
   return {
     status: 'published',
     city: query.city,
-    ...(query.segment ? { segment: query.segment } : {}),
-    ...(query.propertyType
-      ? { propertyType: normalizePropertyType(query.propertyType) }
-      : {}),
+    ...(normalizedSegment ? { segment: normalizedSegment } : {}),
+    ...(normalizedPropertyType ? { propertyType: normalizedPropertyType } : {}),
+    ...(normalizedTag ? { tagSlugs: { has: normalizedTag } } : {}),
     ...(query.bedroomsMin ? { bedrooms: { gte: query.bedroomsMin } } : {}),
     ...(query.bathroomsMin ? { bathrooms: { gte: query.bathroomsMin } } : {}),
     ...(query.garageSpacesMin
@@ -177,7 +184,20 @@ function buildPublishedPropertyWhere(
   };
 }
 
-function normalizePropertyType(propertyType: string) {
+function normalizeSearchTag(query: z.infer<typeof searchQuerySchema>) {
+  if (query.tag) return query.tag;
+  if (query.segment === 'investments') return 'na-planta';
+  if (query.propertyType === 'new-development') return 'na-planta';
+  if (query.propertyType === 'near-delivery') return 'recem-entregue';
+  return undefined;
+}
+
+function normalizePropertyType(propertyType?: string) {
+  if (!propertyType) return undefined;
+  if (propertyType === 'new-development' || propertyType === 'near-delivery') {
+    return undefined;
+  }
+
   const propertyTypeBySlug: Record<string, string> = {
     apartment: 'Apartamento',
     house: 'Casa',
@@ -193,8 +213,6 @@ function normalizePropertyType(propertyType: string) {
     'commercial-land': 'Terreno comercial',
     coworking: 'Coworking',
     'clinic-office': 'Consultorio',
-    'new-development': 'Oportunidades na planta',
-    'near-delivery': 'Proximos de entregar',
   };
 
   return propertyTypeBySlug[propertyType] ?? propertyType;

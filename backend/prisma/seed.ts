@@ -4,12 +4,52 @@ const prisma = new PrismaClient();
 
 const now = new Date();
 
+const propertyTags = [
+  {
+    slug: 'na-planta',
+    label: 'Na planta',
+    description: 'Imoveis em lancamento ou em fase de construcao.',
+    sortOrder: 10,
+  },
+  {
+    slug: 'recem-entregue',
+    label: 'Recem entregue',
+    description: 'Imoveis novos, entregues recentemente.',
+    sortOrder: 20,
+  },
+  {
+    slug: 'alta-rentabilidade',
+    label: 'Alta rentabilidade',
+    description: 'Oportunidades com forte potencial de renda ou valorizacao.',
+    sortOrder: 30,
+  },
+  {
+    slug: 'entrada-reduzida',
+    label: 'Entrada reduzida',
+    description: 'Condicoes comerciais com entrada inicial menor.',
+    sortOrder: 40,
+  },
+  {
+    slug: 'exclusivo',
+    label: 'Exclusivo',
+    description: 'Oportunidades com curadoria ou disponibilidade especial.',
+    sortOrder: 50,
+  },
+  {
+    slug: 'pronto-para-morar',
+    label: 'Pronto para morar',
+    description: 'Imoveis prontos para ocupacao imediata.',
+    sortOrder: 60,
+  },
+] as const;
+
 const featuredProperties = [
   {
     id: 'prop_001',
     title: 'Apartamento com varanda gourmet',
     segment: 'residential',
     propertyType: 'Apartamento',
+    tagSlugs: ['pronto-para-morar'],
     city: 'Palmas',
     neighborhood: 'Plano Diretor Sul',
     subNeighborhood: '706 Sul',
@@ -27,6 +67,7 @@ const featuredProperties = [
     title: 'Sala comercial pronta para receber clientes',
     segment: 'commercial',
     propertyType: 'Sala comercial',
+    tagSlugs: ['pronto-para-morar'],
     city: 'Palmas',
     neighborhood: 'Plano Diretor Sul',
     subNeighborhood: 'ACSU-SE 20',
@@ -42,8 +83,9 @@ const featuredProperties = [
   {
     id: 'prop_003',
     title: 'Projeto na planta com lazer completo',
-    segment: 'investments',
+    segment: 'residential',
     propertyType: 'Oportunidades na planta',
+    tagSlugs: ['na-planta', 'entrada-reduzida'],
     city: 'Palmas',
     neighborhood: 'Orla',
     subNeighborhood: 'Orla 14',
@@ -61,6 +103,7 @@ const featuredProperties = [
     title: 'Casa terrea com piscina e area gourmet',
     segment: 'residential',
     propertyType: 'Casa',
+    tagSlugs: ['exclusivo'],
     city: 'Palmas',
     neighborhood: 'Plano Diretor Norte',
     subNeighborhood: 'ARNO 21',
@@ -78,6 +121,7 @@ const featuredProperties = [
     title: 'Apartamento nascente proximo ao parque',
     segment: 'residential',
     propertyType: 'Apartamento',
+    tagSlugs: [],
     city: 'Palmas',
     neighborhood: 'Plano Diretor Sul',
     subNeighborhood: 'ARSE 51',
@@ -95,6 +139,7 @@ const featuredProperties = [
     title: 'Loja comercial em avenida de alto fluxo',
     segment: 'commercial',
     propertyType: 'Loja',
+    tagSlugs: [],
     city: 'Palmas',
     neighborhood: 'Taquaralto',
     subNeighborhood: 'Taquaralto 2 Etapa',
@@ -112,6 +157,7 @@ const featuredProperties = [
     title: 'Casa em condominio com suite master',
     segment: 'residential',
     propertyType: 'Casa em condominio',
+    tagSlugs: ['exclusivo'],
     city: 'Palmas',
     neighborhood: 'Orla',
     subNeighborhood: 'Orla 14',
@@ -127,8 +173,9 @@ const featuredProperties = [
   {
     id: 'prop_008',
     title: 'Predio comercial para renda recorrente',
-    segment: 'investments',
+    segment: 'commercial',
     propertyType: 'Proximos de entregar',
+    tagSlugs: ['alta-rentabilidade'],
     city: 'Palmas',
     neighborhood: 'Centro',
     subNeighborhood: 'ACNO 1',
@@ -144,8 +191,9 @@ const featuredProperties = [
   {
     id: 'prop_009',
     title: 'Studio compacto para investimento',
-    segment: 'investments',
+    segment: 'residential',
     propertyType: 'Oportunidades na planta',
+    tagSlugs: ['na-planta', 'alta-rentabilidade'],
     city: 'Palmas',
     neighborhood: 'Plano Diretor Sul',
     subNeighborhood: '706 Sul',
@@ -161,6 +209,22 @@ const featuredProperties = [
 ] as const;
 
 async function main() {
+  for (const tag of propertyTags) {
+    await prisma.propertyTag.upsert({
+      where: { slug: tag.slug },
+      update: {
+        label: tag.label,
+        description: tag.description,
+        isActive: true,
+        sortOrder: tag.sortOrder,
+      },
+      create: {
+        ...tag,
+        isActive: true,
+      },
+    });
+  }
+
   await prisma.brandContent.upsert({
     where: { id: 'home' },
     update: {
@@ -193,16 +257,21 @@ async function main() {
   });
 
   for (const property of featuredProperties) {
+    const propertyData = {
+      ...property,
+      tagSlugs: [...property.tagSlugs],
+    };
+
     await prisma.property.upsert({
       where: { id: property.id },
       update: {
-        ...property,
+        ...propertyData,
         status: 'published',
         isFeatured: true,
         updatedAt: now,
       },
       create: {
-        ...property,
+        ...propertyData,
         status: 'published',
         isFeatured: true,
         createdAt: now,

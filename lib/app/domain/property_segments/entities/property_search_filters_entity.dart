@@ -5,6 +5,8 @@ class PropertySearchFiltersEntity {
     this.city = 'Palmas',
     this.segment = PropertySegment.residential,
     this.propertyType = ResidentialPropertyType.apartment,
+    this.tag = '',
+    this.tagOnly = false,
     this.bedroomsMin,
     this.bathroomsMin,
     this.garageSpacesMin,
@@ -17,6 +19,8 @@ class PropertySearchFiltersEntity {
   final String city;
   final PropertySegment segment;
   final PropertyFilterOption propertyType;
+  final String tag;
+  final bool tagOnly;
   final int? bedroomsMin;
   final int? bathroomsMin;
   final int? garageSpacesMin;
@@ -29,6 +33,8 @@ class PropertySearchFiltersEntity {
     String? city,
     PropertySegment? segment,
     PropertyFilterOption? propertyType,
+    String? tag,
+    bool? tagOnly,
     int? bedroomsMin,
     int? bathroomsMin,
     int? garageSpacesMin,
@@ -51,6 +57,8 @@ class PropertySearchFiltersEntity {
       city: city ?? this.city,
       segment: nextSegment,
       propertyType: nextPropertyType,
+      tag: tag ?? this.tag,
+      tagOnly: tagOnly ?? this.tagOnly,
       bedroomsMin: clearBedrooms ? null : bedroomsMin ?? this.bedroomsMin,
       bathroomsMin: clearBathrooms ? null : bathroomsMin ?? this.bathroomsMin,
       garageSpacesMin: clearGarageSpaces
@@ -67,8 +75,9 @@ class PropertySearchFiltersEntity {
       if (blockOrNeighborhood.trim().isNotEmpty)
         'blockOrNeighborhood': blockOrNeighborhood.trim(),
       'city': city.trim(),
-      'segment': segment.value,
-      'propertyType': propertyType.value,
+      if (!tagOnly) 'segment': segment.value,
+      if (!tagOnly) 'propertyType': propertyType.value,
+      if (tag.trim().isNotEmpty) 'tag': tag.trim(),
       if (bedroomsMin != null) 'bedroomsMin': bedroomsMin.toString(),
       if (bathroomsMin != null) 'bathroomsMin': bathroomsMin.toString(),
       if (garageSpacesMin != null)
@@ -81,8 +90,7 @@ class PropertySearchFiltersEntity {
 
 enum PropertySegment {
   residential('residential', 'Residencial'),
-  commercial('commercial', 'Comercial'),
-  investments('investments', 'Investimentos');
+  commercial('commercial', 'Comercial');
 
   const PropertySegment(this.value, this.label);
 
@@ -93,7 +101,6 @@ enum PropertySegment {
     return switch (this) {
       PropertySegment.residential => ResidentialPropertyType.values,
       PropertySegment.commercial => CommercialPropertyType.values,
-      PropertySegment.investments => InvestmentPropertyType.values,
     };
   }
 
@@ -133,19 +140,6 @@ enum CommercialPropertyType implements PropertyFilterOption {
   clinicOffice('clinic-office', 'Consultorio');
 
   const CommercialPropertyType(this.value, this.label);
-
-  @override
-  final String value;
-
-  @override
-  final String label;
-}
-
-enum InvestmentPropertyType implements PropertyFilterOption {
-  newDevelopment('new-development', 'Oportunidades na planta'),
-  nearDelivery('near-delivery', 'Proximos de entregar');
-
-  const InvestmentPropertyType(this.value, this.label);
 
   @override
   final String value;
