@@ -118,7 +118,9 @@ function buildPublishedPropertyWhere(
     status: 'published',
     city: query.city,
     ...(query.segment ? { segment: query.segment } : {}),
-    ...(query.propertyType ? { propertyType: query.propertyType } : {}),
+    ...(query.propertyType
+      ? { propertyType: normalizePropertyType(query.propertyType) }
+      : {}),
     ...(query.bedroomsMin ? { bedrooms: { gte: query.bedroomsMin } } : {}),
     ...(query.bathroomsMin ? { bathrooms: { gte: query.bathroomsMin } } : {}),
     ...(query.garageSpacesMin
@@ -173,4 +175,27 @@ function buildPublishedPropertyWhere(
         }
       : {}),
   };
+}
+
+function normalizePropertyType(propertyType: string) {
+  const propertyTypeBySlug: Record<string, string> = {
+    apartment: 'Apartamento',
+    house: 'Casa',
+    'condominium-house': 'Casa em condominio',
+    townhouse: 'Sobrado',
+    kitchenette: 'Kitnet',
+    studio: 'Studio',
+    'commercial-room': 'Sala comercial',
+    store: 'Loja',
+    warehouse: 'Galpao',
+    'commercial-building': 'Predio comercial',
+    'business-point': 'Ponto comercial',
+    'commercial-land': 'Terreno comercial',
+    coworking: 'Coworking',
+    'clinic-office': 'Consultorio',
+    'new-development': 'Oportunidades na planta',
+    'near-delivery': 'Proximos de entregar',
+  };
+
+  return propertyTypeBySlug[propertyType] ?? propertyType;
 }

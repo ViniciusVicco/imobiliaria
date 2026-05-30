@@ -10,7 +10,10 @@ Flutter Web/Mobile
   -> Datasource HTTP
   -> Backend Node
   -> PostgreSQL local/dev/prod
+```
 
+Setup local de banco:
+```sql
 CREATE USER admin_local WITH PASSWORD 'sua_senha_local';
 CREATE DATABASE seletta_local OWNER admin_local;
 CREATE DATABASE seletta_shadow OWNER admin_local;
@@ -25,6 +28,19 @@ Firebase Auth continua como provedor de identidade no primeiro momento. O backen
 - Trocar Firestore gradualmente por HTTP API.
 - Centralizar regras sensiveis no backend.
 - Preparar deploy futuro em Cloud Run, Render, Railway, Fly.io ou VPS.
+
+## Estado Atual Implementado
+- Backend criado em `backend/` com Node, Fastify, Prisma, Zod e PostgreSQL.
+- Banco local validado com `seletta_local` e `seletta_shadow`.
+- Prisma migration e seed executados com sucesso.
+- Seed populou `brand_content` e 9 registros iniciais em `properties`.
+- VS Code possui tasks/launch:
+  - `front-end-local`
+  - `back-end-local`
+  - compound `local-full-stack`
+- Flutter Home foi ligado aos endpoints HTTP via `RestClient`, com fallback para mocks.
+- `RestClient`, `RestClientAbstract` e `RestEnv` foram adicionados/exportados no `packages/core`.
+- Endpoints da feature Home foram centralizados em `PropertySegmentsEndpoints`.
 
 ## Publicos E Papeis
 - Publico: navega Home, busca imoveis e consulta detalhes publicados.
@@ -454,16 +470,26 @@ Futuro.
 9. Flutter nao acessa PostgreSQL diretamente.
 10. Datasources Flutter usam HTTP API, preservando controllers/usecases/repositories.
 
+## Criterios Ja Atendidos
+1. PostgreSQL local criado.
+2. Backend local compila e roda.
+3. Prisma criou schema inicial.
+4. Seed populou propriedades iniciais.
+5. Endpoints Home existem no backend.
+6. Flutter Home chama API local via datasource HTTP.
+
 ## Ordem Recomendada De Entrega
-1. Criar backend Node local com `/health`.
-2. Criar PostgreSQL local com migrations.
-3. Seedar `brand_content` e `properties` a partir dos mocks atuais.
-4. Implementar endpoints Home.
-5. Implementar endpoint Search.
-6. Trocar datasource Flutter de Home/Search para HTTP.
-7. Implementar `/me`.
-8. Implementar Admin Users.
-9. Criar Broker/Admin Properties em spec propria.
+1. Criar backend Node local com `/health`. [done]
+2. Criar PostgreSQL local com migrations. [done]
+3. Seedar `brand_content` e `properties` a partir dos mocks atuais. [done]
+4. Implementar endpoints Home. [done]
+5. Implementar endpoint Search. [done no backend]
+6. Trocar datasource Flutter de Home para HTTP. [done]
+7. Integrar `/search` Flutter com `GET /api/v1/properties/search`. [next]
+8. Implementar `/api/v1/me`.
+9. Migrar `AuthRepository` para perfil via API.
+10. Implementar Admin Users.
+11. Criar Broker/Admin Properties em spec propria.
 
 ## Fora Do MVP
 - Upload definitivo de imagens.

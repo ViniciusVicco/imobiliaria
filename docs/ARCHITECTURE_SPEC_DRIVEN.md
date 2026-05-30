@@ -24,6 +24,9 @@ Regra de ouro:
 - O core modular (`packages/core`) continua como base de DI, modulo e ciclo de vida.
 - O fluxo de dominio foi padronizado em `data/domain/presentation` dentro de `lib/app`.
 - Rotas principais em ingles, alinhadas com a estrategia web do modulo.
+- A persistencia de produto passa a evoluir para backend Node + PostgreSQL local/dev/prod.
+- Firebase Auth continua como identidade inicial, mas dados de dominio devem ser servidos pela API propria.
+- O acesso HTTP no Flutter deve passar por `RestClient` no `packages/core` e ser injetado nos datasources.
 
 ## 4) Padrao oficial de pastas
 ### 4.1) Packages
@@ -73,6 +76,8 @@ Detalhamento:
 ### DataSource
 - Apenas acesso externo, cache, storage ou adaptacao de payload.
 - Sem regra de negocio de tela.
+- Pode chamar API HTTP via `RestClient`, Firebase Auth ou fallback local de desenvolvimento.
+- Endpoints de feature devem ficar isolados em `lib/app/data/api/`, evitando paths hardcoded espalhados.
 
 ## 6) Roteamento e modulos (estado atual)
 - Rotas principais do modulo: `/home`, `/commercial`, `/residential`, `/investments`, `/announce-property`.
@@ -128,6 +133,7 @@ Regra de decisao:
 ### 10.1) App principal
 - `legend_core`
 - `design_system`
+- `dio`, quando o app usar `RestClient` diretamente por injecao.
 - Dependencias de produto devem ficar no app apenas quando houver uso real na feature.
 
 ### 10.2) Design system
@@ -138,12 +144,28 @@ Regra de decisao:
 - Dependencias estruturais do core ficam em `packages/core`, como `dio` para requests cancelaveis e `logger` para mixins de log.
 
 ## 11) Backlog spec-driven (proximas fases)
-- Spec 1: Home showcase com dados reais e filtros iniciais.
-- Spec 2: Catalogo residencial.
-- Spec 3: Catalogo comercial.
-- Spec 4: Investimentos na planta.
-- Spec 5: Fluxo Anunciar imovel.
-- Spec 6: Observabilidade, performance web e testes.
+- Spec 1: Home showcase com dados reais via API local.
+- Spec 2: Backend Node + PostgreSQL, Auth/Profile e Admin Users.
+- Spec 3: Catalogo residencial.
+- Spec 4: Catalogo comercial.
+- Spec 5: Investimentos na planta.
+- Spec 6: Fluxo Anunciar imovel.
+- Spec 7: Observabilidade, performance web e testes.
+
+## 11.1) Estado atual de infraestrutura local
+- Backend Node/Fastify criado em `backend/`.
+- PostgreSQL local usa bancos `seletta_local` e `seletta_shadow`.
+- Prisma controla migrations e seed.
+- Endpoints MVP ja previstos:
+  - `GET /api/v1/health`
+  - `GET /api/v1/home/brand-content`
+  - `GET /api/v1/home/featured-properties`
+  - `GET /api/v1/properties/search`
+  - `GET /api/v1/properties/:id`
+- VS Code possui tasks/launch:
+  - `front-end-local`
+  - `back-end-local`
+  - compound `local-full-stack`
 
 ## 12) Template de spec
 ```md

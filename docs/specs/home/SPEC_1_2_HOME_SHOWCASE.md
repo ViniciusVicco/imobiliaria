@@ -6,6 +6,7 @@
 - Reason for new version: the Home is no longer only a segment grid with initial filters. It becomes a brand showcase with a search entry point, featured properties, institutional sections, and a video block.
 - Historical rule: keep previous specs as context; create a new spec when product direction changes layout, routing, or user intent.
 - 2026-04-29 update: Home search was reduced for a local Palmas-TO experience. The Home now shows only the essential search controls by default and moves bedrooms, bathrooms, garage spaces, price, and keyword into `Mais filtros`.
+- 2026-05-29 update: Home data source moved from local mocks-first to HTTP API-first through `RestClient`, with mock fallback for local development when backend is offline.
 
 ## Context
 The Home should present Seletta as a real estate brand before pushing the user into a full listing experience.
@@ -46,6 +47,31 @@ The product is local to Palmas, Tocantins. Search copy, quick filters, and hidde
 - `/home`: showcase page.
 - `/search`: search results destination.
 - `/investments`: remains available for investment-related navigation, but `Novidades na planta` initially uses `/search` with preselected investment filters.
+
+## Backend Integration
+Local backend base URL:
+```txt
+http://localhost:3333/api/v1
+```
+
+Home endpoints:
+```txt
+GET /home/brand-content
+GET /home/featured-properties
+```
+
+Search endpoints planned/available in backend:
+```txt
+GET /properties/search
+GET /properties/:id
+```
+
+Flutter integration rules:
+- `PropertySegmentsDatasource` calls HTTP through `RestClient`.
+- Endpoint paths are centralized in `PropertySegmentsEndpoints`.
+- Controller/usecase/repository boundaries remain unchanged.
+- Repository keeps mapping external errors to `Failure`.
+- Mocks under `assets/mocks/` remain as local fallback while the backend is optional during development.
 
 ## Search Behavior
 ### Home Search Fields
@@ -282,6 +308,9 @@ These cards are the target of top navigation scroll actions.
 - Search page:
   - Minimum placeholder page may be created to receive and display query parameters.
   - Full optimized grid belongs to a later search/catalog spec unless implementation scope is expanded.
+- Backend:
+  - Home brand content and featured properties are served by Node/PostgreSQL.
+  - Search endpoint exists in backend and must be integrated into `/search` in the next frontend slice.
 
 ## File Targets (Planned)
 - `lib/app/domain/property_segments/entities/property_search_filters_entity.dart`
@@ -340,11 +369,13 @@ These cards are the target of top navigation scroll actions.
   - Click lower-section nav links and verify scroll target.
 
 ## Rollout Strategy
-1. Add contracts/entities and datasource-backed placeholder content.
-2. Build Home layout sections with static/mock data through repository.
-3. Add search query mapping and `/search` placeholder route.
-4. Wire top navigation scroll and `Novidades na planta`.
-5. Validate mobile/desktop layout and accessibility basics.
+1. Add contracts/entities and datasource-backed placeholder content. [done]
+2. Build Home layout sections with static/mock data through repository. [done]
+3. Add search query mapping and `/search` placeholder route. [done]
+4. Wire top navigation scroll and `Novidades na planta`. [done]
+5. Serve Home content from backend Node/PostgreSQL with mock fallback. [done]
+6. Integrate `/search` page with `GET /api/v1/properties/search`. [next]
+7. Validate mobile/desktop layout and accessibility basics.
 
 ## Definition of Done (Spec 1.2)
 - Home structure matches the sketch: nav, mission/message, search, highlights, video, brand cards.

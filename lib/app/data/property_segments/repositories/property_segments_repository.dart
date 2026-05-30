@@ -4,9 +4,11 @@ import 'package:imobiliaria/app/data/property_segments/failures/segment_route_fa
 import 'package:imobiliaria/app/data/property_segments/models/featured_property_model.dart';
 import 'package:imobiliaria/app/data/property_segments/models/home_brand_content_model.dart';
 import 'package:imobiliaria/app/data/property_segments/models/property_segment_route_model.dart';
+import 'package:imobiliaria/app/data/property_segments/models/search_property_model.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/home_brand_content_entity.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/property_search_filters_entity.dart';
+import 'package:imobiliaria/app/domain/property_segments/entities/search_property_entity.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySegmentsRepository {
@@ -83,6 +85,30 @@ class PropertySegmentsRepository {
       );
     } catch (_) {
       return ErrorResponse<Failure, HomeBrandContentEntity>(
+        HomeShowcaseFailure(),
+      );
+    }
+  }
+
+  Future<DualResponse<Failure, PropertySearchResultEntity>>
+  searchPublishedProperties({
+    required Map<String, String> queryParameters,
+  }) async {
+    try {
+      final response = await datasource.searchPublishedProperties(
+        queryParameters: queryParameters,
+      );
+      if (!response.hasSuccess) {
+        return ErrorResponse<Failure, PropertySearchResultEntity>(
+          HomeShowcaseFailure(),
+        );
+      }
+
+      return SuccessResponse<Failure, PropertySearchResultEntity>(
+        PropertySearchResultModel.fromJson(response.data),
+      );
+    } catch (_) {
+      return ErrorResponse<Failure, PropertySearchResultEntity>(
         HomeShowcaseFailure(),
       );
     }
