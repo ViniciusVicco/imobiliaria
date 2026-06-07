@@ -2,6 +2,7 @@
 import 'package:legend_core/legend_core.dart';
 import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.dart';
 
+import 'pages/admin/admin_brokers_page.dart';
 import 'pages/admin/admin_home_page.dart';
 import 'pages/broker/broker_home_page.dart';
 import 'pages/property_segments/property_segments_home_page.dart';
@@ -44,7 +45,7 @@ class MainModule extends Module {
     MainRoutes.adminUsers: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,
       requestedRoute: MainRoutes.adminUsers,
-      child: AdminHomePage(),
+      child: AdminBrokersPage(),
     ),
     MainRoutes.adminProperties: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,

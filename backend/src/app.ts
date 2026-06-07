@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import Fastify from 'fastify';
 
 import { env } from './config/env.js';
+import { adminBrokersRoutes } from './modules/admin/admin-brokers.routes.js';
 import { adminReportsRoutes } from './modules/admin/admin-reports.routes.js';
 import { adminUsersRoutes } from './modules/admin/admin-users.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
@@ -30,6 +31,7 @@ export async function buildApp() {
     async (api) => {
       await api.register(healthRoutes);
       await api.register(authRoutes);
+      await api.register(adminBrokersRoutes);
       await api.register(adminUsersRoutes);
       await api.register(adminReportsRoutes);
       await api.register(homeRoutes);

@@ -1,8 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/admin/datasources/admin_brokers_datasource.dart';
+import 'package:imobiliaria/app/data/admin/repositories/admin_brokers_repository.dart';
 import 'package:imobiliaria/app/data/users/datasources/auth_datasource.dart';
 import 'package:imobiliaria/app/data/users/repositories/auth_repository.dart';
 import 'package:imobiliaria/app/data/property_segments/datasources/property_segments_datasource.dart';
 import 'package:imobiliaria/app/data/property_segments/repositories/property_segments_repository.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/create_admin_broker_use_case.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/get_admin_brokers_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/build_property_search_query_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_featured_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_home_brand_content_use_case.dart';
@@ -13,6 +17,8 @@ import 'package:imobiliaria/app/domain/users/usecases/logout_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/resolve_protected_route_access_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/watch_current_user_session_use_case.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
+import 'package:imobiliaria/app/presentation/main/pages/admin/admin_brokers_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/admin/admin_brokers_store.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_controller.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_store.dart';
 import 'package:imobiliaria/app/presentation/main/pages/search/property_search_controller.dart';
@@ -49,6 +55,13 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         searchPublishedProperties: get<SearchPublishedPropertiesUseCase>(),
       ),
     );
+    registerFactory(
+      () => AdminBrokersController(
+        store: get<AdminBrokersStore>(),
+        getAdminBrokers: get<GetAdminBrokersUseCase>(),
+        createAdminBroker: get<CreateAdminBrokerUseCase>(),
+      ),
+    );
   }
 
   @override
@@ -70,6 +83,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     registerSingleton(PropertySegmentsHomeStore());
     registerFactory(() => PropertySearchStore());
     registerFactory(() => AuthGuardStore());
+    registerFactory(() => AdminBrokersStore());
   }
 
   @override
@@ -78,6 +92,9 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => PropertySegmentsDatasource(restClient: get<RestClient>()),
     );
     registerFactory(() => AuthDatasource(restClient: get<RestClient>()));
+    registerFactory(
+      () => AdminBrokersDatasource(restClient: get<RestClient>()),
+    );
   }
 
   @override
@@ -88,6 +105,11 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       ),
     );
     registerFactory(() => AuthRepository(datasource: get<AuthDatasource>()));
+    registerFactory(
+      () => AdminBrokersRepository(
+        datasource: get<AdminBrokersDatasource>(),
+      ),
+    );
   }
 
   @override
@@ -125,5 +147,15 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => WatchCurrentUserSessionUseCase(repository: get<AuthRepository>()),
     );
     registerFactory(() => ResolveProtectedRouteAccessUseCase());
+    registerFactory(
+      () => GetAdminBrokersUseCase(
+        repository: get<AdminBrokersRepository>(),
+      ),
+    );
+    registerFactory(
+      () => CreateAdminBrokerUseCase(
+        repository: get<AdminBrokersRepository>(),
+      ),
+    );
   }
 }
