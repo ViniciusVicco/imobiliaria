@@ -25,7 +25,8 @@ Regra de ouro:
 - O fluxo de dominio foi padronizado em `data/domain/presentation` dentro de `lib/app`.
 - Rotas principais em ingles, alinhadas com a estrategia web do modulo.
 - A persistencia de produto passa a evoluir para backend Node + PostgreSQL local/dev/prod.
-- Firebase Auth continua como identidade inicial, mas dados de dominio devem ser servidos pela API propria.
+- Autenticacao e autorizacao devem ser proprias do backend Node + PostgreSQL; Firebase nao faz parte do fluxo vigente de usuarios.
+- Guia operacional de auth: `docs/guides/AUTH_JWT_POSTGRES_GUIDE.md`.
 - O acesso HTTP no Flutter deve passar por `RestClient` no `packages/core` e ser injetado nos datasources.
 
 ## 4) Padrao oficial de pastas
@@ -76,7 +77,7 @@ Detalhamento:
 ### DataSource
 - Apenas acesso externo, cache, storage ou adaptacao de payload.
 - Sem regra de negocio de tela.
-- Pode chamar API HTTP via `RestClient`, Firebase Auth ou fallback local de desenvolvimento.
+- Pode chamar API HTTP via `RestClient` ou fallback local de desenvolvimento.
 - Endpoints de feature devem ficar isolados em `lib/app/data/api/`, evitando paths hardcoded espalhados.
 
 ## 6) Roteamento e modulos (estado atual)
@@ -159,6 +160,8 @@ Regra de decisao:
 - Prisma controla migrations e seed.
 - Endpoints MVP ja previstos:
   - `GET /api/v1/health`
+  - `POST /api/v1/auth/login`
+  - `GET /api/v1/me`
   - `GET /api/v1/home/brand-content`
   - `GET /api/v1/home/featured-properties`
   - `GET /api/v1/properties/search`

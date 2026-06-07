@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dio/dio.dart';
 import 'package:imobiliaria/app/data/users/datasources/auth_datasource.dart';
 import 'package:imobiliaria/app/data/users/failures/auth_failure.dart';
 import 'package:imobiliaria/app/data/users/models/authenticated_user_model.dart';
@@ -18,21 +18,34 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      final credential = await datasource.signInWithEmailAndPassword(
+      final response = await datasource.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
-      final firebaseUser = credential.user;
-      if (firebaseUser == null) {
+
+      final body = response.data;
+      final accessToken = body['accessToken'] as String?;
+      final userJson = body['user'] as Map<String, dynamic>?;
+
+      if (!response.hasSuccess || accessToken == null || userJson == null) {
         return ErrorResponse<Failure, AuthenticatedUserEntity>(
           AuthFailure('Nao foi possivel carregar o usuario autenticado.'),
         );
       }
 
-      return _buildSession(firebaseUser);
-    } on FirebaseAuthException catch (error) {
+      final tokenResponse = await datasource.saveAccessToken(accessToken);
+      if (!tokenResponse.hasSuccess) {
+        return ErrorResponse<Failure, AuthenticatedUserEntity>(
+          AuthFailure('Nao foi possivel salvar a sessao autenticada.'),
+        );
+      }
+
+      return SuccessResponse<Failure, AuthenticatedUserEntity>(
+        AuthenticatedUserModel.fromJson(userJson),
+      );
+    } on DioException catch (error) {
       return ErrorResponse<Failure, AuthenticatedUserEntity>(
-        AuthFailure(_mapFirebaseAuthMessage(error)),
+        AuthFailure(_mapApiAuthMessage(error)),
       );
     } catch (_) {
       return ErrorResponse<Failure, AuthenticatedUserEntity>(AuthFailure());
@@ -42,13 +55,38 @@ class AuthRepository {
   Future<DualResponse<Failure, AuthenticatedUserEntity?>>
   getCurrentSession() async {
     try {
-      final firebaseUser = datasource.currentUser;
-      if (firebaseUser == null) {
+      final accessTokenResponse = await datasource.getAccessToken();
+      final accessToken = accessTokenResponse.data;
+      if (!accessTokenResponse.hasSuccess ||
+          accessToken == null ||
+          accessToken.isEmpty) {
         return SuccessResponse<Failure, AuthenticatedUserEntity?>(null);
       }
 
-      final result = await _buildSession(firebaseUser);
-      return _mapNullableSessionResponse(result);
+      final response = await datasource.getCurrentUserProfile(
+        accessToken: accessToken,
+      );
+      final body = response.data;
+
+      if (!response.hasSuccess) {
+        await datasource.clearAccessToken();
+        return SuccessResponse<Failure, AuthenticatedUserEntity?>(null);
+      }
+
+      return SuccessResponse<Failure, AuthenticatedUserEntity?>(
+        AuthenticatedUserModel.fromJson(body),
+      );
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401 ||
+          error.response?.statusCode == 403 ||
+          error.response?.statusCode == 404) {
+        await datasource.clearAccessToken();
+        return SuccessResponse<Failure, AuthenticatedUserEntity?>(null);
+      }
+
+      return ErrorResponse<Failure, AuthenticatedUserEntity?>(
+        AuthFailure('Nao foi possivel carregar o perfil de acesso.'),
+      );
     } catch (_) {
       return ErrorResponse<Failure, AuthenticatedUserEntity?>(AuthFailure());
     }
@@ -56,20 +94,17 @@ class AuthRepository {
 
   Stream<DualResponse<Failure, AuthenticatedUserEntity?>>
   watchCurrentSession() async* {
-    await for (final firebaseUser in datasource.authStateChanges()) {
-      if (firebaseUser == null) {
-        yield SuccessResponse<Failure, AuthenticatedUserEntity?>(null);
-        continue;
-      }
-
-      final result = await _buildSession(firebaseUser);
-      yield _mapNullableSessionResponse(result);
-    }
+    yield await getCurrentSession();
   }
 
   Future<DualResponse<Failure, void>> signOut() async {
     try {
-      await datasource.signOut();
+      final response = await datasource.clearAccessToken();
+      if (!response.hasSuccess) {
+        return ErrorResponse<Failure, void>(
+          AuthFailure('Nao foi possivel sair da conta agora.'),
+        );
+      }
       return SuccessResponse<Failure, void>(null);
     } catch (_) {
       return ErrorResponse<Failure, void>(
@@ -78,54 +113,27 @@ class AuthRepository {
     }
   }
 
-  Future<DualResponse<Failure, AuthenticatedUserEntity>> _buildSession(
-    User firebaseUser,
-  ) async {
-    try {
-      final profile = await datasource.getUserProfile(firebaseUser.uid);
-      if (!profile.exists) {
-        return ErrorResponse<Failure, AuthenticatedUserEntity>(
-          AuthFailure('Perfil de acesso nao encontrado.'),
-        );
-      }
-
-      return SuccessResponse<Failure, AuthenticatedUserEntity>(
-        AuthenticatedUserModel.fromFirebase(
-          firebaseUser: firebaseUser,
-          profile: profile,
-        ),
-      );
-    } catch (_) {
-      return ErrorResponse<Failure, AuthenticatedUserEntity>(
-        AuthFailure('Nao foi possivel carregar o perfil de acesso.'),
-      );
+  String _mapApiAuthMessage(DioException error) {
+    final statusCode = error.response?.statusCode;
+    final data = error.response?.data;
+    String errorMessage = '';
+    if (data is Map<String, dynamic> && data['error'] != null) {
+      errorMessage = data['message'];
     }
-  }
 
-  DualResponse<Failure, AuthenticatedUserEntity?> _mapNullableSessionResponse(
-    DualResponse<Failure, AuthenticatedUserEntity> result,
-  ) {
-    late final DualResponse<Failure, AuthenticatedUserEntity?> response;
-    result.getResult(
-      onSuccess: (user) {
-        response = SuccessResponse<Failure, AuthenticatedUserEntity?>(user);
-      },
-      onError: (error) {
-        response = ErrorResponse<Failure, AuthenticatedUserEntity?>(error);
-      },
-    );
-    return response;
-  }
+    // final errorMessage = data is Map<String, dynamic>
+    //   ? (data['error'] as Map<String, dynamic>?) != null?['message'] as String?
+    //  : null:false:
 
-  String _mapFirebaseAuthMessage(FirebaseAuthException error) {
-    return switch (error.code) {
-      'invalid-email' => 'Informe um email valido.',
-      'user-disabled' => 'Este usuario esta desativado.',
-      'user-not-found' ||
-      'wrong-password' ||
-      'invalid-credential' => 'Email ou senha invalidos.',
-      'too-many-requests' =>
-        'Muitas tentativas. Aguarde um momento e tente novamente.',
+    if (errorMessage.isNotEmpty) {
+      return errorMessage;
+    }
+
+    return switch (statusCode) {
+      500 => 'Login ou senha fora do padrão.',
+      400 => 'Confira os dados informados.',
+      401 => 'Email ou senha invalidos.',
+      403 => 'Este usuario esta inativo.',
       _ => 'Nao foi possivel autenticar com esses dados.',
     };
   }

@@ -2,6 +2,9 @@ import cors from '@fastify/cors';
 import Fastify from 'fastify';
 
 import { env } from './config/env.js';
+import { adminReportsRoutes } from './modules/admin/admin-reports.routes.js';
+import { adminUsersRoutes } from './modules/admin/admin-users.routes.js';
+import { authRoutes } from './modules/auth/auth.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { homeRoutes } from './modules/home/home.routes.js';
 import { propertiesRoutes } from './modules/properties/properties.routes.js';
@@ -26,6 +29,9 @@ export async function buildApp() {
   await app.register(
     async (api) => {
       await api.register(healthRoutes);
+      await api.register(authRoutes);
+      await api.register(adminUsersRoutes);
+      await api.register(adminReportsRoutes);
       await api.register(homeRoutes);
       await api.register(propertiesRoutes);
     },

@@ -1,5 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 
+import { env } from '../src/config/env.js';
+import { hashPassword } from '../src/shared/security/password.js';
+
 const prisma = new PrismaClient();
 
 const now = new Date();
@@ -209,6 +212,26 @@ const featuredProperties = [
 ] as const;
 
 async function main() {
+  const firstAdminPasswordHash = await hashPassword(env.FIRST_ADMIN_PASSWORD);
+
+  await prisma.user.upsert({
+    where: { email: env.FIRST_ADMIN_EMAIL.toLowerCase() },
+    update: {
+      name: env.FIRST_ADMIN_NAME,
+      passwordHash: firstAdminPasswordHash,
+      role: 'admin',
+      isActive: true,
+    },
+    create: {
+      name: env.FIRST_ADMIN_NAME,
+      email: env.FIRST_ADMIN_EMAIL.toLowerCase(),
+      phone: null,
+      passwordHash: firstAdminPasswordHash,
+      role: 'admin',
+      isActive: true,
+    },
+  });
+
   for (const tag of propertyTags) {
     await prisma.propertyTag.upsert({
       where: { slug: tag.slug },

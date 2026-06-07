@@ -9,16 +9,18 @@ datasource db {
 }
 
 model User {
-  uid       String   @id
-  name      String
-  email     String   @unique
-  phone     String?
-  role      UserRole
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  createdBy String?  @map("created_by")
-  updatedBy String?  @map("updated_by")
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String   @map("password_hash")
+  role         UserRole
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdBy    String?  @map("created_by")
+  updatedBy    String?  @map("updated_by")
+  lastLoginAt  DateTime? @map("last_login_at")
 
   properties Property[] @relation("BrokerProperties")
 
@@ -43,7 +45,7 @@ model BrandContent {
 
 model Property {
   id               String         @id
-  brokerUid        String?        @map("broker_uid")
+  brokerId         String?        @map("broker_id")
   title            String
   description      String?
   segment          PropertySegment
@@ -64,7 +66,7 @@ model Property {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  broker User?           @relation("BrokerProperties", fields: [brokerUid], references: [uid])
+  broker User?           @relation("BrokerProperties", fields: [brokerId], references: [id])
   media  PropertyMedia[]
 
   @@index([status, isFeatured])

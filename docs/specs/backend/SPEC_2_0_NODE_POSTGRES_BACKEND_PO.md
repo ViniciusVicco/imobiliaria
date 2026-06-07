@@ -1,7 +1,7 @@
 # Spec 2.0 - Backend Node + PostgreSQL
 
 ## Visao De Produto
-A plataforma Seletta precisa sair de mocks/Firestore para uma base relacional com backend proprio, mantendo velocidade de desenvolvimento local e reduzindo custo/complexidade inicial.
+A plataforma Seletta precisa sair de mocks e dependencias externas de identidade/dominio para uma base relacional com backend proprio, mantendo velocidade de desenvolvimento local e reduzindo custo/complexidade inicial.
 
 A nova direcao e:
 
@@ -19,13 +19,13 @@ CREATE DATABASE seletta_local OWNER admin_local;
 CREATE DATABASE seletta_shadow OWNER admin_local;
 ```
 
-Firebase Auth continua como provedor de identidade no primeiro momento. O backend valida o ID token recebido pelo app e aplica as regras de negocio por role.
+A autenticacao passa a ser propria do backend. O PostgreSQL guarda usuarios, senha com hash, roles e status ativo; o backend emite e valida JWT Bearer e aplica as regras de negocio por role.
 
 ## Objetivos
 - Criar API propria para Home, Search, Auth/Profile, Admin Users e futuramente Imoveis.
 - Usar PostgreSQL local para desenvolvimento rapido e barato.
 - Manter a arquitetura Flutter atual: `widget -> controller -> useCase -> repository -> datasource`.
-- Trocar Firestore gradualmente por HTTP API.
+- Trocar fluxos legados de autenticacao/dominio por HTTP API propria.
 - Centralizar regras sensiveis no backend.
 - Preparar deploy futuro em Cloud Run, Render, Railway, Fly.io ou VPS.
 
@@ -55,7 +55,7 @@ Firebase Auth continua como provedor de identidade no primeiro momento. O backen
 - Autenticacao por header:
 
 ```txt
-Authorization: Bearer <firebase_id_token>
+Authorization: Bearer <access_token>
 ```
 
 - Rotas publicas nunca retornam dados administrativos.
@@ -83,7 +83,7 @@ Entrega conteudo da vitrine inicial.
 Entrega busca publica e detalhes publicos.
 
 ### Auth/Profile
-Resolve sessao atual a partir do token Firebase e perfil no PostgreSQL.
+Resolve sessao atual a partir do JWT Bearer e perfil no PostgreSQL.
 
 ### Admin Users
 Permite que admins gerenciem corretores e administradores.
@@ -237,15 +237,48 @@ Resposta:
 ```
 
 ## Auth/Profile
-### `GET /api/v1/me`
-Autenticado.
+### `POST /api/v1/auth/login`
+Publico.
 
-Resolve o usuario atual a partir do Firebase ID token.
+Autentica admin/corretor com email e senha local.
+
+Body:
+```json
+{
+  "email": "user@email.com",
+  "password": "senha"
+}
+```
 
 Resposta:
 ```json
 {
-  "uid": "firebase_uid",
+  "accessToken": "jwt",
+  "user": {
+    "id": "user_id",
+    "email": "user@email.com",
+    "name": "Nome",
+    "phone": "",
+    "role": "admin",
+    "isActive": true
+  }
+}
+```
+
+Regras:
+- validar senha contra `password_hash`;
+- usuario inativo nao faz login;
+- nunca retornar senha ou hash.
+
+### `GET /api/v1/me`
+Autenticado.
+
+Resolve o usuario atual a partir do JWT Bearer.
+
+Resposta:
+```json
+{
+  "id": "user_id",
   "email": "user@email.com",
   "name": "Nome",
   "phone": "",
@@ -255,14 +288,15 @@ Resposta:
 ```
 
 Regras:
-- se nao houver token, retornar `401`.
+- se nao houver token ou token for invalido, retornar `401`.
 - se nao houver perfil no PostgreSQL, retornar `404 PROFILE_NOT_FOUND`.
-- se `isActive=false`, retornar perfil, mas guards devem bloquear rotas restritas.
+- se `isActive=false`, retornar `403 INACTIVE_USER`.
+- role e status usados para autorizacao sempre devem vir do PostgreSQL.
 
 ### `POST /api/v1/auth/logout`
 Opcional no backend.
 
-O logout principal continua no Firebase Auth do cliente. Este endpoint fica reservado para auditoria futura.
+Na v1 com JWT Bearer stateless, o logout do Flutter pode descartar o token localmente. Este endpoint fica reservado para auditoria/revogacao futura.
 
 ## Admin Users
 Todas as rotas exigem admin ativo.
@@ -282,7 +316,7 @@ Resposta:
 {
   "items": [
     {
-      "uid": "firebase_uid",
+      "id": "user_id",
       "name": "Nome",
       "email": "user@email.com",
       "phone": "",
@@ -316,15 +350,15 @@ Body:
 ```
 
 Regras:
-- criar usuario no Firebase Auth.
 - criar perfil no PostgreSQL.
-- aplicar custom claims minimas.
-- nunca retornar senha.
+- gerar `password_hash` no backend.
+- permitir apenas roles `admin` e `broker`.
+- nunca retornar senha ou hash.
 
-### `GET /api/v1/admin/users/:uid`
-Retorna perfil administrativo por uid.
+### `GET /api/v1/admin/users/:id`
+Retorna perfil administrativo por id.
 
-### `PATCH /api/v1/admin/users/:uid`
+### `PATCH /api/v1/admin/users/:id`
 Atualiza nome, telefone, role e status.
 
 Body:
@@ -339,10 +373,11 @@ Body:
 
 Regras:
 - email fica somente leitura na v1.
-- role/status devem sincronizar custom claims.
+- role/status sao atualizados apenas no PostgreSQL.
 - bloquear auto-desativacao do proprio admin.
+- bloquear desativacao/rebaixamento do ultimo admin ativo.
 
-### `PATCH /api/v1/admin/users/:uid/status`
+### `PATCH /api/v1/admin/users/:id/status`
 Ativa ou desativa usuario.
 
 Body:
@@ -352,13 +387,36 @@ Body:
 }
 ```
 
-### `PATCH /api/v1/admin/users/:uid/role`
+### `PATCH /api/v1/admin/users/:id/role`
 Altera role.
 
 Body:
 ```json
 {
   "role": "admin"
+}
+```
+
+### `GET /api/v1/admin/reports/brokers-property-summary`
+Admin ativo.
+
+Resume a quantidade de imoveis sob responsabilidade de cada corretor.
+
+Resposta:
+```json
+{
+  "items": [
+    {
+      "brokerId": "broker_id",
+      "brokerName": "Nome",
+      "brokerEmail": "broker@email.com",
+      "totalProperties": 12,
+      "draftProperties": 2,
+      "publishedProperties": 8,
+      "soldProperties": 1,
+      "inactiveProperties": 1
+    }
+  ]
 }
 ```
 
@@ -370,7 +428,7 @@ Broker ativo lista apenas seus imoveis.
 Broker cria imovel proprio em `draft`.
 
 ### `GET /api/v1/broker/properties/:id`
-Broker acessa apenas imovel com `brokerId` igual ao proprio uid.
+Broker acessa apenas imovel com `brokerId`/`broker_id` igual ao proprio usuario autenticado.
 
 ### `PATCH /api/v1/broker/properties/:id`
 Broker edita apenas imovel proprio.
@@ -408,10 +466,11 @@ Regras:
 
 ## Modelo Relacional Inicial
 ### `users`
-- `uid` primary key.
+- `id` primary key.
 - `name`.
 - `email` unique.
 - `phone`.
+- `password_hash`.
 - `role`.
 - `is_active`.
 - `created_at`.
@@ -421,7 +480,7 @@ Regras:
 
 ### `properties`
 - `id` primary key.
-- `broker_uid` foreign key nullable.
+- `broker_id` foreign key nullable.
 - `title`.
 - `description`.
 - `segment`.
@@ -476,13 +535,15 @@ Futuro.
 1. Home consome conteudo institucional via API.
 2. Home consome imoveis destacados via API.
 3. Busca publica retorna apenas imoveis publicados.
-4. `/me` valida token Firebase e carrega perfil do PostgreSQL.
-5. Admin ativo lista usuarios.
-6. Admin cria usuario sincronizando Firebase Auth e PostgreSQL.
-7. Broker nao acessa rotas admin.
-8. Usuario inativo nao acessa areas restritas.
-9. Flutter nao acessa PostgreSQL diretamente.
-10. Datasources Flutter usam HTTP API, preservando controllers/usecases/repositories.
+4. `/auth/login` valida senha local e retorna JWT Bearer.
+5. `/me` valida JWT Bearer e carrega perfil do PostgreSQL.
+6. Admin ativo lista usuarios.
+7. Admin cria usuario no PostgreSQL com senha hasheada.
+8. Broker nao acessa rotas admin.
+9. Usuario inativo nao acessa areas restritas.
+10. Relatorio admin mostra quantidade de imoveis por corretor.
+11. Flutter nao acessa PostgreSQL diretamente.
+12. Datasources Flutter usam HTTP API, preservando controllers/usecases/repositories.
 
 ## Criterios Ja Atendidos
 1. PostgreSQL local criado.
@@ -500,15 +561,18 @@ Futuro.
 5. Implementar endpoint Search. [done no backend]
 6. Trocar datasource Flutter de Home para HTTP. [done]
 7. Integrar `/search` Flutter com `GET /api/v1/properties/search`. [next]
-8. Implementar `/api/v1/me`.
-9. Migrar `AuthRepository` para perfil via API.
-10. Implementar Admin Users.
-11. Criar Broker/Admin Properties em spec propria.
+8. Atualizar schema de usuarios com `password_hash` e seed/script do primeiro admin.
+9. Implementar `/api/v1/auth/login` e `/api/v1/me`.
+10. Criar middlewares de auth/role no backend.
+11. Migrar `AuthRepository` para login e perfil via API propria.
+12. Implementar Admin Users.
+13. Implementar relatorio simples de imoveis por corretor.
+14. Criar Broker/Admin Properties em spec propria.
 
 ## Fora Do MVP
 - Upload definitivo de imagens.
 - CRM completo.
-- Relatorios.
+- Relatorios avancados.
 - Auditoria visual.
 - Pagamentos.
 - PostGIS.

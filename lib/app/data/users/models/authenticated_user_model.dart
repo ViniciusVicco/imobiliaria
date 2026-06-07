@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.dart';
 
 class AuthenticatedUserModel extends AuthenticatedUserEntity {
@@ -12,24 +10,20 @@ class AuthenticatedUserModel extends AuthenticatedUserEntity {
     super.phone,
   });
 
-  factory AuthenticatedUserModel.fromFirebase({
-    required User firebaseUser,
-    required DocumentSnapshot<Map<String, dynamic>> profile,
-  }) {
-    final data = profile.data() ?? const <String, dynamic>{};
-    final role = UserRole.fromValue(data['role'] as String?);
+  factory AuthenticatedUserModel.fromJson(Map<String, dynamic> json) {
+    final role = UserRole.fromValue(json['role'] as String?);
 
     if (role == null) {
       throw const FormatException('Invalid user role.');
     }
 
     return AuthenticatedUserModel(
-      uid: firebaseUser.uid,
-      email: (data['email'] as String?) ?? firebaseUser.email ?? '',
+      uid: (json['id'] as String?) ?? '',
+      email: (json['email'] as String?) ?? '',
       role: role,
-      isActive: (data['isActive'] as bool?) ?? false,
-      name: (data['name'] as String?) ?? firebaseUser.displayName ?? '',
-      phone: data['phone'] as String?,
+      isActive: (json['isActive'] as bool?) ?? false,
+      name: (json['name'] as String?) ?? '',
+      phone: json['phone'] as String?,
     );
   }
 }

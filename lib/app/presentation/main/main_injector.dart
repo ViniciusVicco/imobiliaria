@@ -77,7 +77,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     registerFactory(
       () => PropertySegmentsDatasource(restClient: get<RestClient>()),
     );
-    registerFactory(() => AuthDatasource());
+    registerFactory(() => AuthDatasource(restClient: get<RestClient>()));
   }
 
   @override
