@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/api/auth_token_interceptor.dart';
 import 'package:imobiliaria/app/data/users/datasources/auth_datasource.dart';
 import 'package:imobiliaria/app/data/users/repositories/auth_repository.dart';
+import 'package:imobiliaria/app/domain/users/usecases/get_current_user_session_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/login_with_email_use_case.dart';
 import 'package:imobiliaria/app/presentation/authentication/authentication_module.dart';
 import 'package:imobiliaria/app/presentation/authentication/pages/login/login_controller.dart';
@@ -16,6 +18,7 @@ class AuthenticationInjector extends ModuleInjector<AuthenticationModule> {
       () => LoginController(
         store: get<LoginStore>(),
         loginWithEmail: get<LoginWithEmailUseCase>(),
+        getCurrentUserSession: get<GetCurrentUserSessionUseCase>(),
         navigator: get<AppNavigator>(),
       ),
     );
@@ -31,6 +34,7 @@ class AuthenticationInjector extends ModuleInjector<AuthenticationModule> {
           connectTimeout: const Duration(seconds: 2),
           receiveTimeout: const Duration(seconds: 5),
         ),
+        interceptors: <Interceptor>[AuthTokenInterceptor()],
       ),
     );
   }
@@ -56,6 +60,9 @@ class AuthenticationInjector extends ModuleInjector<AuthenticationModule> {
   void usecases() {
     registerFactory(
       () => LoginWithEmailUseCase(repository: get<AuthRepository>()),
+    );
+    registerFactory(
+      () => GetCurrentUserSessionUseCase(repository: get<AuthRepository>()),
     );
   }
 }

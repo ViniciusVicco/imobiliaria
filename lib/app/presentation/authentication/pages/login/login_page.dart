@@ -23,6 +23,11 @@ class _LoginPageState
     super.initState();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.resumeValidSession(
+        redirectRoute: widget.routeData?.queryParameters['redirect'],
+      );
+    });
   }
 
   @override

@@ -1,11 +1,9 @@
-import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/api/auth_token_interceptor.dart';
 import 'package:legend_core/legend_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthDatasource {
   AuthDatasource({required RestClient restClient}) : _restClient = restClient;
-
-  static const String _accessTokenKey = 'seletta_access_token';
 
   final RestClient _restClient;
 
@@ -24,14 +22,10 @@ class AuthDatasource {
     );
   }
 
-  Future<DataSourceResponse<Map<String, dynamic>>> getCurrentUserProfile({
-    required String accessToken,
-  }) async {
+  Future<DataSourceResponse<Map<String, dynamic>>>
+  getCurrentUserProfile() async {
     final response = await _restClient.get<Map<String, dynamic>>(
       '/me',
-      options: Options(
-        headers: <String, dynamic>{'Authorization': 'Bearer $accessToken'},
-      ),
     );
     return DataSourceResponse<Map<String, dynamic>>(
       data: response.data ?? const <String, dynamic>{},
@@ -41,13 +35,18 @@ class AuthDatasource {
 
   Future<DataSourceResponse<void>> saveAccessToken(String accessToken) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setString(_accessTokenKey, accessToken);
+    await preferences.setString(
+      AuthTokenInterceptor.accessTokenKey,
+      accessToken,
+    );
     return DataSourceResponse<void>(data: null, hasSuccess: true);
   }
 
   Future<DataSourceResponse<String?>> getAccessToken() async {
     final preferences = await SharedPreferences.getInstance();
-    final accessToken = preferences.getString(_accessTokenKey);
+    final accessToken = preferences.getString(
+      AuthTokenInterceptor.accessTokenKey,
+    );
     return DataSourceResponse<String?>(
       data: accessToken,
       hasSuccess: accessToken != null && accessToken.isNotEmpty,
@@ -56,7 +55,7 @@ class AuthDatasource {
 
   Future<DataSourceResponse<void>> clearAccessToken() async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.remove(_accessTokenKey);
+    await preferences.remove(AuthTokenInterceptor.accessTokenKey);
     return DataSourceResponse<void>(data: null, hasSuccess: true);
   }
 }

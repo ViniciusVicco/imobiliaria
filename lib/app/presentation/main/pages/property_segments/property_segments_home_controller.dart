@@ -4,6 +4,7 @@ import 'package:imobiliaria/app/domain/property_segments/usecases/build_property
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_featured_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_home_brand_content_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/resolve_property_segment_route_use_case.dart';
+import 'package:imobiliaria/app/domain/users/usecases/get_current_user_session_use_case.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_store.dart';
 import 'package:legend_core/legend_core.dart';
@@ -16,6 +17,7 @@ class PropertySegmentsHomeController extends Controller {
     required this.buildPropertySearchQuery,
     required this.getFeaturedProperties,
     required this.getHomeBrandContent,
+    required this.getCurrentUserSession,
     required AppNavigator navigator,
   }) : _navigator = navigator;
 
@@ -24,6 +26,7 @@ class PropertySegmentsHomeController extends Controller {
   final BuildPropertySearchQueryUseCase buildPropertySearchQuery;
   final GetFeaturedPropertiesUseCase getFeaturedProperties;
   final GetHomeBrandContentUseCase getHomeBrandContent;
+  final GetCurrentUserSessionUseCase getCurrentUserSession;
   final AppNavigator _navigator;
   bool _hasLoadedHome = false;
 
@@ -34,6 +37,12 @@ class PropertySegmentsHomeController extends Controller {
 
     final featuredResult = await getFeaturedProperties.call();
     final brandResult = await getHomeBrandContent.call();
+    final sessionResult = await getCurrentUserSession.call();
+
+    sessionResult.getResult(
+      onSuccess: store.setAuthenticatedUser,
+      onError: (_) => store.setAuthenticatedUser(null),
+    );
 
     featuredResult.getResult(
       onSuccess: (featuredProperties) {
@@ -62,7 +71,18 @@ class PropertySegmentsHomeController extends Controller {
   }
 
   void onLoginPressed() {
-    _navigator.pushNamed(MainRoutes.login);
+    final user = store.authenticatedUser;
+    if (user == null) {
+      _navigator.pushNamed(MainRoutes.login);
+      return;
+    }
+
+    if (user.isAdmin) {
+      _navigator.pushNamed(MainRoutes.admin);
+      return;
+    }
+
+    _navigator.pushNamed(MainRoutes.broker);
   }
 
   Future<void> onSearchSubmitted() async {

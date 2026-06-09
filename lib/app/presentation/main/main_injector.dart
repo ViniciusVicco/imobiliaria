@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:imobiliaria/app/data/admin/datasources/admin_brokers_datasource.dart';
 import 'package:imobiliaria/app/data/admin/repositories/admin_brokers_repository.dart';
+import 'package:imobiliaria/app/data/api/auth_token_interceptor.dart';
 import 'package:imobiliaria/app/data/users/datasources/auth_datasource.dart';
 import 'package:imobiliaria/app/data/users/repositories/auth_repository.dart';
 import 'package:imobiliaria/app/data/property_segments/datasources/property_segments_datasource.dart';
@@ -38,6 +39,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         buildPropertySearchQuery: get<BuildPropertySearchQueryUseCase>(),
         getFeaturedProperties: get<GetFeaturedPropertiesUseCase>(),
         getHomeBrandContent: get<GetHomeBrandContentUseCase>(),
+        getCurrentUserSession: get<GetCurrentUserSessionUseCase>(),
         navigator: get<AppNavigator>(),
       ),
     );
@@ -74,6 +76,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
           connectTimeout: const Duration(seconds: 2),
           receiveTimeout: const Duration(seconds: 5),
         ),
+        interceptors: <Interceptor>[AuthTokenInterceptor()],
       ),
     );
   }

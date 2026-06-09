@@ -12,6 +12,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
     required this.onMissionPressed,
     required this.onWhatsappPressed,
     required this.onLoginPressed,
+    required this.hasAuthenticatedUser,
   });
 
   final VoidCallback onNewDevelopmentsPressed;
@@ -20,6 +21,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
   final VoidCallback onMissionPressed;
   final VoidCallback onWhatsappPressed;
   final VoidCallback onLoginPressed;
+  final bool hasAuthenticatedUser;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +54,10 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
                 final whatsappButton = _WhatsappButton(
                   onPressed: onWhatsappPressed,
                 );
-                final loginButton = _LoginButton(onPressed: onLoginPressed);
+                final loginButton = _LoginButton(
+                  onPressed: onLoginPressed,
+                  hasAuthenticatedUser: hasAuthenticatedUser,
+                );
 
                 if (isCompact) {
                   return Column(
@@ -230,9 +235,13 @@ class _WhatsappButton extends StatelessWidget {
 }
 
 class _LoginButton extends StatelessWidget {
-  const _LoginButton({required this.onPressed});
+  const _LoginButton({
+    required this.onPressed,
+    required this.hasAuthenticatedUser,
+  });
 
   final VoidCallback onPressed;
+  final bool hasAuthenticatedUser;
 
   @override
   Widget build(BuildContext context) {
@@ -248,8 +257,8 @@ class _LoginButton extends StatelessWidget {
           fontWeight: FontWeight.w800,
         ),
       ),
-      icon: const Icon(Icons.login),
-      label: const Text('Entrar'),
+      icon: Icon(hasAuthenticatedUser ? Icons.dashboard_outlined : Icons.login),
+      label: Text(hasAuthenticatedUser ? 'Acessar Painel' : 'Entrar'),
     );
   }
 }

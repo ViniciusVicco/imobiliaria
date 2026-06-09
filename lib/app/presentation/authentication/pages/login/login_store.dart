@@ -14,6 +14,11 @@ class LoginStore extends Store {
     state.updateState(newState: AppStateEnum.hasSuccess);
   }
 
+  void setIdle() {
+    _errorMessage = null;
+    state.updateState(newState: AppStateEnum.idle);
+  }
+
   void setError(String message) {
     _errorMessage = message;
     state.updateState(newState: AppStateEnum.hasError);

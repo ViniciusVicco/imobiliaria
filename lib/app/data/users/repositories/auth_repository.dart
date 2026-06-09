@@ -63,9 +63,7 @@ class AuthRepository {
         return SuccessResponse<Failure, AuthenticatedUserEntity?>(null);
       }
 
-      final response = await datasource.getCurrentUserProfile(
-        accessToken: accessToken,
-      );
+      final response = await datasource.getCurrentUserProfile();
       final body = response.data;
 
       if (!response.hasSuccess) {
