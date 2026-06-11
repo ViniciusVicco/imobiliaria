@@ -2,7 +2,7 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/property_tag_chips.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/property_card_image.dart';
 
 class FeaturedPropertiesSection extends StatefulWidget {
   const FeaturedPropertiesSection({
@@ -103,18 +103,9 @@ class _FeaturedPropertyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: CachedNetworkImage(
-                imageUrl: property.coverUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    ColoredBox(color: DSColors.surfaceContainerHigh),
-                errorWidget: (context, url, error) => const ColoredBox(
-                  color: DSColors.surfaceContainerHigh,
-                  child: Icon(Icons.home_work_outlined),
-                ),
-              ),
+            PropertyCardImage(
+              coverUrl: property.coverUrl,
+              tags: property.tags,
             ),
             Expanded(
               child: Padding(
@@ -134,10 +125,6 @@ class _FeaturedPropertyCard extends StatelessWidget {
                     _PropertyLocationText(property: property),
                     const SizedBox(height: DSSpacing.md),
                     _PropertyFacts(property: property),
-                    if (property.tags.isNotEmpty) ...<Widget>[
-                      const SizedBox(height: DSSpacing.md),
-                      PropertyTagChips(tags: property.tags),
-                    ],
                     const Spacer(),
                     Text(
                       _formatPrice(property.price),

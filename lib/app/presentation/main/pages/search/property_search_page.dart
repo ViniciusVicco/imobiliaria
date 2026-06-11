@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/search_property_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/search/property_search_controller.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/property_tag_chips.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/property_card_image.dart';
 import 'package:legend_core/legend_core.dart';
 
 class PropertySearchPage extends StatefulWidget {
@@ -17,7 +17,12 @@ class PropertySearchPage extends StatefulWidget {
 }
 
 class _PropertySearchPageState
-    extends StateController<MainModule, PropertySearchPage, PropertySearchController> {
+    extends
+        StateController<
+          MainModule,
+          PropertySearchPage,
+          PropertySearchController
+        > {
   Map<String, String> get _queryParameters =>
       widget.routeData?.queryParameters ?? const <String, String>{};
 
@@ -88,7 +93,11 @@ class _SearchErrorState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(Icons.error_outline, color: DSColors.primary, size: 40),
+              const Icon(
+                Icons.error_outline,
+                color: DSColors.primary,
+                size: 40,
+              ),
               const SizedBox(height: DSSpacing.md),
               Text(
                 message,
@@ -163,9 +172,8 @@ class _SearchSuccessState extends StatelessWidget {
 
               return SliverGrid(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => _SearchPropertyCard(
-                    property: items[index],
-                  ),
+                  (context, index) =>
+                      _SearchPropertyCard(property: items[index]),
                   childCount: items.length,
                 ),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -262,22 +270,10 @@ class _SearchPropertyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: CachedNetworkImage(
-                imageUrl: property.coverUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    const ColoredBox(color: DSColors.surfaceContainerHigh),
-                errorWidget: (context, url, error) => const ColoredBox(
-                  color: DSColors.surfaceContainerHigh,
-                  child: Icon(Icons.home_work_outlined),
-                ),
-              ),
-            ),
+            PropertyCardImage(coverUrl: property.coverUrl, tags: property.tags),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(DSSpacing.md),
+                padding: const EdgeInsets.all(DSSpacing.sm),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -293,11 +289,7 @@ class _SearchPropertyCard extends StatelessWidget {
                     _PropertyLocationText(property: property),
                     const SizedBox(height: DSSpacing.md),
                     _PropertyFacts(property: property),
-                    if (property.tags.isNotEmpty) ...<Widget>[
-                      const SizedBox(height: DSSpacing.md),
-                      PropertyTagChips(tags: property.tags),
-                    ],
-                    const Spacer(),
+                    const SizedBox(height: DSSpacing.xs),
                     Text(
                       _formatPrice(property.price),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
