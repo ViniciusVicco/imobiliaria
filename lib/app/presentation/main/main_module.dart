@@ -4,7 +4,9 @@ import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.
 
 import 'pages/admin/admin_brokers_page.dart';
 import 'pages/admin/admin_home_page.dart';
+import 'pages/admin/admin_properties_page.dart';
 import 'pages/broker/broker_home_page.dart';
+import 'pages/broker/broker_properties_page.dart';
 import 'pages/property_segments/property_segments_home_page.dart';
 import 'pages/search/property_search_page.dart';
 import 'pages/segment_details/segment_details_page.dart';
@@ -35,7 +37,7 @@ class MainModule extends Module {
     MainRoutes.brokerProperties: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.broker,
       requestedRoute: MainRoutes.brokerProperties,
-      child: BrokerHomePage(),
+      child: BrokerPropertiesPage(),
     ),
     MainRoutes.admin: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,
@@ -50,7 +52,7 @@ class MainModule extends Module {
     MainRoutes.adminProperties: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,
       requestedRoute: MainRoutes.adminProperties,
-      child: AdminHomePage(),
+      child: AdminPropertiesPage(),
     ),
     MainRoutes.commercial: (context, arguments) => const SegmentDetailsPage(
       title: 'Commercial Spaces',

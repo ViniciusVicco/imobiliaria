@@ -77,6 +77,13 @@ class _AdminSidebar extends StatelessWidget {
                 route: MainRoutes.adminUsers,
                 currentRoute: currentRoute,
               ),
+              const SizedBox(height: DSSpacing.sm),
+              _AdminNavButton(
+                label: 'Gerenciar imoveis',
+                icon: Icons.home_work_outlined,
+                route: MainRoutes.adminProperties,
+                currentRoute: currentRoute,
+              ),
             ],
           ),
         ),
@@ -95,11 +102,22 @@ class _AdminTopTabs extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.all(DSSpacing.sm),
-      child: _AdminNavButton(
-        label: 'Gerenciar corretores',
-        icon: Icons.groups_outlined,
-        route: MainRoutes.adminUsers,
-        currentRoute: currentRoute,
+      child: Row(
+        children: <Widget>[
+          _AdminNavButton(
+            label: 'Gerenciar corretores',
+            icon: Icons.groups_outlined,
+            route: MainRoutes.adminUsers,
+            currentRoute: currentRoute,
+          ),
+          const SizedBox(width: DSSpacing.sm),
+          _AdminNavButton(
+            label: 'Gerenciar imoveis',
+            icon: Icons.home_work_outlined,
+            route: MainRoutes.adminProperties,
+            currentRoute: currentRoute,
+          ),
+        ],
       ),
     );
   }

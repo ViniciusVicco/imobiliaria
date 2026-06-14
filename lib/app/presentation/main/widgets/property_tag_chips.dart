@@ -2,18 +2,13 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 class PropertyTagChips extends StatelessWidget {
-  const PropertyTagChips({
-    super.key,
-    required this.tags,
-  }) : isOverlay = false;
+  const PropertyTagChips({super.key, required this.tags}) : isOverlay = false;
 
-  const PropertyTagChips.overlay({
-    super.key,
-    required this.tags,
-  }) : isOverlay = true;
+  const PropertyTagChips.overlay({super.key, required this.tags})
+    : isOverlay = true;
 
-  final List<String> tags;
   final bool isOverlay;
+  final List<String> tags;
 
   @override
   Widget build(BuildContext context) {

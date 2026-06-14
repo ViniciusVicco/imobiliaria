@@ -89,7 +89,8 @@ Resolve sessao atual a partir do JWT Bearer e perfil no PostgreSQL.
 Permite que admins gerenciem corretores e administradores.
 
 ### Broker Properties
-Fase seguinte para cadastro e manutencao de imoveis pelo corretor.
+Cadastro e manutencao de imoveis pelo corretor/admin foram detalhados na spec propria:
+`docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
 
 ### Leads
 Fase futura para contatos de clientes publicos.
@@ -420,12 +421,14 @@ Resposta:
 }
 ```
 
-## Broker Properties - Proxima Fase
+## Broker Properties - Spec Propria
+Detalhamento oficial: `docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
+
 ### `GET /api/v1/broker/properties`
 Broker ativo lista apenas seus imoveis.
 
 ### `POST /api/v1/broker/properties`
-Broker cria imovel proprio em `draft`.
+Broker cria imovel proprio em `published` na v1 definida pela Spec 4.0.
 
 ### `GET /api/v1/broker/properties/:id`
 Broker acessa apenas imovel com `brokerId`/`broker_id` igual ao proprio usuario autenticado.
@@ -436,7 +439,9 @@ Broker edita apenas imovel proprio.
 ### `PATCH /api/v1/broker/properties/:id/status`
 Broker muda status permitido dentro de seu escopo.
 
-## Admin Properties - Proxima Fase
+## Admin Properties - Spec Propria
+Detalhamento oficial: `docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
+
 ### `GET /api/v1/admin/properties`
 Admin lista todos os imoveis.
 
@@ -567,7 +572,7 @@ Futuro.
 11. Migrar `AuthRepository` para login e perfil via API propria.
 12. Implementar Admin Users.
 13. Implementar relatorio simples de imoveis por corretor.
-14. Criar Broker/Admin Properties em spec propria.
+14. Implementar Broker/Admin Properties conforme `docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
 
 ## Fora Do MVP
 - Upload definitivo de imagens.

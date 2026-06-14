@@ -9,6 +9,7 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { homeRoutes } from './modules/home/home.routes.js';
 import { propertiesRoutes } from './modules/properties/properties.routes.js';
+import { protectedPropertiesRoutes } from './modules/properties/protected-properties.routes.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -36,6 +37,7 @@ export async function buildApp() {
       await api.register(adminReportsRoutes);
       await api.register(homeRoutes);
       await api.register(propertiesRoutes);
+      await api.register(protectedPropertiesRoutes);
     },
     { prefix: '/api/v1' },
   );

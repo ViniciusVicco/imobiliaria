@@ -26,14 +26,16 @@ export async function propertiesRoutes(app: FastifyInstance) {
     const where = buildPublishedPropertyWhere(query);
     const skip = (query.page - 1) * query.pageSize;
 
-    const [properties, total] = await Promise.all([
+    const [properties, total, brandContent] = await Promise.all([
       prisma.property.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
         skip,
         take: query.pageSize,
+        include: { broker: true },
       }),
       prisma.property.count({ where }),
+      prisma.brandContent.findUnique({ where: { id: 'home' } }),
     ]);
 
     return {
@@ -53,6 +55,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
         garageSpaces: property.garageSpaces,
         propertyAgeYears: property.propertyAgeYears,
         price: property.price,
+        brokerContact: mapBrokerContact(property.broker, brandContent),
       })),
       pagination: {
         page: query.page,
@@ -74,6 +77,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
         media: {
           orderBy: { sortOrder: 'asc' },
         },
+        broker: true,
       },
     });
 
@@ -110,6 +114,10 @@ export async function propertiesRoutes(app: FastifyInstance) {
       },
       price: property.price,
       tags: property.tagSlugs.slice(0, 3),
+      brokerContact: mapBrokerContact(
+        property.broker,
+        await prisma.brandContent.findUnique({ where: { id: 'home' } }),
+      ),
     };
   });
 }
@@ -216,4 +224,18 @@ function normalizePropertyType(propertyType?: string) {
   };
 
   return propertyTypeBySlug[propertyType] ?? propertyType;
+}
+
+function mapBrokerContact(
+  broker: { name: string; phone: string | null } | null,
+  brandContent: { contactWhatsapp: string; contactPhone: string } | null,
+) {
+  const brokerPhone = broker?.phone?.trim();
+  const fallbackPhone = brandContent?.contactWhatsapp || brandContent?.contactPhone || '';
+
+  return {
+    name: brokerPhone ? broker?.name ?? '' : 'Seletta',
+    phone: brokerPhone || fallbackPhone,
+    whatsapp: brokerPhone || fallbackPhone,
+  };
 }
