@@ -101,7 +101,8 @@ class _AdminPropertiesPageState
                     AppStateEnum.hasSuccess => PropertyManagementGrid(
                       properties: controller.store.properties,
                       showBroker: true,
-                      onEdit: _openForm,
+                      onCreate: _createDraft,
+                      onEdit: controller.openEditForm,
                       onMarkSold: (property) => _confirmStatus(
                         property: property,
                         status: 'sold',
@@ -124,25 +125,9 @@ class _AdminPropertiesPageState
     );
   }
 
-  Future<void> _openForm(BrokerPropertyEntity property) async {
-    final wasSaved = await showDialog<bool>(
-      context: context,
-      builder: (context) => PropertyFormDialog(
-        title: 'Editar imovel',
-        initialValue: property.toForm(),
-        allowBrokerId: true,
-        onSave: (form) => controller.saveProperty(
-          id: property.id,
-          property: form,
-        ),
-      ),
-    );
-
-    if (wasSaved == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Imovel salvo.')),
-      );
-    } else if (mounted && controller.store.errorMessage != null) {
+  Future<void> _createDraft() async {
+    final wasCreated = await controller.createDraftAndOpenForm();
+    if (!wasCreated && mounted && controller.store.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(controller.store.errorMessage!)),
       );

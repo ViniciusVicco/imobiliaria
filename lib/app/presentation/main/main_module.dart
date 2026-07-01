@@ -4,9 +4,12 @@ import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.
 
 import 'pages/admin/admin_brokers_page.dart';
 import 'pages/admin/admin_home_page.dart';
+import 'pages/admin/admin_property_new_page.dart';
 import 'pages/admin/admin_properties_page.dart';
 import 'pages/broker/broker_home_page.dart';
+import 'pages/broker/broker_property_new_page.dart';
 import 'pages/broker/broker_properties_page.dart';
+import 'pages/broker/property_form_page.dart';
 import 'pages/property_segments/property_segments_home_page.dart';
 import 'pages/search/property_search_page.dart';
 import 'pages/segment_details/segment_details_page.dart';
@@ -39,6 +42,18 @@ class MainModule extends Module {
       requestedRoute: MainRoutes.brokerProperties,
       child: BrokerPropertiesPage(),
     ),
+    MainRoutes.brokerPropertyNew: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.broker,
+      requestedRoute: MainRoutes.brokerPropertyNew,
+      child: BrokerPropertyNewPage(),
+    ),
+    MainRoutes.brokerPropertyEdit: (context, arguments) => AuthGuardPage(
+      requiredRole: UserRole.broker,
+      requestedRoute: MainRoutes.brokerPropertyEdit,
+      child: PropertyFormPage(
+        routeData: arguments is ModuleRouteData ? arguments : null,
+      ),
+    ),
     MainRoutes.admin: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,
       requestedRoute: MainRoutes.admin,
@@ -53,6 +68,19 @@ class MainModule extends Module {
       requiredRole: UserRole.admin,
       requestedRoute: MainRoutes.adminProperties,
       child: AdminPropertiesPage(),
+    ),
+    MainRoutes.adminPropertyNew: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminPropertyNew,
+      child: AdminPropertyNewPage(),
+    ),
+    MainRoutes.adminPropertyEdit: (context, arguments) => AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminPropertyEdit,
+      child: PropertyFormPage(
+        mode: PropertyFormMode.admin,
+        routeData: arguments is ModuleRouteData ? arguments : null,
+      ),
     ),
     MainRoutes.commercial: (context, arguments) => const SegmentDetailsPage(
       title: 'Commercial Spaces',

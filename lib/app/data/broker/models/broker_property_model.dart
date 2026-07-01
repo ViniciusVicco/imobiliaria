@@ -1,4 +1,5 @@
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
+import 'package:imobiliaria/app/data/media/models/property_media_model.dart';
 
 class BrokerPropertyModel extends BrokerPropertyEntity {
   const BrokerPropertyModel({
@@ -23,16 +24,20 @@ class BrokerPropertyModel extends BrokerPropertyEntity {
     required super.status,
     required super.isFeatured,
     required super.updatedAt,
+    super.media,
     super.broker,
   });
 
   factory BrokerPropertyModel.fromJson(Map<String, dynamic> json) {
     final brokerJson = json['broker'] as Map<String, dynamic>?;
     final media = json['media'] as List<dynamic>? ?? const <dynamic>[];
-    final imageUrlsFromMedia = media
+    final mediaItems = media
         .cast<Map<String, dynamic>>()
-        .where((item) => item['type'] == 'image')
-        .map((item) => item['url'].toString())
+        .map(PropertyMediaModel.fromJson)
+        .toList();
+    final imageUrlsFromMedia = mediaItems
+        .where((item) => item.type == 'image')
+        .map((item) => item.url)
         .toList();
 
     return BrokerPropertyModel(
@@ -62,6 +67,7 @@ class BrokerPropertyModel extends BrokerPropertyEntity {
       status: json['status'] as String? ?? 'published',
       isFeatured: json['isFeatured'] as bool? ?? false,
       updatedAt: json['updatedAt'] as String? ?? '',
+      media: mediaItems,
       broker: brokerJson == null
           ? null
           : BrokerPropertyBrokerModel.fromJson(brokerJson),

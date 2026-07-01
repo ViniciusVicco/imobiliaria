@@ -75,6 +75,10 @@ export async function propertiesRoutes(app: FastifyInstance) {
       },
       include: {
         media: {
+          where: {
+            status: 'active',
+            deletedAt: null,
+          },
           orderBy: { sortOrder: 'asc' },
         },
         broker: true,
@@ -101,7 +105,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
       subNeighborhood: property.subNeighborhood ?? '',
       media: property.media.map((media) => ({
         id: media.id,
-        url: media.url,
+        url: media.publicUrl ?? media.url,
         type: media.type,
         sortOrder: media.sortOrder,
       })),

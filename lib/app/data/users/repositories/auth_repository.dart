@@ -114,16 +114,12 @@ class AuthRepository {
   String _mapApiAuthMessage(DioException error) {
     final statusCode = error.response?.statusCode;
     final data = error.response?.data;
-    String errorMessage = '';
-    if (data is Map<String, dynamic> && data['error'] != null) {
-      errorMessage = data['message'];
-    }
+    final errorBody = data is Map<String, dynamic>
+        ? data['error'] as Map<String, dynamic>?
+        : null;
+    final errorMessage = errorBody?['message'] as String?;
 
-    // final errorMessage = data is Map<String, dynamic>
-    //   ? (data['error'] as Map<String, dynamic>?) != null?['message'] as String?
-    //  : null:false:
-
-    if (errorMessage.isNotEmpty) {
+    if (errorMessage != null && errorMessage.isNotEmpty) {
       return errorMessage;
     }
 

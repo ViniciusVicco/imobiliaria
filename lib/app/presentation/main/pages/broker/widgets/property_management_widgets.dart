@@ -50,6 +50,7 @@ class PropertyManagementGrid extends StatelessWidget {
     required this.onMarkSold,
     required this.onDeactivate,
     this.showBroker = false,
+    this.onCreate,
   });
 
   final List<BrokerPropertyEntity> properties;
@@ -57,10 +58,11 @@ class PropertyManagementGrid extends StatelessWidget {
   final ValueChanged<BrokerPropertyEntity> onMarkSold;
   final ValueChanged<BrokerPropertyEntity> onDeactivate;
   final bool showBroker;
+  final VoidCallback? onCreate;
 
   @override
   Widget build(BuildContext context) {
-    if (properties.isEmpty) {
+    if (properties.isEmpty && onCreate == null) {
       return const Center(child: Text('Nenhum imovel encontrado.'));
     }
 
@@ -79,9 +81,14 @@ class PropertyManagementGrid extends StatelessWidget {
             mainAxisSpacing: DSSpacing.md,
             childAspectRatio: 0.82,
           ),
-          itemCount: properties.length,
+          itemCount: properties.length + (onCreate == null ? 0 : 1),
           itemBuilder: (context, index) {
-            final property = properties[index];
+            if (onCreate != null && index == 0) {
+              return PropertyCreateCard(onPressed: onCreate!);
+            }
+
+            final propertyIndex = onCreate == null ? index : index - 1;
+            final property = properties[propertyIndex];
             return PropertyManagementCard(
               property: property,
               onEdit: () => onEdit(property),
@@ -92,6 +99,52 @@ class PropertyManagementGrid extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class PropertyCreateCard extends StatelessWidget {
+  const PropertyCreateCard({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: DSColors.surfaceContainer,
+      borderRadius: DSRadius.md,
+      child: InkWell(
+        borderRadius: DSRadius.md,
+        onTap: onPressed,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: DSRadius.md,
+            border: Border.all(
+              color: DSColors.outline,
+              style: BorderStyle.solid,
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  Icons.add_home_work_outlined,
+                  size: 48,
+                  color: DSColors.primary,
+                ),
+                const SizedBox(height: DSSpacing.sm),
+                Text(
+                  'Novo imovel',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

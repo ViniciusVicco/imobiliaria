@@ -27,6 +27,7 @@ export async function adminReportsRoutes(app: FastifyInstance) {
             }),
             {
               draft: 0,
+              pending_review: 0,
               published: 0,
               sold: 0,
               inactive: 0,
@@ -39,6 +40,7 @@ export async function adminReportsRoutes(app: FastifyInstance) {
             brokerEmail: broker.email,
             totalProperties: broker.properties.length,
             draftProperties: statusCount.draft,
+            pendingReviewProperties: statusCount.pending_review,
             publishedProperties: statusCount.published,
             soldProperties: statusCount.sold,
             inactiveProperties: statusCount.inactive,

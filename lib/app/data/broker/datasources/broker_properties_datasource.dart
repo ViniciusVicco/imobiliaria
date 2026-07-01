@@ -48,6 +48,17 @@ class BrokerPropertiesDatasource with BrokerPropertiesEndpoints {
     );
   }
 
+  Future<DataSourceResponse<Map<String, dynamic>>> createBrokerPropertyDraft() async {
+    final response = await _restClient.post<Map<String, dynamic>>(
+      '$brokerProperties/draft',
+    );
+
+    return DataSourceResponse<Map<String, dynamic>>(
+      data: response.data ?? const <String, dynamic>{},
+      hasSuccess: response.statusCode == 200 && response.data != null,
+    );
+  }
+
   Future<DataSourceResponse<Map<String, dynamic>>> updateBrokerProperty({
     required String id,
     required Map<String, dynamic> data,
@@ -116,6 +127,31 @@ class BrokerPropertiesDatasource with BrokerPropertiesEndpoints {
     final response = await _restClient.patch<Map<String, dynamic>>(
       adminProperty(id),
       data: data,
+    );
+
+    return DataSourceResponse<Map<String, dynamic>>(
+      data: response.data ?? const <String, dynamic>{},
+      hasSuccess: response.statusCode == 200 && response.data != null,
+    );
+  }
+
+  Future<DataSourceResponse<Map<String, dynamic>>> createAdminProperty({
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _restClient.post<Map<String, dynamic>>(
+      adminProperties,
+      data: data,
+    );
+
+    return DataSourceResponse<Map<String, dynamic>>(
+      data: response.data ?? const <String, dynamic>{},
+      hasSuccess: response.statusCode == 200 && response.data != null,
+    );
+  }
+
+  Future<DataSourceResponse<Map<String, dynamic>>> createAdminPropertyDraft() async {
+    final response = await _restClient.post<Map<String, dynamic>>(
+      '$adminProperties/draft',
     );
 
     return DataSourceResponse<Map<String, dynamic>>(

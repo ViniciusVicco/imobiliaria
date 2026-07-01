@@ -49,7 +49,7 @@ class _BrokerPropertiesPageState
                       ),
                     ),
                     FilledButton.icon(
-                      onPressed: () => _openForm(),
+                      onPressed: _createDraft,
                       icon: const Icon(Icons.add_home_work_outlined),
                       label: const Text('Novo imovel'),
                     ),
@@ -75,7 +75,7 @@ class _BrokerPropertiesPageState
                     ),
                     AppStateEnum.hasSuccess => PropertyManagementGrid(
                       properties: controller.store.properties,
-                      onEdit: _openForm,
+                      onEdit: controller.openEditForm,
                       onMarkSold: (property) => _confirmStatus(
                         property: property,
                         status: 'sold',
@@ -96,6 +96,15 @@ class _BrokerPropertiesPageState
         },
       ),
     );
+  }
+
+  Future<void> _createDraft() async {
+    final wasCreated = await controller.createDraftAndOpenForm();
+    if (!wasCreated && mounted && controller.store.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(controller.store.errorMessage!)),
+      );
+    }
   }
 
   Future<void> _openForm([BrokerPropertyEntity? property]) async {

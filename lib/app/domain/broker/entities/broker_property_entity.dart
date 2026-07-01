@@ -1,3 +1,5 @@
+import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart';
+
 class BrokerPropertyEntity {
   const BrokerPropertyEntity({
     required this.id,
@@ -21,6 +23,7 @@ class BrokerPropertyEntity {
     required this.status,
     required this.isFeatured,
     required this.updatedAt,
+    this.media = const <PropertyMediaEntity>[],
     this.broker,
   });
 
@@ -45,6 +48,7 @@ class BrokerPropertyEntity {
   final String status;
   final bool isFeatured;
   final String updatedAt;
+  final List<PropertyMediaEntity> media;
   final BrokerPropertyBrokerEntity? broker;
 
   BrokerPropertyFormEntity toForm() {

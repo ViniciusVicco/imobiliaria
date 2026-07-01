@@ -49,17 +49,21 @@ class LoginController extends Controller {
     }
 
     store.setLoading();
-    final result = await loginWithEmail.call(email: email, password: password);
+    try {
+      final result = await loginWithEmail.call(email: email, password: password);
 
-    result.getResult(
-      onSuccess: (user) {
-        store.setSuccess();
-        _navigator.pushReplacementNamed(
-          _resolveDestination(user: user, redirectRoute: redirectRoute),
-        );
-      },
-      onError: (error) => store.setError(error.message),
-    );
+      result.getResult(
+        onSuccess: (user) {
+          store.setSuccess();
+          _navigator.pushReplacementNamed(
+            _resolveDestination(user: user, redirectRoute: redirectRoute),
+          );
+        },
+        onError: (error) => store.setError(error.message),
+      );
+    } catch (_) {
+      store.setError('Nao foi possivel autenticar com esses dados.');
+    }
   }
 
   String _resolveDestination({

@@ -19,6 +19,17 @@ const envSchema = z.object({
   GMAIL_SMTP_SECRET: z.string().default(''),
   GMAIL_SMTP_USER: z.string().email().default('admin@seletta.local'),
   GMAIL_SMTP_FROM: z.string().default('Seletta'),
+  R2_ACCOUNT_ID: z.string().default(''),
+  R2_BUCKET_NAME: z.string().default(''),
+  R2_ACCESS_KEY_ID: z.string().default(''),
+  R2_SECRET_ACCESS_KEY: z.string().default(''),
+  R2_PUBLIC_BASE_URL: z.string().default(''),
+  R2_ENDPOINT: z.string().default(''),
+  R2_REGION: z.string().default('auto'),
+  R2_MAX_IMAGE_SIZE_MB: z.coerce.number().int().positive().default(10),
+  R2_ALLOWED_IMAGE_MIME_TYPES: z
+    .string()
+    .default('image/jpeg,image/png,image/webp'),
 });
 
 export const env = envSchema.parse(process.env);

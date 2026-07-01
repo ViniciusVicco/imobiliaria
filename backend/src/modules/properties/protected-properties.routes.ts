@@ -13,6 +13,7 @@ import {
 
 const propertyStatusSchema = z.enum([
   'draft',
+  'pending_review',
   'published',
   'sold',
   'inactive',
@@ -27,22 +28,22 @@ const listPropertiesQuerySchema = z.object({
 });
 
 const propertyPayloadSchema = z.object({
-  title: z.string().trim().min(1),
+  title: z.string().trim(),
   description: z.string().trim().optional().default(''),
   segment: z.enum(['residential', 'commercial']),
-  propertyType: z.string().trim().min(1),
-  city: z.string().trim().min(1),
-  neighborhood: z.string().trim().min(1),
+  propertyType: z.string().trim(),
+  city: z.string().trim(),
+  neighborhood: z.string().trim(),
   subNeighborhood: z.string().trim().optional().default(''),
-  coverUrl: z.string().trim().url(),
-  imageUrls: z.array(z.string().trim().url()).min(4).max(12),
+  coverUrl: z.string().trim().url().or(z.literal('')).default(''),
+  imageUrls: z.array(z.string().trim().url()).max(12).default([]),
   videoUrl: z.string().trim().url().optional().or(z.literal('')),
-  areaM2: z.coerce.number().int().min(1),
+  areaM2: z.coerce.number().int().min(0),
   bedrooms: z.coerce.number().int().min(0).max(5).default(0),
   bathrooms: z.coerce.number().int().min(0).max(5),
   garageSpaces: z.coerce.number().int().min(0).max(5),
   propertyAgeYears: z.coerce.number().int().min(0).max(50).default(0),
-  price: z.coerce.number().int().min(1),
+  price: z.coerce.number().int().min(0),
   tagSlugs: z.array(z.string().trim().min(1)).default([]),
   isFeatured: z.boolean().default(false),
   isNewDevelopment: z.boolean().default(false),
@@ -54,6 +55,82 @@ const statusPayloadSchema = z.object({
 });
 
 export async function protectedPropertiesRoutes(app: FastifyInstance) {
+  app.post(
+    '/broker/properties/draft',
+    { preHandler: requireActiveBroker },
+    async (request, reply) => {
+      const brokerId = request.authenticatedUser?.id;
+      if (!brokerId) {
+        return sendApiError({
+          reply,
+          statusCode: 401,
+          code: 'UNAUTHENTICATED',
+          message: 'Entre para acessar esta area.',
+        });
+      }
+
+      const property = await prisma.property.create({
+        data: {
+          id: randomUUID(),
+          brokerId,
+          title: 'Novo imovel',
+          description: '',
+          segment: 'residential',
+          propertyType: 'Apartamento',
+          tagSlugs: [],
+          city: 'Palmas',
+          neighborhood: 'A definir',
+          subNeighborhood: '',
+          coverUrl: '',
+          areaM2: null,
+          bedrooms: null,
+          bathrooms: null,
+          garageSpaces: null,
+          propertyAgeYears: null,
+          price: null,
+          status: 'draft',
+          isFeatured: false,
+        },
+        include: propertyDetailInclude,
+      });
+
+      return mapPropertyDetail(property);
+    },
+  );
+
+  app.post(
+    '/admin/properties/draft',
+    { preHandler: requireActiveAdmin },
+    async () => {
+      const property = await prisma.property.create({
+        data: {
+          id: randomUUID(),
+          brokerId: null,
+          title: 'Novo imovel',
+          description: '',
+          segment: 'residential',
+          propertyType: 'Apartamento',
+          tagSlugs: [],
+          city: 'Palmas',
+          neighborhood: 'A definir',
+          subNeighborhood: '',
+          coverUrl: '',
+          areaM2: null,
+          bedrooms: null,
+          bathrooms: null,
+          garageSpaces: null,
+          propertyAgeYears: null,
+          price: null,
+          status: 'draft',
+          isFeatured: false,
+        },
+        include: propertyDetailInclude,
+      });
+
+      return mapPropertyDetail(property);
+    },
+  );
+
   app.get(
     '/broker/properties',
     { preHandler: requireActiveBroker },
@@ -84,6 +161,9 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
 
       const validationError = await validateActiveTags(normalizeTagSlugs(payload));
       if (validationError) return sendApiError({ reply, ...validationError });
+
+      const finalizationError = validatePayloadReadyForPublication(payload);
+      if (finalizationError) return sendApiError({ reply, ...finalizationError });
 
       const property = await upsertPropertyWithMedia({
         payload,
@@ -150,6 +230,13 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
 
       if (!existing) return sendPropertyNotFound(reply);
 
+      if (payload.status === 'pending_review' || payload.status === 'published') {
+        const finalizationError = await validatePropertyReadyForPublication(
+          params.id,
+        );
+        if (finalizationError) return sendApiError({ reply, ...finalizationError });
+      }
+
       const property = await prisma.property.update({
         where: { id: params.id },
         data: { status: payload.status },
@@ -182,6 +269,33 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const property = await findPropertyDetail({ id: params.id });
 
       if (!property) return sendPropertyNotFound(reply);
+      return mapPropertyDetail(property);
+    },
+  );
+
+  app.post(
+    '/admin/properties',
+    { preHandler: requireActiveAdmin },
+    async (request, reply) => {
+      const payload = propertyPayloadSchema.parse(request.body);
+
+      const validationError = await validateActiveTags(normalizeTagSlugs(payload));
+      if (validationError) return sendApiError({ reply, ...validationError });
+
+      const brokerValidationError = await validateBrokerId(payload.brokerId);
+      if (brokerValidationError) {
+        return sendApiError({ reply, ...brokerValidationError });
+      }
+
+      const finalizationError = validatePayloadReadyForPublication(payload);
+      if (finalizationError) return sendApiError({ reply, ...finalizationError });
+
+      const property = await upsertPropertyWithMedia({
+        payload,
+        brokerId: payload.brokerId ?? null,
+        status: 'published',
+      });
+
       return mapPropertyDetail(property);
     },
   );
@@ -228,6 +342,13 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
 
       if (!existing) return sendPropertyNotFound(reply);
 
+      if (payload.status === 'pending_review' || payload.status === 'published') {
+        const finalizationError = await validatePropertyReadyForPublication(
+          params.id,
+        );
+        if (finalizationError) return sendApiError({ reply, ...finalizationError });
+      }
+
       const property = await prisma.property.update({
         where: { id: params.id },
         data: { status: payload.status },
@@ -241,6 +362,9 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
 
 const propertyDetailInclude = {
   media: {
+    where: {
+      deletedAt: null,
+    },
     orderBy: { sortOrder: 'asc' },
   },
   broker: true,
@@ -374,14 +498,31 @@ async function upsertPropertyWithMedia({
       },
     });
 
-    await tx.propertyMedia.deleteMany({ where: { propertyId } });
-    await tx.propertyMedia.createMany({
-      data: buildMediaRows({
-        propertyId,
-        imageUrls: payload.imageUrls,
-        videoUrl: payload.videoUrl,
-      }),
-    });
+    if (payload.imageUrls.length > 0) {
+      await tx.propertyMedia.deleteMany({ where: { propertyId } });
+      await tx.propertyMedia.createMany({
+        data: buildMediaRows({
+          propertyId,
+          imageUrls: payload.imageUrls,
+          videoUrl: payload.videoUrl,
+        }),
+      });
+    } else {
+      await tx.propertyMedia.deleteMany({
+        where: { propertyId, type: 'video' },
+      });
+      if (payload.videoUrl) {
+        await tx.propertyMedia.create({
+          data: {
+            id: randomUUID(),
+            propertyId,
+            url: payload.videoUrl,
+            type: 'video',
+            sortOrder: 1000,
+          },
+        });
+      }
+    }
 
     return tx.property.findUniqueOrThrow({
       where: { id: property.id },
@@ -452,6 +593,121 @@ async function validateActiveTags(tagSlugs: string[]) {
   };
 }
 
+function validatePayloadReadyForPublication(
+  payload: z.infer<typeof propertyPayloadSchema>,
+) {
+  const hasMissingText = [
+    payload.title,
+    payload.propertyType,
+    payload.city,
+    payload.neighborhood,
+  ].some((value) => !value.trim());
+  if (
+    hasMissingText ||
+    payload.areaM2 <= 0 ||
+    payload.price <= 0
+  ) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_REQUIRED_FIELDS',
+      message: 'Preencha os dados obrigatorios antes de publicar.',
+    };
+  }
+
+  if (!payload.coverUrl) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_COVER_REQUIRED',
+      message: 'Defina uma foto de capa antes de publicar.',
+    };
+  }
+
+  if (payload.imageUrls.length < 4 || payload.imageUrls.length > 12) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_IMAGES_INVALID',
+      message: 'Informe entre 4 e 12 fotos antes de publicar.',
+    };
+  }
+
+  if (!payload.imageUrls.includes(payload.coverUrl)) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_COVER_INVALID',
+      message: 'A capa deve ser uma imagem ativa do imovel.',
+    };
+  }
+
+  return null;
+}
+
+async function validatePropertyReadyForPublication(propertyId: string) {
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    include: {
+      media: {
+        where: {
+          type: 'image',
+          status: 'active',
+          deletedAt: null,
+        },
+      },
+    },
+  });
+
+  if (!property) {
+    return {
+      statusCode: 404,
+      code: 'PROPERTY_NOT_FOUND',
+      message: 'Imovel nao encontrado.',
+    };
+  }
+
+  const requiredFields = [
+    property.title,
+    property.propertyType,
+    property.city,
+    property.neighborhood,
+  ];
+  const hasMissingText = requiredFields.some((value) => !value.trim());
+  const hasMissingNumbers =
+    !property.areaM2 ||
+    property.bathrooms === null ||
+    property.garageSpaces === null ||
+    !property.price;
+
+  if (hasMissingText || hasMissingNumbers) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_REQUIRED_FIELDS',
+      message: 'Preencha os dados obrigatorios antes de publicar.',
+    };
+  }
+
+  if (property.media.length < 4 || property.media.length > 12) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_IMAGES_INVALID',
+      message: 'Envie entre 4 e 12 fotos antes de publicar.',
+    };
+  }
+
+  const coverUrl = property.coverUrl.trim();
+  const hasActiveCover = property.media.some(
+    (media) => media.url === coverUrl || media.publicUrl === coverUrl,
+  );
+
+  if (!coverUrl || !hasActiveCover) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_COVER_INVALID',
+      message: 'Defina uma foto de capa ativa antes de publicar.',
+    };
+  }
+
+  return null;
+}
+
 async function validateBrokerId(brokerId?: string) {
   if (!brokerId) return null;
 
@@ -511,15 +767,29 @@ function mapPropertyDetail(
     ...mapPropertyListItem(property),
     description: property.description ?? '',
     imageUrls: property.media
-      .filter((media) => media.type === 'image')
-      .map((media) => media.url),
+      .filter((media) => media.type === 'image' && media.status === 'active')
+      .map((media) => media.publicUrl ?? media.url),
     videoUrl:
-      property.media.find((media) => media.type === 'video')?.url ?? '',
+      property.media.find(
+        (media) => media.type === 'video' && media.status === 'active',
+      )?.publicUrl ??
+      property.media.find(
+        (media) => media.type === 'video' && media.status === 'active',
+      )?.url ??
+      '',
     media: property.media.map((media) => ({
       id: media.id,
-      url: media.url,
+      propertyId: media.propertyId,
+      url: media.publicUrl ?? media.url,
+      publicUrl: media.publicUrl ?? media.url,
+      storageKey: media.storageKey,
       type: media.type,
+      status: media.status,
+      mimeType: media.mimeType,
+      sizeBytes: media.sizeBytes,
       sortOrder: media.sortOrder,
+      pendingDeleteAt: media.pendingDeleteAt?.toISOString() ?? null,
+      deletedAt: media.deletedAt?.toISOString() ?? null,
     })),
   };
 }

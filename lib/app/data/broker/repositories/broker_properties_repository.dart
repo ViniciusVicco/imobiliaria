@@ -31,6 +31,10 @@ class BrokerPropertiesRepository {
     );
   }
 
+  Future<DualResponse<Failure, BrokerPropertyEntity>> createBrokerPropertyDraft() {
+    return _getProperty(() => datasource.createBrokerPropertyDraft());
+  }
+
   Future<DualResponse<Failure, BrokerPropertyEntity>> updateBrokerProperty({
     required String id,
     required BrokerPropertyFormEntity property,
@@ -72,6 +76,18 @@ class BrokerPropertiesRepository {
     return _getProperty(
       () => datasource.updateAdminProperty(id: id, data: property.toJson()),
     );
+  }
+
+  Future<DualResponse<Failure, BrokerPropertyEntity>> createAdminProperty(
+    BrokerPropertyFormEntity property,
+  ) {
+    return _getProperty(
+      () => datasource.createAdminProperty(data: property.toJson()),
+    );
+  }
+
+  Future<DualResponse<Failure, BrokerPropertyEntity>> createAdminPropertyDraft() {
+    return _getProperty(() => datasource.createAdminPropertyDraft());
   }
 
   Future<DualResponse<Failure, BrokerPropertyEntity>> updateAdminStatus({

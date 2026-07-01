@@ -6,28 +6,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthTokenInterceptor extends Interceptor {
   static const String accessTokenKey = 'seletta_access_token';
   static const Set<int> _sessionInvalidStatusCodes = <int>{401, 403, 404};
-  static const Set<String> _protectedPaths = <String>{
-    '/me',
-    '/auth/logout',
-  };
+  static const Set<String> _protectedPaths = <String>{'/me', '/auth/logout'};
   static const Set<String> _protectedPathPrefixes = <String>{
     '/admin',
     '/broker',
+    '/media',
   };
 
   @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     unawaited(_handleRequest(options, handler));
   }
 
   @override
-  void onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     unawaited(_handleError(err, handler));
   }
 
