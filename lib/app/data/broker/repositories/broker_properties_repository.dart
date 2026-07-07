@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/api/api_failure_mapper.dart';
 import 'package:imobiliaria/app/data/broker/datasources/broker_properties_datasource.dart';
 import 'package:imobiliaria/app/data/broker/failures/broker_properties_failure.dart';
 import 'package:imobiliaria/app/data/broker/models/broker_property_model.dart';
@@ -115,11 +116,11 @@ class BrokerPropertiesRepository {
       );
     } on DioException catch (error) {
       return ErrorResponse<Failure, BrokerPropertiesResultEntity>(
-        BrokerPropertiesFailure(_mapApiMessage(error)),
+        BrokerPropertiesFailure(ApiFailureMapper.fromDioException(error)),
       );
     } catch (_) {
       return ErrorResponse<Failure, BrokerPropertiesResultEntity>(
-        BrokerPropertiesFailure(),
+        BrokerPropertiesFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
   }
@@ -140,28 +141,12 @@ class BrokerPropertiesRepository {
       );
     } on DioException catch (error) {
       return ErrorResponse<Failure, BrokerPropertyEntity>(
-        BrokerPropertiesFailure(_mapApiMessage(error)),
+        BrokerPropertiesFailure(ApiFailureMapper.fromDioException(error)),
       );
     } catch (_) {
       return ErrorResponse<Failure, BrokerPropertyEntity>(
-        BrokerPropertiesFailure('Nao foi possivel concluir a operacao agora.'),
+        BrokerPropertiesFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
-  }
-
-  String _mapApiMessage(DioException error) {
-    final data = error.response?.data;
-    final errorBody = data is Map<String, dynamic>
-        ? data['error'] as Map<String, dynamic>?
-        : null;
-    final errorMessage = errorBody?['message'] as String?;
-
-    if (errorMessage != null && errorMessage.isNotEmpty) return errorMessage;
-    if (error.response?.statusCode == 401) return 'Entre novamente.';
-    if (error.response?.statusCode == 403) {
-      return 'Seu perfil nao pode acessar esta area.';
-    }
-    if (error.response?.statusCode == 404) return 'Imovel nao encontrado.';
-    return 'Nao foi possivel concluir a operacao agora.';
   }
 }

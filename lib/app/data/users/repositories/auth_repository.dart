@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/api/api_failure_mapper.dart';
 import 'package:imobiliaria/app/data/users/datasources/auth_datasource.dart';
 import 'package:imobiliaria/app/data/users/failures/auth_failure.dart';
 import 'package:imobiliaria/app/data/users/models/authenticated_user_model.dart';
@@ -45,10 +46,23 @@ class AuthRepository {
       );
     } on DioException catch (error) {
       return ErrorResponse<Failure, AuthenticatedUserEntity>(
-        AuthFailure(_mapApiAuthMessage(error)),
+        AuthFailure(
+          ApiFailureMapper.fromDioException(
+            error,
+            fallbackMessage: 'Nao foi possivel autenticar com esses dados.',
+            statusMessages: const <int, String>{
+              400: 'Confira os dados informados.',
+              401: 'Email ou senha invalidos.',
+              403: 'Este usuario esta inativo.',
+              500: 'Login ou senha fora do padrao.',
+            },
+          ),
+        ),
       );
     } catch (_) {
-      return ErrorResponse<Failure, AuthenticatedUserEntity>(AuthFailure());
+      return ErrorResponse<Failure, AuthenticatedUserEntity>(
+        AuthFailure(ApiFailureMapper.unexpectedResponse()),
+      );
     }
   }
 
@@ -83,10 +97,17 @@ class AuthRepository {
       }
 
       return ErrorResponse<Failure, AuthenticatedUserEntity?>(
-        AuthFailure('Nao foi possivel carregar o perfil de acesso.'),
+        AuthFailure(
+          ApiFailureMapper.fromDioException(
+            error,
+            fallbackMessage: 'Nao foi possivel carregar o perfil de acesso.',
+          ),
+        ),
       );
     } catch (_) {
-      return ErrorResponse<Failure, AuthenticatedUserEntity?>(AuthFailure());
+      return ErrorResponse<Failure, AuthenticatedUserEntity?>(
+        AuthFailure(ApiFailureMapper.unexpectedResponse()),
+      );
     }
   }
 
@@ -109,26 +130,5 @@ class AuthRepository {
         AuthFailure('Nao foi possivel sair da conta agora.'),
       );
     }
-  }
-
-  String _mapApiAuthMessage(DioException error) {
-    final statusCode = error.response?.statusCode;
-    final data = error.response?.data;
-    final errorBody = data is Map<String, dynamic>
-        ? data['error'] as Map<String, dynamic>?
-        : null;
-    final errorMessage = errorBody?['message'] as String?;
-
-    if (errorMessage != null && errorMessage.isNotEmpty) {
-      return errorMessage;
-    }
-
-    return switch (statusCode) {
-      500 => 'Login ou senha fora do padrão.',
-      400 => 'Confira os dados informados.',
-      401 => 'Email ou senha invalidos.',
-      403 => 'Este usuario esta inativo.',
-      _ => 'Nao foi possivel autenticar com esses dados.',
-    };
   }
 }

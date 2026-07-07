@@ -101,6 +101,7 @@ class _AdminPropertiesPageState
                     AppStateEnum.hasSuccess => PropertyManagementGrid(
                       properties: controller.store.properties,
                       showBroker: true,
+                      loadMediaFile: controller.loadMediaFile,
                       onCreate: _createDraft,
                       onEdit: controller.openEditForm,
                       onMarkSold: (property) => _confirmStatus(
@@ -128,9 +129,9 @@ class _AdminPropertiesPageState
   Future<void> _createDraft() async {
     final wasCreated = await controller.createDraftAndOpenForm();
     if (!wasCreated && mounted && controller.store.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.store.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(controller.store.errorMessage!)));
     }
   }
 
@@ -164,9 +165,9 @@ class _AdminPropertiesPageState
       status: status,
     );
     if (wasUpdated && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Status atualizado.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Status atualizado.')));
     }
   }
 }

@@ -23,6 +23,15 @@ const uploadImageSchema = z.object({
   contentBase64: z.string().trim().min(1),
 });
 
+const tempUploadImageSchema = uploadImageSchema.extend({
+  uploadSessionId: z
+    .string()
+    .trim()
+    .min(8)
+    .max(80)
+    .regex(/^[a-zA-Z0-9_-]+$/),
+});
+
 const propertyParamsSchema = z.object({
   propertyId: z.string().trim().min(1),
 });
@@ -32,6 +41,77 @@ const mediaParamsSchema = z.object({
 });
 
 export async function mediaRoutes(app: FastifyInstance) {
+  app.post(
+    '/media/property-images/temp',
+    { preHandler: requireAuthenticatedUser },
+    async (request, reply) => {
+      const payload = tempUploadImageSchema.parse(request.body);
+      const user = request.authenticatedUser;
+
+      if (!user) return sendUnauthenticated(reply);
+
+      const validationError = validateImagePayload(payload);
+      if (validationError) return sendApiError({ reply, ...validationError });
+
+      const body = Buffer.from(payload.contentBase64, 'base64');
+      if (body.length > getMaxImageSizeBytes()) {
+        return sendApiError({
+          reply,
+          statusCode: 400,
+          code: 'IMAGE_TOO_LARGE',
+          message: 'Imagem acima do tamanho maximo permitido.',
+        });
+      }
+
+      const storageKey = buildTempPropertyMediaStorageKey({
+        uploadSessionId: payload.uploadSessionId,
+        fileName: payload.fileName,
+      });
+
+      let publicUrl: string;
+      try {
+        publicUrl = buildR2PublicUrl(storageKey);
+        await uploadR2Object({
+          storageKey,
+          body,
+          contentType: payload.mimeType,
+        });
+      } catch (error) {
+        if (error instanceof R2ConfigurationError) {
+          return sendApiError({
+            reply,
+            statusCode: 500,
+            code: 'R2_NOT_CONFIGURED',
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+
+      const media = await prisma.propertyMedia.create({
+        data: {
+          id: randomUUID(),
+          propertyId: null,
+          url: publicUrl,
+          publicUrl,
+          storageKey,
+          type: 'image',
+          status: 'active',
+          mimeType: payload.mimeType,
+          sizeBytes: body.length,
+          sortOrder: await getNextTempSortOrder({
+            uploadedBy: user.id,
+            uploadSessionId: payload.uploadSessionId,
+          }),
+          uploadedBy: user.id,
+          uploadSessionId: payload.uploadSessionId,
+        },
+      });
+
+      return mapMedia(media);
+    },
+  );
+
   app.post(
     '/media/properties/:propertyId/images',
     { preHandler: requireAuthenticatedUser },
@@ -176,7 +256,7 @@ export async function mediaRoutes(app: FastifyInstance) {
       });
 
       if (!media) return sendMediaNotFound(reply);
-      if (media.type !== 'image' || media.status !== 'active') {
+      if (!media.propertyId || media.type !== 'image' || media.status !== 'active') {
         return sendApiError({
           reply,
           statusCode: 400,
@@ -266,9 +346,17 @@ export async function mediaRoutes(app: FastifyInstance) {
       const threshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const mediaItems = await prisma.propertyMedia.findMany({
         where: {
-          status: 'pending_delete',
-          pendingDeleteAt: { lte: threshold },
           deletedAt: null,
+          OR: [
+            {
+              status: 'pending_delete',
+              pendingDeleteAt: { lte: threshold },
+            },
+            {
+              propertyId: null,
+              createdAt: { lte: threshold },
+            },
+          ],
         },
       });
 
@@ -316,9 +404,17 @@ async function findAccessibleMedia({
     where: {
       id: mediaId,
       deletedAt: null,
-      property: {
-        ...(user.role === 'broker' ? { brokerId: user.id } : {}),
-      },
+      OR: [
+        {
+          property: {
+            ...(user.role === 'broker' ? { brokerId: user.id } : {}),
+          },
+        },
+        {
+          propertyId: null,
+          uploadedBy: user.id,
+        },
+      ],
     },
   });
 }
@@ -326,6 +422,25 @@ async function findAccessibleMedia({
 async function getNextSortOrder(propertyId: string) {
   const lastMedia = await prisma.propertyMedia.findFirst({
     where: { propertyId },
+    orderBy: { sortOrder: 'desc' },
+  });
+
+  return (lastMedia?.sortOrder ?? -1) + 1;
+}
+
+async function getNextTempSortOrder({
+  uploadedBy,
+  uploadSessionId,
+}: {
+  uploadedBy: string;
+  uploadSessionId: string;
+}) {
+  const lastMedia = await prisma.propertyMedia.findFirst({
+    where: {
+      propertyId: null,
+      uploadedBy,
+      uploadSessionId,
+    },
     orderBy: { sortOrder: 'desc' },
   });
 
@@ -345,7 +460,7 @@ function validateImagePayload(payload: z.infer<typeof uploadImageSchema>) {
   return null;
 }
 
-function buildPropertyMediaStorageKey({
+export function buildPropertyMediaStorageKey({
   propertyId,
   fileName,
 }: {
@@ -361,9 +476,26 @@ function buildPropertyMediaStorageKey({
   return `media/properties/${propertyId}/${randomUUID()}-${safeFileName || 'image'}`;
 }
 
+function buildTempPropertyMediaStorageKey({
+  uploadSessionId,
+  fileName,
+}: {
+  uploadSessionId: string;
+  fileName: string;
+}) {
+  const safeSessionId = uploadSessionId.replace(/[^a-zA-Z0-9_-]+/g, '-');
+  const safeFileName = fileName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `media/temp/${safeSessionId}/${randomUUID()}-${safeFileName || 'image'}`;
+}
+
 function mapMedia(media: {
   id: string;
-  propertyId: string;
+  propertyId: string | null;
   url: string;
   publicUrl: string | null;
   storageKey: string | null;
@@ -377,7 +509,7 @@ function mapMedia(media: {
 }) {
   return {
     id: media.id,
-    propertyId: media.propertyId,
+    propertyId: media.propertyId ?? '',
     url: media.publicUrl ?? media.url,
     publicUrl: media.publicUrl ?? media.url,
     storageKey: media.storageKey,

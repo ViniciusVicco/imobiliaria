@@ -89,7 +89,7 @@ model PropertyTag {
 
 model PropertyMedia {
   id              String      @id
-  propertyId      String      @map("property_id")
+  propertyId      String?     @map("property_id")
   url             String
   publicUrl       String?     @map("public_url")
   storageKey      String?     @map("storage_key")
@@ -99,13 +99,15 @@ model PropertyMedia {
   sizeBytes       Int?        @map("size_bytes")
   sortOrder       Int         @default(0) @map("sort_order")
   uploadedBy      String?     @map("uploaded_by")
+  uploadSessionId String?     @map("upload_session_id")
   pendingDeleteAt DateTime?   @map("pending_delete_at")
   deletedAt       DateTime?   @map("deleted_at")
   createdAt       DateTime    @default(now()) @map("created_at")
 
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId, status, sortOrder])
+  @@index([uploadedBy, uploadSessionId, createdAt])
   @@index([pendingDeleteAt])
   @@map("property_media")
 }

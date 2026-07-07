@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
+import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart';
 
 typedef PropertySaveCallback =
     Future<bool> Function(BrokerPropertyFormEntity property);
+typedef PropertyMediaFileLoader = Future<Uint8List?> Function(String mediaId);
 
 class PropertyStatusTabs extends StatelessWidget {
   const PropertyStatusTabs({
@@ -24,6 +28,11 @@ class PropertyStatusTabs extends StatelessWidget {
           value: 'published',
           icon: Icon(Icons.campaign_outlined),
           label: Text('Anunciados'),
+        ),
+        ButtonSegment<String>(
+          value: 'pending_review',
+          icon: Icon(Icons.hourglass_top),
+          label: Text('Em revisao'),
         ),
         ButtonSegment<String>(
           value: 'sold',
@@ -51,6 +60,7 @@ class PropertyManagementGrid extends StatelessWidget {
     required this.onDeactivate,
     this.showBroker = false,
     this.onCreate,
+    this.loadMediaFile,
   });
 
   final List<BrokerPropertyEntity> properties;
@@ -59,6 +69,7 @@ class PropertyManagementGrid extends StatelessWidget {
   final ValueChanged<BrokerPropertyEntity> onDeactivate;
   final bool showBroker;
   final VoidCallback? onCreate;
+  final PropertyMediaFileLoader? loadMediaFile;
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +106,7 @@ class PropertyManagementGrid extends StatelessWidget {
               onMarkSold: () => onMarkSold(property),
               onDeactivate: () => onDeactivate(property),
               showBroker: showBroker,
+              loadMediaFile: loadMediaFile,
             );
           },
         );
@@ -157,6 +169,7 @@ class PropertyManagementCard extends StatelessWidget {
     required this.onMarkSold,
     required this.onDeactivate,
     this.showBroker = false,
+    this.loadMediaFile,
   });
 
   final BrokerPropertyEntity property;
@@ -164,6 +177,7 @@ class PropertyManagementCard extends StatelessWidget {
   final VoidCallback onMarkSold;
   final VoidCallback onDeactivate;
   final bool showBroker;
+  final PropertyMediaFileLoader? loadMediaFile;
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +186,8 @@ class PropertyManagementCard extends StatelessWidget {
       symbol: 'R\$',
       decimalDigits: 0,
     );
+    final coverUrl = property.coverUrl.trim();
+    final coverMedia = _coverMedia(property);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -188,16 +204,18 @@ class PropertyManagementCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: <Widget>[
-                  Image.network(
-                    property.coverUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const ColoredBox(
-                        color: DSColors.surfaceContainerHighest,
-                        child: Center(child: Icon(Icons.image_not_supported)),
-                      );
-                    },
-                  ),
+                  if (coverUrl.isEmpty)
+                    const ColoredBox(
+                      color: DSColors.surfaceContainerHighest,
+                      child: Center(child: Icon(Icons.image_not_supported)),
+                    )
+                  else
+                    PropertyManagementCoverImage(
+                      mediaId: coverMedia?.id ?? '',
+                      fallbackUrl: coverUrl,
+                      fit: BoxFit.cover,
+                      loadMediaFile: loadMediaFile,
+                    ),
                   Positioned(
                     top: DSSpacing.sm,
                     right: DSSpacing.sm,
@@ -265,9 +283,18 @@ class PropertyManagementCard extends StatelessWidget {
                     spacing: DSSpacing.sm,
                     runSpacing: DSSpacing.xs,
                     children: <Widget>[
-                      _PropertyFact(icon: Icons.square_foot, text: '${property.areaM2} m2'),
-                      _PropertyFact(icon: Icons.bathtub_outlined, text: '${property.bathrooms} ban.'),
-                      _PropertyFact(icon: Icons.directions_car_outlined, text: '${property.garageSpaces} vagas'),
+                      _PropertyFact(
+                        icon: Icons.square_foot,
+                        text: '${property.areaM2} m2',
+                      ),
+                      _PropertyFact(
+                        icon: Icons.bathtub_outlined,
+                        text: '${property.bathrooms} ban.',
+                      ),
+                      _PropertyFact(
+                        icon: Icons.directions_car_outlined,
+                        text: '${property.garageSpaces} vagas',
+                      ),
                     ],
                   ),
                   const SizedBox(height: DSSpacing.sm),
@@ -289,6 +316,108 @@ class PropertyManagementCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  PropertyMediaEntity? _coverMedia(BrokerPropertyEntity property) {
+    final coverUrl = property.coverUrl.trim();
+    for (final media in property.media) {
+      if (!media.isImage || !media.isActive) continue;
+      if (media.url.trim() == coverUrl || media.publicUrl.trim() == coverUrl) {
+        return media;
+      }
+    }
+    return null;
+  }
+}
+
+class PropertyManagementCoverImage extends StatefulWidget {
+  const PropertyManagementCoverImage({
+    super.key,
+    required this.mediaId,
+    required this.fallbackUrl,
+    required this.fit,
+    this.loadMediaFile,
+  });
+
+  final String mediaId;
+  final String fallbackUrl;
+  final BoxFit fit;
+  final PropertyMediaFileLoader? loadMediaFile;
+
+  @override
+  State<PropertyManagementCoverImage> createState() =>
+      _PropertyManagementCoverImageState();
+}
+
+class _PropertyManagementCoverImageState
+    extends State<PropertyManagementCoverImage> {
+  Future<Uint8List?>? _fileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fileFuture = _loadFile();
+  }
+
+  @override
+  void didUpdateWidget(covariant PropertyManagementCoverImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.mediaId != widget.mediaId ||
+        oldWidget.loadMediaFile != widget.loadMediaFile) {
+      _fileFuture = _loadFile();
+    }
+  }
+
+  Future<Uint8List?>? _loadFile() {
+    final mediaId = widget.mediaId.trim();
+    final loader = widget.loadMediaFile;
+    if (mediaId.isEmpty || loader == null) return null;
+    return loader(mediaId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fileFuture = _fileFuture;
+    if (fileFuture == null) return _NetworkCoverImage(widget: widget);
+
+    return FutureBuilder<Uint8List?>(
+      future: fileFuture,
+      builder: (context, snapshot) {
+        final bytes = snapshot.data;
+        if (bytes != null && bytes.isNotEmpty) {
+          return Image.memory(bytes, fit: widget.fit);
+        }
+
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const ColoredBox(
+            color: DSColors.surfaceContainerHighest,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return _NetworkCoverImage(widget: widget);
+      },
+    );
+  }
+}
+
+class _NetworkCoverImage extends StatelessWidget {
+  const _NetworkCoverImage({required this.widget});
+
+  final PropertyManagementCoverImage widget;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      widget.fallbackUrl,
+      fit: widget.fit,
+      errorBuilder: (context, error, stackTrace) {
+        return const ColoredBox(
+          color: DSColors.surfaceContainerHighest,
+          child: Center(child: Icon(Icons.image_not_supported)),
+        );
+      },
     );
   }
 }
@@ -673,6 +802,7 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
 String _statusLabel(String status) {
   return switch (status) {
     'published' => 'Anunciado',
+    'pending_review' => 'Em revisao',
     'sold' => 'Vendido',
     'inactive' => 'Excluido',
     'draft' => 'Rascunho',

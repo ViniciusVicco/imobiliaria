@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/api/api_failure_mapper.dart';
 import 'package:imobiliaria/app/data/media/datasources/media_datasource.dart';
 import 'package:imobiliaria/app/data/media/failures/media_failure.dart';
 import 'package:imobiliaria/app/data/media/models/property_media_model.dart';
@@ -24,6 +25,18 @@ class MediaRepository {
     );
   }
 
+  Future<DualResponse<Failure, PropertyMediaEntity>>
+  uploadTemporaryPropertyImage({
+    required String uploadSessionId,
+    required PropertyImageUploadEntity image,
+  }) {
+    return _requestMedia(
+      () => datasource.uploadTemporaryPropertyImage(
+        data: image.toJson(uploadSessionId: uploadSessionId),
+      ),
+    );
+  }
+
   Future<DualResponse<Failure, PropertyMediaEntity>> setCover({
     required String mediaId,
   }) {
@@ -42,10 +55,12 @@ class MediaRepository {
       return SuccessResponse<Failure, Uint8List>(response.data);
     } on DioException catch (error) {
       return ErrorResponse<Failure, Uint8List>(
-        MediaFailure(_mapApiMessage(error)),
+        MediaFailure(ApiFailureMapper.fromDioException(error)),
       );
     } catch (_) {
-      return ErrorResponse<Failure, Uint8List>(MediaFailure());
+      return ErrorResponse<Failure, Uint8List>(
+        MediaFailure(ApiFailureMapper.unexpectedResponse()),
+      );
     }
   }
 
@@ -75,26 +90,12 @@ class MediaRepository {
       );
     } on DioException catch (error) {
       return ErrorResponse<Failure, PropertyMediaEntity>(
-        MediaFailure(_mapApiMessage(error)),
+        MediaFailure(ApiFailureMapper.fromDioException(error)),
       );
     } catch (_) {
-      return ErrorResponse<Failure, PropertyMediaEntity>(MediaFailure());
+      return ErrorResponse<Failure, PropertyMediaEntity>(
+        MediaFailure(ApiFailureMapper.unexpectedResponse()),
+      );
     }
-  }
-
-  String _mapApiMessage(DioException error) {
-    final data = error.response?.data;
-    final errorBody = data is Map<String, dynamic>
-        ? data['error'] as Map<String, dynamic>?
-        : null;
-    final errorMessage = errorBody?['message'] as String?;
-
-    if (errorMessage != null && errorMessage.isNotEmpty) return errorMessage;
-    if (error.response?.statusCode == 401) return 'Entre novamente.';
-    if (error.response?.statusCode == 403) {
-      return 'Seu perfil nao pode acessar esta area.';
-    }
-    if (error.response?.statusCode == 404) return 'Midia nao encontrada.';
-    return 'Nao foi possivel concluir a operacao de midia.';
   }
 }

@@ -42,11 +42,13 @@ class PropertyImageUploadEntity {
   final String mimeType;
   final String contentBase64;
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({String? uploadSessionId}) {
     return <String, dynamic>{
       'fileName': fileName,
       'mimeType': mimeType,
       'contentBase64': contentBase64,
+      if (uploadSessionId != null && uploadSessionId.isNotEmpty)
+        'uploadSessionId': uploadSessionId,
     };
   }
 }

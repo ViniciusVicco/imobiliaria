@@ -12,9 +12,7 @@ import 'package:imobiliaria/app/data/property_segments/datasources/property_segm
 import 'package:imobiliaria/app/data/property_segments/repositories/property_segments_repository.dart';
 import 'package:imobiliaria/app/domain/admin/usecases/create_admin_broker_use_case.dart';
 import 'package:imobiliaria/app/domain/admin/usecases/get_admin_brokers_use_case.dart';
-import 'package:imobiliaria/app/domain/broker/usecases/create_admin_property_draft_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/create_admin_property_use_case.dart';
-import 'package:imobiliaria/app/domain/broker/usecases/create_broker_property_draft_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_admin_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_admin_property_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_broker_property_use_case.dart';
@@ -28,6 +26,7 @@ import 'package:imobiliaria/app/domain/media/usecases/get_property_media_file_us
 import 'package:imobiliaria/app/domain/media/usecases/restore_property_media_use_case.dart';
 import 'package:imobiliaria/app/domain/media/usecases/set_property_cover_use_case.dart';
 import 'package:imobiliaria/app/domain/media/usecases/upload_property_image_use_case.dart';
+import 'package:imobiliaria/app/domain/media/usecases/upload_temporary_property_image_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/build_property_search_query_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_featured_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_home_brand_content_use_case.dart';
@@ -94,7 +93,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => BrokerPropertiesController(
         store: get<BrokerPropertiesStore>(),
         getBrokerProperties: get<GetBrokerPropertiesUseCase>(),
-        createBrokerPropertyDraft: get<CreateBrokerPropertyDraftUseCase>(),
+        getPropertyMediaFile: get<GetPropertyMediaFileUseCase>(),
         saveBrokerProperty: get<SaveBrokerPropertyUseCase>(),
         updateBrokerPropertyStatus: get<UpdateBrokerPropertyStatusUseCase>(),
         navigator: get<AppNavigator>(),
@@ -111,6 +110,8 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         updateBrokerPropertyStatus: get<UpdateBrokerPropertyStatusUseCase>(),
         updateAdminPropertyStatus: get<UpdateAdminPropertyStatusUseCase>(),
         uploadPropertyImage: get<UploadPropertyImageUseCase>(),
+        uploadTemporaryPropertyImage:
+            get<UploadTemporaryPropertyImageUseCase>(),
         setPropertyCover: get<SetPropertyCoverUseCase>(),
         getPropertyMediaFile: get<GetPropertyMediaFileUseCase>(),
         deletePropertyMedia: get<DeletePropertyMediaUseCase>(),
@@ -121,7 +122,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => AdminPropertiesController(
         store: get<AdminPropertiesStore>(),
         getAdminProperties: get<GetAdminPropertiesUseCase>(),
-        createAdminPropertyDraft: get<CreateAdminPropertyDraftUseCase>(),
+        getPropertyMediaFile: get<GetPropertyMediaFileUseCase>(),
         createAdminProperty: get<CreateAdminPropertyUseCase>(),
         saveAdminProperty: get<SaveAdminPropertyUseCase>(),
         updateAdminPropertyStatus: get<UpdateAdminPropertyStatusUseCase>(),
@@ -180,20 +181,14 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     );
     registerFactory(() => AuthRepository(datasource: get<AuthDatasource>()));
     registerFactory(
-      () => AdminBrokersRepository(
-        datasource: get<AdminBrokersDatasource>(),
-      ),
+      () => AdminBrokersRepository(datasource: get<AdminBrokersDatasource>()),
     );
     registerFactory(
       () => BrokerPropertiesRepository(
         datasource: get<BrokerPropertiesDatasource>(),
       ),
     );
-    registerFactory(
-      () => MediaRepository(
-        datasource: get<MediaDatasource>(),
-      ),
-    );
+    registerFactory(() => MediaRepository(datasource: get<MediaDatasource>()));
   }
 
   @override
@@ -232,14 +227,10 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     );
     registerFactory(() => ResolveProtectedRouteAccessUseCase());
     registerFactory(
-      () => GetAdminBrokersUseCase(
-        repository: get<AdminBrokersRepository>(),
-      ),
+      () => GetAdminBrokersUseCase(repository: get<AdminBrokersRepository>()),
     );
     registerFactory(
-      () => CreateAdminBrokerUseCase(
-        repository: get<AdminBrokersRepository>(),
-      ),
+      () => CreateAdminBrokerUseCase(repository: get<AdminBrokersRepository>()),
     );
     registerFactory(
       () => GetBrokerPropertiesUseCase(
@@ -248,11 +239,6 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     );
     registerFactory(
       () => GetBrokerPropertyUseCase(
-        repository: get<BrokerPropertiesRepository>(),
-      ),
-    );
-    registerFactory(
-      () => CreateBrokerPropertyDraftUseCase(
         repository: get<BrokerPropertiesRepository>(),
       ),
     );
@@ -277,11 +263,6 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       ),
     );
     registerFactory(
-      () => CreateAdminPropertyDraftUseCase(
-        repository: get<BrokerPropertiesRepository>(),
-      ),
-    );
-    registerFactory(
       () => CreateAdminPropertyUseCase(
         repository: get<BrokerPropertiesRepository>(),
       ),
@@ -297,29 +278,24 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       ),
     );
     registerFactory(
-      () => UploadPropertyImageUseCase(
+      () => UploadPropertyImageUseCase(repository: get<MediaRepository>()),
+    );
+    registerFactory(
+      () => UploadTemporaryPropertyImageUseCase(
         repository: get<MediaRepository>(),
       ),
     );
     registerFactory(
-      () => SetPropertyCoverUseCase(
-        repository: get<MediaRepository>(),
-      ),
+      () => SetPropertyCoverUseCase(repository: get<MediaRepository>()),
     );
     registerFactory(
-      () => GetPropertyMediaFileUseCase(
-        repository: get<MediaRepository>(),
-      ),
+      () => GetPropertyMediaFileUseCase(repository: get<MediaRepository>()),
     );
     registerFactory(
-      () => DeletePropertyMediaUseCase(
-        repository: get<MediaRepository>(),
-      ),
+      () => DeletePropertyMediaUseCase(repository: get<MediaRepository>()),
     );
     registerFactory(
-      () => RestorePropertyMediaUseCase(
-        repository: get<MediaRepository>(),
-      ),
+      () => RestorePropertyMediaUseCase(repository: get<MediaRepository>()),
     );
   }
 }

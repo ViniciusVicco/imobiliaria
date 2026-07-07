@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/api/api_failure_mapper.dart';
 import 'package:imobiliaria/app/data/property_segments/datasources/property_segments_datasource.dart';
 import 'package:imobiliaria/app/data/property_segments/failures/home_showcase_failure.dart';
 import 'package:imobiliaria/app/data/property_segments/failures/segment_route_failure.dart';
@@ -31,9 +33,13 @@ class PropertySegmentsRepository {
       return ErrorResponse<Failure, PropertySegmentRouteModel>(
         SegmentRouteFailure(),
       );
+    } on DioException catch (error) {
+      return ErrorResponse<Failure, PropertySegmentRouteModel>(
+        SegmentRouteFailure(ApiFailureMapper.fromDioException(error)),
+      );
     } catch (_) {
       return ErrorResponse<Failure, PropertySegmentRouteModel>(
-        SegmentRouteFailure(),
+        SegmentRouteFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
   }
@@ -63,9 +69,13 @@ class PropertySegmentsRepository {
       return SuccessResponse<Failure, List<FeaturedPropertyEntity>>(
         response.data.map(FeaturedPropertyModel.fromJson).toList(),
       );
+    } on DioException catch (error) {
+      return ErrorResponse<Failure, List<FeaturedPropertyEntity>>(
+        HomeShowcaseFailure(ApiFailureMapper.fromDioException(error)),
+      );
     } catch (_) {
       return ErrorResponse<Failure, List<FeaturedPropertyEntity>>(
-        HomeShowcaseFailure(),
+        HomeShowcaseFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
   }
@@ -83,9 +93,13 @@ class PropertySegmentsRepository {
       return SuccessResponse<Failure, HomeBrandContentEntity>(
         HomeBrandContentModel.fromJson(response.data),
       );
+    } on DioException catch (error) {
+      return ErrorResponse<Failure, HomeBrandContentEntity>(
+        HomeShowcaseFailure(ApiFailureMapper.fromDioException(error)),
+      );
     } catch (_) {
       return ErrorResponse<Failure, HomeBrandContentEntity>(
-        HomeShowcaseFailure(),
+        HomeShowcaseFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
   }
@@ -107,9 +121,13 @@ class PropertySegmentsRepository {
       return SuccessResponse<Failure, PropertySearchResultEntity>(
         PropertySearchResultModel.fromJson(response.data),
       );
+    } on DioException catch (error) {
+      return ErrorResponse<Failure, PropertySearchResultEntity>(
+        HomeShowcaseFailure(ApiFailureMapper.fromDioException(error)),
+      );
     } catch (_) {
       return ErrorResponse<Failure, PropertySearchResultEntity>(
-        HomeShowcaseFailure(),
+        HomeShowcaseFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
   }

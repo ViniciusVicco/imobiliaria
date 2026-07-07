@@ -1,17 +1,18 @@
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
-import 'package:imobiliaria/app/domain/broker/usecases/create_broker_property_draft_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_broker_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/save_broker_property_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/update_broker_property_status_use_case.dart';
+import 'package:imobiliaria/app/domain/media/usecases/get_property_media_file_use_case.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/broker_properties_store.dart';
 import 'package:legend_core/legend_core.dart';
+import 'dart:typed_data';
 
 class BrokerPropertiesController extends Controller {
   BrokerPropertiesController({
     required this.store,
     required this.getBrokerProperties,
-    required this.createBrokerPropertyDraft,
+    required this.getPropertyMediaFile,
     required this.saveBrokerProperty,
     required this.updateBrokerPropertyStatus,
     required this.navigator,
@@ -19,7 +20,7 @@ class BrokerPropertiesController extends Controller {
 
   final BrokerPropertiesStore store;
   final GetBrokerPropertiesUseCase getBrokerProperties;
-  final CreateBrokerPropertyDraftUseCase createBrokerPropertyDraft;
+  final GetPropertyMediaFileUseCase getPropertyMediaFile;
   final SaveBrokerPropertyUseCase saveBrokerProperty;
   final UpdateBrokerPropertyStatusUseCase updateBrokerPropertyStatus;
   final AppNavigator navigator;
@@ -62,28 +63,23 @@ class BrokerPropertiesController extends Controller {
   }
 
   Future<bool> createDraftAndOpenForm({bool replace = false}) async {
-    store.setLoading();
-    final result = await createBrokerPropertyDraft.call();
-
-    var wasCreated = false;
-    result.getResult(
-      onSuccess: (property) {
-        wasCreated = true;
-        final route = MainRoutes.brokerPropertyEditPath(property.id);
-        if (replace) {
-          navigator.pushReplacementNamed(route);
-        } else {
-          navigator.pushNamed(route);
-        }
-      },
-      onError: (error) => store.setError(error.message),
-    );
-
-    return wasCreated;
+    if (replace) {
+      navigator.pushReplacementNamed(MainRoutes.brokerPropertyNew);
+    } else {
+      navigator.pushNamed(MainRoutes.brokerPropertyNew);
+    }
+    return true;
   }
 
   void openEditForm(BrokerPropertyEntity property) {
     navigator.pushNamed(MainRoutes.brokerPropertyEditPath(property.id));
+  }
+
+  Future<Uint8List?> loadMediaFile(String mediaId) async {
+    final result = await getPropertyMediaFile.call(mediaId: mediaId);
+    Uint8List? bytes;
+    result.getResult(onSuccess: (data) => bytes = data, onError: (_) {});
+    return bytes;
   }
 
   Future<bool> updateStatus({

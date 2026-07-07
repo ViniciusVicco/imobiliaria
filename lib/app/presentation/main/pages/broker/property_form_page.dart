@@ -34,13 +34,15 @@ class _PropertyFormPageState
         StateController<MainModule, PropertyFormPage, PropertyFormController> {
   String get _propertyId => widget.routeData?.pathParameters['id'] ?? '';
   bool get _isAdmin => widget.mode == PropertyFormMode.admin;
+  late final String _uploadSessionId =
+      'property_${DateTime.now().microsecondsSinceEpoch}';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_propertyId.isEmpty) {
-        controller.store.setError('Imovel nao encontrado.');
+        controller.startNewProperty(isAdmin: _isAdmin);
         return;
       }
       controller.loadProperty(_propertyId, isAdmin: _isAdmin);
@@ -85,6 +87,7 @@ class _PropertyFormPageState
               controller: controller,
               isBusy: state == AppStateEnum.isLoading,
               isAdmin: _isAdmin,
+              uploadSessionId: _uploadSessionId,
             ),
           );
         },
@@ -108,12 +111,14 @@ class _PropertyFormContent extends StatefulWidget {
     required this.controller,
     required this.isBusy,
     required this.isAdmin,
+    required this.uploadSessionId,
   });
 
   final BrokerPropertyEntity property;
   final PropertyFormController controller;
   final bool isBusy;
   final bool isAdmin;
+  final String uploadSessionId;
 
   @override
   State<_PropertyFormContent> createState() => _PropertyFormContentState();
@@ -140,6 +145,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
   late bool _isNewDevelopment;
   final PropertyFormValidator _validator = const PropertyFormValidator();
   PropertyFormValidationResult? _validationResult;
+  bool get _isNew => widget.property.id.isEmpty;
 
   @override
   void initState() {
@@ -168,8 +174,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     _garageSpaces = property.garageSpaces.toDouble();
     _propertyAgeYears = property.propertyAgeYears.toDouble();
     _isFeatured = property.isFeatured;
-    _isNewDevelopment =
-        property.tags.contains('na-planta') || property.propertyAgeYears == 0;
+    _isNewDevelopment = property.tags.contains('na-planta');
   }
 
   @override
@@ -206,27 +211,35 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: <Widget>[
                   Text(
-                    widget.property.status == 'draft'
-                        ? 'Rascunho do imovel'
-                        : 'Editar imovel',
+                    _isNew ? 'Novo imovel' : 'Editar imovel',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   _StatusChip(status: widget.property.status),
                 ],
               ),
             ),
-            FilledButton.icon(
-              onPressed: widget.isBusy ? null : _saveDraft,
-              icon: const Icon(Icons.save_outlined),
-              label: const Text('Salvar rascunho'),
-            ),
-            const SizedBox(width: DSSpacing.sm),
+            if (!_isNew) ...<Widget>[
+              FilledButton.icon(
+                onPressed: widget.isBusy ? null : _saveDraft,
+                icon: const Icon(Icons.save_outlined),
+                label: const Text('Salvar alteracoes'),
+              ),
+              const SizedBox(width: DSSpacing.sm),
+            ],
             FilledButton.icon(
               onPressed: widget.isBusy ? null : _finalize,
               icon: Icon(
                 widget.isAdmin ? Icons.publish_outlined : Icons.outgoing_mail,
               ),
-              label: Text(widget.isAdmin ? 'Publicar' : 'Enviar para revisao'),
+              label: Text(
+                _isNew
+                    ? widget.isAdmin
+                          ? 'Criar e publicar'
+                          : 'Criar e enviar para revisao'
+                    : widget.isAdmin
+                    ? 'Publicar'
+                    : 'Enviar para revisao',
+              ),
             ),
           ],
         ),
@@ -236,10 +249,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
         ],
         if (errorMessage != null && errorMessage.isNotEmpty) ...<Widget>[
           const SizedBox(height: DSSpacing.md),
-          _FormFeedbackBanner(
-            message: errorMessage,
-            isError: true,
-          ),
+          _FormFeedbackBanner(message: errorMessage, isError: true),
         ],
         const SizedBox(height: DSSpacing.lg),
         _Section(
@@ -308,8 +318,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
                 label: 'Quartos',
                 value: _bedrooms,
                 max: 10,
-                onChanged: (value) =>
-                    _updateFormState(() => _bedrooms = value),
+                onChanged: (value) => _updateFormState(() => _bedrooms = value),
               ),
               _slider(
                 label: 'Banheiros',
@@ -488,9 +497,9 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       SnackBar(
         content: Text(
           wasSaved
-              ? 'Rascunho salvo.'
+              ? 'Alteracoes salvas.'
               : widget.controller.store.errorMessage ??
-                    'Nao foi possivel salvar o rascunho.',
+                    'Nao foi possivel salvar as alteracoes.',
         ),
       ),
     );
@@ -518,9 +527,12 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       return;
     }
 
-    final wasFinalized = await widget.controller.finalizeProperty(
-      isAdmin: widget.isAdmin,
-    );
+    var wasFinalized = wasSaved;
+    if (!_isNew) {
+      wasFinalized = await widget.controller.finalizeProperty(
+        isAdmin: widget.isAdmin,
+      );
+    }
 
     if (!mounted) return;
 
@@ -536,6 +548,14 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
         ),
       ),
     );
+
+    if (_isNew && wasFinalized) {
+      Module.get<MainModule>().navigator.pushReplacementNamed(
+        widget.isAdmin
+            ? MainRoutes.adminProperties
+            : MainRoutes.brokerProperties,
+      );
+    }
   }
 
   void _showCurrentError(String fallbackMessage) {
@@ -544,9 +564,9 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _setValidationResult(PropertyFormValidationResult validationResult) {
@@ -570,13 +590,17 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
 
     var uploaded = 0;
     for (final image in images.take(remaining)) {
-      final wasUploaded = await widget.controller.uploadImage(
-        PropertyImageUploadEntity(
-          fileName: image.fileName,
-          mimeType: image.mimeType,
-          contentBase64: image.contentBase64,
-        ),
+      final upload = PropertyImageUploadEntity(
+        fileName: image.fileName,
+        mimeType: image.mimeType,
+        contentBase64: image.contentBase64,
       );
+      final wasUploaded = _isNew
+          ? await widget.controller.uploadTemporaryImage(
+              uploadSessionId: widget.uploadSessionId,
+              image: upload,
+            )
+          : await widget.controller.uploadImage(upload);
       if (wasUploaded) uploaded++;
     }
 
@@ -615,6 +639,14 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       isFeatured: _isFeatured,
       isNewDevelopment: _isNewDevelopment,
       brokerId: widget.isAdmin ? _brokerId : null,
+      mediaIds: _isNew
+          ? widget.property.media
+                .where((media) => media.isImage && media.status == 'active')
+                .map((media) => media.id)
+                .toList()
+          : const <String>[],
+      coverMediaId: _isNew ? _coverMediaId() : null,
+      uploadSessionId: _isNew ? widget.uploadSessionId : null,
     );
   }
 
@@ -630,7 +662,26 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
         .toList();
   }
 
+  String? _coverMediaId() {
+    final coverUrl = widget.property.coverUrl.trim();
+    if (coverUrl.isEmpty) return null;
+
+    for (final media in widget.property.media) {
+      if (!media.isImage || media.status != 'active') continue;
+      if (media.url.trim() == coverUrl || media.publicUrl.trim() == coverUrl) {
+        return media.id;
+      }
+    }
+
+    return null;
+  }
+
   Future<void> _setCover(String mediaId) async {
+    if (_isNew) {
+      widget.controller.setTemporaryCover(mediaId);
+      return;
+    }
+
     await widget.controller.setCover(mediaId);
   }
 
@@ -681,10 +732,7 @@ class _Section extends StatelessWidget {
 }
 
 class _FormFeedbackBanner extends StatelessWidget {
-  const _FormFeedbackBanner({
-    required this.message,
-    required this.isError,
-  });
+  const _FormFeedbackBanner({required this.message, required this.isError});
 
   final String message;
   final bool isError;
@@ -763,15 +811,13 @@ class _FormValidationBanner extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text(
-                      '- ',
-                      style: TextStyle(color: DSColors.error),
-                    ),
+                    const Text('- ', style: TextStyle(color: DSColors.error)),
                     Expanded(
                       child: Text(
                         message,
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(color: DSColors.error),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: DSColors.error),
                       ),
                     ),
                   ],
@@ -966,10 +1012,7 @@ class _PropertyPreview extends StatelessWidget {
       imageUrl,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
-        return const _ImagePlaceholder(
-          icon: Icons.image_outlined,
-          size: 40,
-        );
+        return const _ImagePlaceholder(icon: Icons.image_outlined, size: 40);
       },
     );
   }

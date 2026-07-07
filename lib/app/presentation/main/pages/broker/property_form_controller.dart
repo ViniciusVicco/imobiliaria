@@ -14,6 +14,7 @@ import 'package:imobiliaria/app/domain/media/usecases/get_property_media_file_us
 import 'package:imobiliaria/app/domain/media/usecases/restore_property_media_use_case.dart';
 import 'package:imobiliaria/app/domain/media/usecases/set_property_cover_use_case.dart';
 import 'package:imobiliaria/app/domain/media/usecases/upload_property_image_use_case.dart';
+import 'package:imobiliaria/app/domain/media/usecases/upload_temporary_property_image_use_case.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/property_form_store.dart';
 import 'package:legend_core/legend_core.dart';
 
@@ -28,6 +29,7 @@ class PropertyFormController extends Controller {
     required this.updateBrokerPropertyStatus,
     required this.updateAdminPropertyStatus,
     required this.uploadPropertyImage,
+    required this.uploadTemporaryPropertyImage,
     required this.setPropertyCover,
     required this.getPropertyMediaFile,
     required this.deletePropertyMedia,
@@ -43,11 +45,43 @@ class PropertyFormController extends Controller {
   final UpdateBrokerPropertyStatusUseCase updateBrokerPropertyStatus;
   final UpdateAdminPropertyStatusUseCase updateAdminPropertyStatus;
   final UploadPropertyImageUseCase uploadPropertyImage;
+  final UploadTemporaryPropertyImageUseCase uploadTemporaryPropertyImage;
   final SetPropertyCoverUseCase setPropertyCover;
   final GetPropertyMediaFileUseCase getPropertyMediaFile;
   final DeletePropertyMediaUseCase deletePropertyMedia;
   final RestorePropertyMediaUseCase restorePropertyMedia;
   bool _isAdminMode = false;
+
+  void startNewProperty({required bool isAdmin}) {
+    _isAdminMode = isAdmin;
+    store.setProperty(
+      BrokerPropertyEntity(
+        id: '',
+        title: '',
+        description: '',
+        segment: 'residential',
+        propertyType: 'Apartamento',
+        city: 'Palmas',
+        neighborhood: '',
+        subNeighborhood: '',
+        coverUrl: '',
+        imageUrls: const <String>[],
+        videoUrl: '',
+        tags: const <String>[],
+        areaM2: 0,
+        bedrooms: 0,
+        bathrooms: 1,
+        garageSpaces: 0,
+        propertyAgeYears: 0,
+        price: 0,
+        status: isAdmin ? 'published' : 'pending_review',
+        isFeatured: false,
+        updatedAt: '',
+      ),
+    );
+
+    if (isAdmin) loadBrokers();
+  }
 
   Future<void> loadProperty(String id, {required bool isAdmin}) async {
     _isAdminMode = isAdmin;
@@ -65,10 +99,7 @@ class PropertyFormController extends Controller {
 
   Future<void> loadBrokers() async {
     final result = await getAdminBrokers.call();
-    result.getResult(
-      onSuccess: store.setBrokers,
-      onError: (_) {},
-    );
+    result.getResult(onSuccess: store.setBrokers, onError: (_) {});
   }
 
   Future<bool> saveProperty(
@@ -94,9 +125,7 @@ class PropertyFormController extends Controller {
     return wasSaved;
   }
 
-  Future<bool> finalizeProperty({
-    required bool isAdmin,
-  }) async {
+  Future<bool> finalizeProperty({required bool isAdmin}) async {
     final current = store.property;
     if (current == null) return false;
 
@@ -144,17 +173,72 @@ class PropertyFormController extends Controller {
     return wasUploaded;
   }
 
+  Future<bool> uploadTemporaryImage({
+    required String uploadSessionId,
+    required PropertyImageUploadEntity image,
+  }) async {
+    final current = store.property;
+    if (current == null) return false;
+
+    store.setLoading();
+    final result = await uploadTemporaryPropertyImage.call(
+      uploadSessionId: uploadSessionId,
+      image: image,
+    );
+
+    var wasUploaded = false;
+    result.getResult(
+      onSuccess: (media) {
+        wasUploaded = true;
+        final latest = store.property ?? current;
+        final existingMedia = latest.media.any((item) => item.id == media.id);
+        final nextMedia = existingMedia
+            ? latest.media
+            : <PropertyMediaEntity>[...latest.media, media];
+        final nextCoverUrl = latest.coverUrl.trim().isEmpty
+            ? media.publicUrl
+            : latest.coverUrl;
+        store.setProperty(
+          latest.copyWith(media: nextMedia, coverUrl: nextCoverUrl),
+        );
+      },
+      onError: (error) => store.setError(error.message),
+    );
+
+    return wasUploaded;
+  }
+
   Future<bool> setCover(String mediaId) async {
     return _runMediaMutation(() => setPropertyCover.call(mediaId: mediaId));
+  }
+
+  void setTemporaryCover(String mediaId) {
+    final current = store.property;
+    if (current == null || current.id.isNotEmpty) return;
+
+    PropertyMediaEntity? media;
+    for (final item in current.media) {
+      if (item.id == mediaId) {
+        media = item;
+        break;
+      }
+    }
+
+    if (media == null) return;
+
+    store.setProperty(
+      current.copyWith(
+        coverUrl: media.publicUrl.trim().isNotEmpty
+            ? media.publicUrl
+            : media.url,
+      ),
+    );
   }
 
   Future<Uint8List?> loadMediaFile(String mediaId) async {
     final result = await getPropertyMediaFile.call(mediaId: mediaId);
     Uint8List? bytes;
-    result.getResult(
-      onSuccess: (data) => bytes = data,
-      onError: (_) {},
-    );
+    result.getResult(onSuccess: (data) => bytes = data, onError: (_) {});
     return bytes;
   }
 
@@ -177,13 +261,21 @@ class PropertyFormController extends Controller {
 
     var wasUpdated = false;
     result.getResult(
-      onSuccess: (_) {
+      onSuccess: (media) {
         wasUpdated = true;
+        if (current.id.isEmpty) {
+          final nextMedia = current.media
+              .map((item) => item.id == media.id ? media : item)
+              .toList();
+          store.setProperty(current.copyWith(media: nextMedia));
+        }
       },
       onError: (error) => store.setError(error.message),
     );
 
-    if (wasUpdated) await loadProperty(current.id, isAdmin: _isAdminMode);
+    if (wasUpdated && current.id.isNotEmpty) {
+      await loadProperty(current.id, isAdmin: _isAdminMode);
+    }
     return wasUpdated;
   }
 }

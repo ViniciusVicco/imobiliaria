@@ -16,22 +16,15 @@ class PropertySegmentsDatasource with PropertySegmentsEndpoints {
 
   Future<DataSourceResponse<List<Map<String, dynamic>>>>
   getFeaturedProperties() async {
-    try {
-      final response = await restClient.get<Map<String, dynamic>>(
-        featuredProperties,
-      );
-      final body = response.data;
-      if (response.statusCode == 200 && body != null) {
-        final items = body['items'] as List<dynamic>? ?? const <dynamic>[];
-        return DataSourceResponse<List<Map<String, dynamic>>>(
-          data: items.cast<Map<String, dynamic>>(),
-          hasSuccess: true,
-        );
-      }
-    } catch (_) {
+    final response = await restClient.get<Map<String, dynamic>>(
+      featuredProperties,
+    );
+    final body = response.data;
+    if (response.statusCode == 200 && body != null) {
+      final items = body['items'] as List<dynamic>? ?? const <dynamic>[];
       return DataSourceResponse<List<Map<String, dynamic>>>(
-        data: const <Map<String, dynamic>>[],
-        hasSuccess: false,
+        data: items.cast<Map<String, dynamic>>(),
+        hasSuccess: true,
       );
     }
 
@@ -42,21 +35,14 @@ class PropertySegmentsDatasource with PropertySegmentsEndpoints {
   }
 
   Future<DataSourceResponse<Map<String, dynamic>>> getHomeBrandContent() async {
-    try {
-      final response = await restClient.get<Map<String, dynamic>>(
-        brandContent,
-      );
-      final body = response.data;
-      if (response.statusCode == 200 && body != null) {
-        return DataSourceResponse<Map<String, dynamic>>(
-          data: body,
-          hasSuccess: true,
-        );
-      }
-    } catch (_) {
+    final response = await restClient.get<Map<String, dynamic>>(
+      brandContent,
+    );
+    final body = response.data;
+    if (response.statusCode == 200 && body != null) {
       return DataSourceResponse<Map<String, dynamic>>(
-        data: const <String, dynamic>{},
-        hasSuccess: false,
+        data: body,
+        hasSuccess: true,
       );
     }
 

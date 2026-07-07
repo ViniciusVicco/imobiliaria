@@ -1,4 +1,5 @@
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
@@ -77,6 +78,22 @@ export async function deleteR2Object(storageKey: string) {
   );
 }
 
+export async function copyR2Object({
+  sourceKey,
+  destinationKey,
+}: {
+  sourceKey: string;
+  destinationKey: string;
+}) {
+  await getR2Client().send(
+    new CopyObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      CopySource: `${env.R2_BUCKET_NAME}/${encodeR2CopySourceKey(sourceKey)}`,
+      Key: destinationKey,
+    }),
+  );
+}
+
 export function buildR2PublicUrl(storageKey: string) {
   assertR2Configured();
   return `${env.R2_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`;
@@ -109,4 +126,11 @@ export function getAllowedImageMimeTypes() {
 
 export function getMaxImageSizeBytes() {
   return env.R2_MAX_IMAGE_SIZE_MB * 1024 * 1024;
+}
+
+function encodeR2CopySourceKey(storageKey: string) {
+  return storageKey
+    .split('/')
+    .map((part) => encodeURIComponent(part))
+    .join('/');
 }

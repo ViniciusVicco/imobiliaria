@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/api/api_failure_mapper.dart';
 import 'package:imobiliaria/app/data/admin/datasources/admin_brokers_datasource.dart';
 import 'package:imobiliaria/app/data/admin/failures/admin_brokers_failure.dart';
 import 'package:imobiliaria/app/data/admin/models/admin_broker_model.dart';
@@ -38,11 +39,11 @@ class AdminBrokersRepository {
       );
     } on DioException catch (error) {
       return ErrorResponse<Failure, List<AdminBrokerEntity>>(
-        AdminBrokersFailure(_mapApiMessage(error)),
+        AdminBrokersFailure(ApiFailureMapper.fromDioException(error)),
       );
     } catch (_) {
       return ErrorResponse<Failure, List<AdminBrokerEntity>>(
-        AdminBrokersFailure(),
+        AdminBrokersFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
   }
@@ -67,27 +68,12 @@ class AdminBrokersRepository {
       );
     } on DioException catch (error) {
       return ErrorResponse<Failure, AdminBrokerEntity>(
-        AdminBrokersFailure(_mapApiMessage(error)),
+        AdminBrokersFailure(ApiFailureMapper.fromDioException(error)),
       );
     } catch (_) {
       return ErrorResponse<Failure, AdminBrokerEntity>(
-        AdminBrokersFailure('Nao foi possivel criar o corretor agora.'),
+        AdminBrokersFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }
-  }
-
-  String _mapApiMessage(DioException error) {
-    final data = error.response?.data;
-    final errorBody = data is Map<String, dynamic>
-        ? data['error'] as Map<String, dynamic>?
-        : null;
-    final errorMessage = errorBody?['message'] as String?;
-
-    if (errorMessage != null && errorMessage.isNotEmpty) return errorMessage;
-    if (error.response?.statusCode == 401) return 'Entre novamente.';
-    if (error.response?.statusCode == 403) {
-      return 'Seu perfil nao pode acessar esta area.';
-    }
-    return 'Nao foi possivel concluir a operacao agora.';
   }
 }

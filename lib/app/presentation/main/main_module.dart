@@ -4,10 +4,8 @@ import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.
 
 import 'pages/admin/admin_brokers_page.dart';
 import 'pages/admin/admin_home_page.dart';
-import 'pages/admin/admin_property_new_page.dart';
 import 'pages/admin/admin_properties_page.dart';
 import 'pages/broker/broker_home_page.dart';
-import 'pages/broker/broker_property_new_page.dart';
 import 'pages/broker/broker_properties_page.dart';
 import 'pages/broker/property_form_page.dart';
 import 'pages/property_segments/property_segments_home_page.dart';
@@ -45,7 +43,7 @@ class MainModule extends Module {
     MainRoutes.brokerPropertyNew: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.broker,
       requestedRoute: MainRoutes.brokerPropertyNew,
-      child: BrokerPropertyNewPage(),
+      child: PropertyFormPage(),
     ),
     MainRoutes.brokerPropertyEdit: (context, arguments) => AuthGuardPage(
       requiredRole: UserRole.broker,
@@ -72,7 +70,7 @@ class MainModule extends Module {
     MainRoutes.adminPropertyNew: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,
       requestedRoute: MainRoutes.adminPropertyNew,
-      child: AdminPropertyNewPage(),
+      child: PropertyFormPage(mode: PropertyFormMode.admin),
     ),
     MainRoutes.adminPropertyEdit: (context, arguments) => AuthGuardPage(
       requiredRole: UserRole.admin,

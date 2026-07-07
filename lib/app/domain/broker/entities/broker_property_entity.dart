@@ -51,6 +51,58 @@ class BrokerPropertyEntity {
   final List<PropertyMediaEntity> media;
   final BrokerPropertyBrokerEntity? broker;
 
+  BrokerPropertyEntity copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? segment,
+    String? propertyType,
+    String? city,
+    String? neighborhood,
+    String? subNeighborhood,
+    String? coverUrl,
+    List<String>? imageUrls,
+    String? videoUrl,
+    List<String>? tags,
+    int? areaM2,
+    int? bedrooms,
+    int? bathrooms,
+    int? garageSpaces,
+    int? propertyAgeYears,
+    int? price,
+    String? status,
+    bool? isFeatured,
+    String? updatedAt,
+    List<PropertyMediaEntity>? media,
+    BrokerPropertyBrokerEntity? broker,
+  }) {
+    return BrokerPropertyEntity(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      segment: segment ?? this.segment,
+      propertyType: propertyType ?? this.propertyType,
+      city: city ?? this.city,
+      neighborhood: neighborhood ?? this.neighborhood,
+      subNeighborhood: subNeighborhood ?? this.subNeighborhood,
+      coverUrl: coverUrl ?? this.coverUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
+      videoUrl: videoUrl ?? this.videoUrl,
+      tags: tags ?? this.tags,
+      areaM2: areaM2 ?? this.areaM2,
+      bedrooms: bedrooms ?? this.bedrooms,
+      bathrooms: bathrooms ?? this.bathrooms,
+      garageSpaces: garageSpaces ?? this.garageSpaces,
+      propertyAgeYears: propertyAgeYears ?? this.propertyAgeYears,
+      price: price ?? this.price,
+      status: status ?? this.status,
+      isFeatured: isFeatured ?? this.isFeatured,
+      updatedAt: updatedAt ?? this.updatedAt,
+      media: media ?? this.media,
+      broker: broker ?? this.broker,
+    );
+  }
+
   BrokerPropertyFormEntity toForm() {
     return BrokerPropertyFormEntity(
       title: title,
@@ -71,7 +123,7 @@ class BrokerPropertyEntity {
       price: price,
       tagSlugs: tags,
       isFeatured: isFeatured,
-      isNewDevelopment: tags.contains('na-planta') || propertyAgeYears == 0,
+      isNewDevelopment: tags.contains('na-planta'),
       brokerId: broker?.id,
     );
   }
@@ -135,6 +187,9 @@ class BrokerPropertyFormEntity {
     required this.isFeatured,
     required this.isNewDevelopment,
     this.brokerId,
+    this.mediaIds = const <String>[],
+    this.coverMediaId,
+    this.uploadSessionId,
   });
 
   factory BrokerPropertyFormEntity.empty() {
@@ -158,6 +213,7 @@ class BrokerPropertyFormEntity {
       tagSlugs: <String>[],
       isFeatured: false,
       isNewDevelopment: false,
+      mediaIds: <String>[],
     );
   }
 
@@ -181,6 +237,9 @@ class BrokerPropertyFormEntity {
   final bool isFeatured;
   final bool isNewDevelopment;
   final String? brokerId;
+  final List<String> mediaIds;
+  final String? coverMediaId;
+  final String? uploadSessionId;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -207,6 +266,11 @@ class BrokerPropertyFormEntity {
       'isFeatured': isFeatured,
       'isNewDevelopment': isNewDevelopment,
       if (brokerId != null && brokerId!.isNotEmpty) 'brokerId': brokerId,
+      if (mediaIds.isNotEmpty) 'mediaIds': mediaIds,
+      if (coverMediaId != null && coverMediaId!.isNotEmpty)
+        'coverMediaId': coverMediaId,
+      if (uploadSessionId != null && uploadSessionId!.isNotEmpty)
+        'uploadSessionId': uploadSessionId,
     };
   }
 }

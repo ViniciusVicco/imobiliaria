@@ -24,6 +24,19 @@ class MediaDatasource with MediaEndpoints {
     );
   }
 
+  Future<DataSourceResponse<Map<String, dynamic>>>
+  uploadTemporaryPropertyImage({required Map<String, dynamic> data}) async {
+    final response = await _restClient.post<Map<String, dynamic>>(
+      temporaryPropertyImages,
+      data: data,
+    );
+
+    return DataSourceResponse<Map<String, dynamic>>(
+      data: response.data ?? const <String, dynamic>{},
+      hasSuccess: response.statusCode == 200 && response.data != null,
+    );
+  }
+
   Future<DataSourceResponse<Map<String, dynamic>>> setCover({
     required String mediaId,
   }) async {

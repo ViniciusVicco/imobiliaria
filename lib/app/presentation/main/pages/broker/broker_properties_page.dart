@@ -75,6 +75,7 @@ class _BrokerPropertiesPageState
                     ),
                     AppStateEnum.hasSuccess => PropertyManagementGrid(
                       properties: controller.store.properties,
+                      loadMediaFile: controller.loadMediaFile,
                       onEdit: controller.openEditForm,
                       onMarkSold: (property) => _confirmStatus(
                         property: property,
@@ -101,9 +102,9 @@ class _BrokerPropertiesPageState
   Future<void> _createDraft() async {
     final wasCreated = await controller.createDraftAndOpenForm();
     if (!wasCreated && mounted && controller.store.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.store.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(controller.store.errorMessage!)));
     }
   }
 
@@ -113,21 +114,19 @@ class _BrokerPropertiesPageState
       builder: (context) => PropertyFormDialog(
         title: property == null ? 'Novo imovel' : 'Editar imovel',
         initialValue: property?.toForm() ?? BrokerPropertyFormEntity.empty(),
-        onSave: (form) => controller.saveProperty(
-          id: property?.id,
-          property: form,
-        ),
+        onSave: (form) =>
+            controller.saveProperty(id: property?.id, property: form),
       ),
     );
 
     if (wasSaved == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Imovel salvo.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Imovel salvo.')));
     } else if (mounted && controller.store.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.store.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(controller.store.errorMessage!)));
     }
   }
 
@@ -161,9 +160,9 @@ class _BrokerPropertiesPageState
       status: status,
     );
     if (wasUpdated && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Status atualizado.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Status atualizado.')));
     }
   }
 }

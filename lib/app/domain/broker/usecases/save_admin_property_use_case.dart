@@ -8,9 +8,13 @@ class SaveAdminPropertyUseCase {
   final BrokerPropertiesRepository repository;
 
   Future<DualResponse<Failure, BrokerPropertyEntity>> call({
-    required String id,
+    String? id,
     required BrokerPropertyFormEntity property,
   }) {
+    if (id == null || id.isEmpty) {
+      return repository.createAdminProperty(property);
+    }
+
     return repository.updateAdminProperty(id: id, property: property);
   }
 }

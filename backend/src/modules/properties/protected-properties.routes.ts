@@ -1,15 +1,22 @@
 import { randomUUID } from 'node:crypto';
 
 import type { Prisma, PropertyStatus } from '@prisma/client';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import { z } from 'zod';
 
 import { prisma } from '../../shared/database/prisma.js';
 import { sendApiError } from '../../shared/http/errors.js';
 import {
+  buildR2PublicUrl,
+  copyR2Object,
+  deleteR2Object,
+  R2ConfigurationError,
+} from '../../shared/storage/r2-client.js';
+import {
   requireActiveAdmin,
   requireActiveBroker,
 } from '../auth/auth.middleware.js';
+import { buildPropertyMediaStorageKey } from '../media/media.routes.js';
 
 const propertyStatusSchema = z.enum([
   'draft',
@@ -48,6 +55,9 @@ const propertyPayloadSchema = z.object({
   isFeatured: z.boolean().default(false),
   isNewDevelopment: z.boolean().default(false),
   brokerId: z.string().trim().optional(),
+  mediaIds: z.array(z.string().trim().min(1)).max(12).default([]),
+  coverMediaId: z.string().trim().optional(),
+  uploadSessionId: z.string().trim().optional(),
 });
 
 const statusPayloadSchema = z.object({
@@ -162,15 +172,15 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const validationError = await validateActiveTags(normalizeTagSlugs(payload));
       if (validationError) return sendApiError({ reply, ...validationError });
 
-      const finalizationError = validatePayloadReadyForPublication(payload);
-      if (finalizationError) return sendApiError({ reply, ...finalizationError });
-
-      const property = await upsertPropertyWithMedia({
+      const property = await createPropertyWithTemporaryMedia({
         payload,
         brokerId,
-        status: 'published',
+        status: 'pending_review',
+        uploadedBy: brokerId,
+        reply,
       });
 
+      if (!property) return;
       return mapPropertyDetail(property);
     },
   );
@@ -287,15 +297,16 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
         return sendApiError({ reply, ...brokerValidationError });
       }
 
-      const finalizationError = validatePayloadReadyForPublication(payload);
-      if (finalizationError) return sendApiError({ reply, ...finalizationError });
-
-      const property = await upsertPropertyWithMedia({
+      const adminId = request.authenticatedUser?.id ?? '';
+      const property = await createPropertyWithTemporaryMedia({
         payload,
         brokerId: payload.brokerId ?? null,
         status: 'published',
+        uploadedBy: adminId,
+        reply,
       });
 
+      if (!property) return;
       return mapPropertyDetail(property);
     },
   );
@@ -370,6 +381,17 @@ const propertyDetailInclude = {
   broker: true,
 } satisfies Prisma.PropertyInclude;
 
+const propertyListInclude = {
+  broker: true,
+  media: {
+    where: {
+      status: 'active',
+      deletedAt: null,
+    },
+    orderBy: { sortOrder: 'asc' },
+  },
+} satisfies Prisma.PropertyInclude;
+
 async function listProperties({
   query,
   where,
@@ -384,7 +406,7 @@ async function listProperties({
       orderBy: { updatedAt: 'desc' },
       skip,
       take: query.pageSize,
-      include: { broker: true },
+      include: propertyListInclude,
     }),
     prisma.property.count({ where }),
   ]);
@@ -434,6 +456,189 @@ async function findPropertyDetail({
     },
     include: propertyDetailInclude,
   });
+}
+
+async function createPropertyWithTemporaryMedia({
+  payload,
+  brokerId,
+  status,
+  uploadedBy,
+  reply,
+}: {
+  payload: z.infer<typeof propertyPayloadSchema>;
+  brokerId: string | null;
+  status: PropertyStatus;
+  uploadedBy: string;
+  reply: FastifyReply;
+}) {
+  const validationError = await validatePayloadReadyForCreation(payload, uploadedBy);
+  if (validationError) {
+    sendApiError({ reply, ...validationError });
+    return null;
+  }
+
+  const propertyId = randomUUID();
+  const tagSlugs = normalizeTagSlugs(payload);
+  const propertyAgeYears = payload.isNewDevelopment
+    ? 0
+    : payload.propertyAgeYears;
+
+  const mediaItems = await prisma.propertyMedia.findMany({
+    where: {
+      id: { in: payload.mediaIds },
+      propertyId: null,
+      uploadedBy,
+      uploadSessionId: payload.uploadSessionId,
+      type: 'image',
+      status: 'active',
+      deletedAt: null,
+    },
+    orderBy: { sortOrder: 'asc' },
+  });
+
+  const mediaById = new Map(mediaItems.map((media) => [media.id, media]));
+  const coverMedia = payload.coverMediaId
+    ? mediaById.get(payload.coverMediaId)
+    : null;
+
+  if (mediaItems.length !== payload.mediaIds.length || !coverMedia) {
+    sendApiError({
+      reply,
+      statusCode: 400,
+      code: 'INVALID_PROPERTY_MEDIA',
+      message: 'Use apenas imagens enviadas nesta criacao.',
+    });
+    return null;
+  }
+
+  const promotedMedia: Array<{
+    id: string;
+    sourceKey: string;
+    storageKey: string;
+    publicUrl: string;
+    sortOrder: number;
+  }> = [];
+  try {
+    for (const [index, mediaId] of payload.mediaIds.entries()) {
+      const media = mediaById.get(mediaId);
+      if (!media?.storageKey) throw new Error('TEMP_MEDIA_FILE_NOT_AVAILABLE');
+
+      const destinationKey = buildPropertyMediaStorageKey({
+        propertyId,
+        fileName: media.storageKey.split('/').pop() ?? 'image',
+      });
+      const publicUrl = buildR2PublicUrl(destinationKey);
+
+      await copyR2Object({
+        sourceKey: media.storageKey,
+        destinationKey,
+      });
+
+      promotedMedia.push({
+        id: media.id,
+        sourceKey: media.storageKey,
+        storageKey: destinationKey,
+        publicUrl,
+        sortOrder: index,
+      });
+    }
+  } catch (error) {
+    if (
+      error instanceof R2ConfigurationError ||
+      error instanceof Error
+    ) {
+      sendApiError({
+        reply,
+        statusCode: 502,
+        code: 'PROPERTY_MEDIA_PROMOTION_FAILED',
+        message: 'Nao foi possivel finalizar as imagens do imovel.',
+      });
+      return null;
+    }
+
+    throw error;
+  }
+
+  const promotedCover = promotedMedia.find(
+    (media) => media.id === payload.coverMediaId,
+  );
+  if (!promotedCover) {
+    sendApiError({
+      reply,
+      statusCode: 400,
+      code: 'PROPERTY_COVER_INVALID',
+      message: 'Defina uma foto de capa ativa antes de criar o imovel.',
+    });
+    return null;
+  }
+
+  try {
+    const property = await prisma.$transaction(async (tx) => {
+      const property = await tx.property.create({
+        data: {
+          id: propertyId,
+          brokerId,
+          title: payload.title,
+          description: payload.description,
+          segment: payload.segment,
+          propertyType: payload.propertyType,
+          tagSlugs,
+          city: payload.city,
+          neighborhood: payload.neighborhood,
+          subNeighborhood: payload.subNeighborhood,
+          coverUrl: promotedCover.publicUrl,
+          areaM2: payload.areaM2,
+          bedrooms: payload.bedrooms,
+          bathrooms: payload.bathrooms,
+          garageSpaces: payload.garageSpaces,
+          propertyAgeYears,
+          price: payload.price,
+          status,
+          isFeatured: payload.isFeatured,
+        },
+      });
+
+      for (const media of promotedMedia) {
+        await tx.propertyMedia.update({
+          where: { id: media.id },
+          data: {
+            propertyId,
+            url: media.publicUrl,
+            publicUrl: media.publicUrl,
+            storageKey: media.storageKey,
+            sortOrder: media.sortOrder,
+            uploadSessionId: null,
+          },
+        });
+      }
+
+      return tx.property.findUniqueOrThrow({
+        where: { id: property.id },
+        include: propertyDetailInclude,
+      });
+    });
+
+    for (const media of promotedMedia) {
+      await deleteR2Object(media.sourceKey).catch(() => undefined);
+    }
+
+    return property;
+  } catch (error) {
+    for (const media of promotedMedia) {
+      await deleteR2Object(media.storageKey).catch(() => undefined);
+    }
+
+    if (error instanceof Error && error.message === 'INVALID_TEMP_MEDIA_STATE') {
+      sendApiError({
+        reply,
+        statusCode: 400,
+        code: 'INVALID_PROPERTY_MEDIA',
+        message: 'Use apenas imagens enviadas nesta criacao.',
+      });
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function upsertPropertyWithMedia({
@@ -641,6 +846,85 @@ function validatePayloadReadyForPublication(
   return null;
 }
 
+async function validatePayloadReadyForCreation(
+  payload: z.infer<typeof propertyPayloadSchema>,
+  uploadedBy: string,
+) {
+  const baseValidationError = validatePayloadRequiredFields(payload);
+  if (baseValidationError) return baseValidationError;
+
+  const mediaIds = [...new Set(payload.mediaIds)];
+  if (
+    !payload.uploadSessionId?.trim() ||
+    mediaIds.length !== payload.mediaIds.length ||
+    mediaIds.length < 4 ||
+    mediaIds.length > 12
+  ) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_IMAGES_INVALID',
+      message: 'Envie entre 4 e 12 fotos antes de criar o imovel.',
+    };
+  }
+
+  if (!payload.coverMediaId || !mediaIds.includes(payload.coverMediaId)) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_COVER_INVALID',
+      message: 'Defina uma foto de capa ativa antes de criar o imovel.',
+    };
+  }
+
+  const mediaCount = await prisma.propertyMedia.count({
+    where: {
+      id: { in: mediaIds },
+      propertyId: null,
+      uploadedBy,
+      uploadSessionId: payload.uploadSessionId,
+      type: 'image',
+      status: 'active',
+      deletedAt: null,
+    },
+  });
+
+  if (mediaCount !== mediaIds.length) {
+    return {
+      statusCode: 400,
+      code: 'INVALID_PROPERTY_MEDIA',
+      message: 'Use apenas imagens enviadas nesta criacao.',
+    };
+  }
+
+  return null;
+}
+
+function validatePayloadRequiredFields(
+  payload: z.infer<typeof propertyPayloadSchema>,
+) {
+  const hasMissingText = [
+    payload.title,
+    payload.propertyType,
+    payload.city,
+    payload.neighborhood,
+  ].some((value) => !value.trim());
+
+  if (
+    hasMissingText ||
+    payload.areaM2 <= 0 ||
+    payload.price <= 0 ||
+    payload.bathrooms === null ||
+    payload.garageSpaces === null
+  ) {
+    return {
+      statusCode: 400,
+      code: 'PROPERTY_REQUIRED_FIELDS',
+      message: 'Preencha os dados obrigatorios antes de criar o imovel.',
+    };
+  }
+
+  return null;
+}
+
 async function validatePropertyReadyForPublication(propertyId: string) {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
@@ -729,7 +1013,7 @@ async function validateBrokerId(brokerId?: string) {
 }
 
 function mapPropertyListItem(
-  property: Prisma.PropertyGetPayload<{ include: { broker: true } }>,
+  property: Prisma.PropertyGetPayload<{ include: typeof propertyListInclude }>,
 ) {
   return {
     id: property.id,
@@ -750,6 +1034,20 @@ function mapPropertyListItem(
     status: property.status,
     isFeatured: property.isFeatured,
     updatedAt: property.updatedAt.toISOString(),
+    media: property.media.map((media) => ({
+      id: media.id,
+      propertyId: media.propertyId,
+      url: media.publicUrl ?? media.url,
+      publicUrl: media.publicUrl ?? media.url,
+      storageKey: media.storageKey,
+      type: media.type,
+      status: media.status,
+      mimeType: media.mimeType,
+      sizeBytes: media.sizeBytes,
+      sortOrder: media.sortOrder,
+      pendingDeleteAt: media.pendingDeleteAt?.toISOString() ?? null,
+      deletedAt: media.deletedAt?.toISOString() ?? null,
+    })),
     broker: property.broker
       ? {
           id: property.broker.id,
