@@ -1,7 +1,7 @@
 # Spec 1.0 - Usuarios, Autenticacao e Acessos
 
 ## Status historico
-Esta spec foi superseded por `USERS_SPEC_DRIVEN_1.2_POSTGRES_AUTH_ADMIN_BROKERS.md`.
+Esta spec foi superseded por `docs/specs/backend/02-auth-jwt-postgres-admin-brokers.md`.
 
 As decisoes sobre Firebase Auth, Firestore, Custom Claims e Cloud Functions nao representam mais a direcao vigente. A direcao atual e autenticacao propria no backend Node + PostgreSQL, com JWT Bearer, senha local com hash e PostgreSQL como fonte de verdade para roles e `isActive`.
 

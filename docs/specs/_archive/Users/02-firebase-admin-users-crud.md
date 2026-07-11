@@ -1,7 +1,7 @@
 # Spec 1.1 - Admin Users CRUD
 
 ## Status historico
-Esta spec foi superseded por `USERS_SPEC_DRIVEN_1.2_POSTGRES_AUTH_ADMIN_BROKERS.md`.
+Esta spec foi superseded por `docs/specs/backend/02-auth-jwt-postgres-admin-brokers.md`.
 
 As decisoes sobre Cloud Functions, Firestore, Firebase Auth e Custom Claims nao representam mais a direcao vigente. O CRUD administrativo atual deve usar backend Node + PostgreSQL, senha local com hash e JWT Bearer.
 

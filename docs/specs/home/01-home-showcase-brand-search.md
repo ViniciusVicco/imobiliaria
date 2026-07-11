@@ -1,7 +1,7 @@
 # Spec 1.2 - Home Showcase, Search Entry and Brand Sections
 
 ## Versioning
-- Supersedes: `SPEC_1_1_HOME_SHOWCASE.md` for Home layout and search behavior.
+- Supersedes: `docs/specs/_archive/Home/01-home-showcase-initial-filters.md` for Home layout and search behavior.
 - Keeps: architecture contract `widget -> controller -> useCase -> repository -> datasource`.
 - Reason for new version: the Home is no longer only a segment grid with initial filters. It becomes a brand showcase with a search entry point, featured properties, institutional sections, and a video block.
 - Historical rule: keep previous specs as context; create a new spec when product direction changes layout, routing, or user intent.

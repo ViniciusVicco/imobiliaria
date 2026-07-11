@@ -1,8 +1,8 @@
 # Spec 1.2 - Auth propria PostgreSQL e CRUD de Admins/Corretores
 
 ## Versionamento
-- Supersedes: `USERS_SPEC_DRIVEN_1.0.md` para autenticacao/autorizacao.
-- Supersedes: `USERS_SPEC_DRIVEN_1.1_ADMIN_USERS_CRUD.md` para CRUD administrativo.
+- Supersedes: `docs/specs/_archive/Users/01-firebase-auth-accesses.md` para autenticacao/autorizacao.
+- Supersedes: `docs/specs/_archive/Users/02-firebase-admin-users-crud.md` para CRUD administrativo.
 - Motivo: a plataforma nao usara mais Firebase Auth, Firestore, Cloud Functions ou Custom Claims para usuarios. A identidade, senha, sessao, perfil e permissoes passam a ser responsabilidade do backend Node + PostgreSQL.
 
 ## Contexto

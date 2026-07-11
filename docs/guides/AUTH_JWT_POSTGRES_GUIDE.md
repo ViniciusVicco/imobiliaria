@@ -13,7 +13,7 @@ Regras centrais:
 - O frontend nunca deve liberar acesso por confiar em enum local, `isAdmin`, `role` enviado pelo cliente ou estado manipulavel.
 
 Spec fonte de verdade:
-- `docs/specs/users/USERS_SPEC_DRIVEN_1.2_POSTGRES_AUTH_ADMIN_BROKERS.md`
+- `docs/specs/backend/02-auth-jwt-postgres-admin-brokers.md`
 
 ## Fluxo de login
 Endpoint:

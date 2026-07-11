@@ -90,7 +90,7 @@ Permite que admins gerenciem corretores e administradores.
 
 ### Broker Properties
 Cadastro e manutencao de imoveis pelo corretor/admin foram detalhados na spec propria:
-`docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
+`docs/specs/properties/01-broker-admin-properties-crud.md`.
 
 ### Leads
 Fase futura para contatos de clientes publicos.
@@ -422,7 +422,7 @@ Resposta:
 ```
 
 ## Broker Properties - Spec Propria
-Detalhamento oficial: `docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
+Detalhamento oficial: `docs/specs/properties/01-broker-admin-properties-crud.md`.
 
 ### `GET /api/v1/broker/properties`
 Broker ativo lista apenas seus imoveis.
@@ -440,7 +440,7 @@ Broker edita apenas imovel proprio.
 Broker muda status permitido dentro de seu escopo.
 
 ## Admin Properties - Spec Propria
-Detalhamento oficial: `docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
+Detalhamento oficial: `docs/specs/properties/01-broker-admin-properties-crud.md`.
 
 ### `GET /api/v1/admin/properties`
 Admin lista todos os imoveis.
@@ -572,7 +572,7 @@ Futuro.
 11. Migrar `AuthRepository` para login e perfil via API propria.
 12. Implementar Admin Users.
 13. Implementar relatorio simples de imoveis por corretor.
-14. Implementar Broker/Admin Properties conforme `docs/specs/broker/SPEC_4_0_BROKER_PROPERTIES_CRUD.md`.
+14. Implementar Broker/Admin Properties conforme `docs/specs/properties/01-broker-admin-properties-crud.md`.
 
 ## Fora Do MVP
 - Upload definitivo de imagens.
