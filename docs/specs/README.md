@@ -24,6 +24,14 @@ Este diretorio organiza as specs por dominio de produto. A numeracao dentro de c
 1. `docs/specs/admin/01-admin-lifecycle-brokers.md`
    - Area admin operacional e gerenciamento inicial de corretores.
    - Tem sobreposicao proposital com auth/admin users, mas foca na experiencia administrativa.
+2. `docs/specs/admin/02-admin-broker-capabilities.md`
+   - Matriz objetiva do que Admin e Broker podem fazer.
+   - Lista rotas Flutter, endpoints e use cases por perfil.
+
+### Broker
+1. `docs/specs/broker/01-broker-dashboard-profile.md`
+   - Painel principal amigavel do corretor em `/broker`.
+   - Define tabs `Meus imoveis` e `Meu perfil`, avatar, dados profissionais e troca de senha.
 
 ### Properties
 1. `docs/specs/properties/01-broker-admin-properties-crud.md`

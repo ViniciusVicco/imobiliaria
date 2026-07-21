@@ -13,6 +13,11 @@ model User {
   name         String
   email        String   @unique
   phone        String?
+  whatsapp     String?
+  creci        String?
+  about        String?
+  avatarUrl    String?  @map("avatar_url")
+  brokerCode   String?  @map("broker_code")
   passwordHash String   @map("password_hash")
   role         UserRole
   isActive     Boolean  @default(true) @map("is_active")

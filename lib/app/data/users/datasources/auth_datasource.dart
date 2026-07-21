@@ -7,8 +7,7 @@ class AuthDatasource {
 
   final RestClient _restClient;
 
-  Future<DataSourceResponse<Map<String, dynamic>>>
-  signInWithEmailAndPassword({
+  Future<DataSourceResponse<Map<String, dynamic>>> signInWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
@@ -24,9 +23,7 @@ class AuthDatasource {
 
   Future<DataSourceResponse<Map<String, dynamic>>>
   getCurrentUserProfile() async {
-    final response = await _restClient.get<Map<String, dynamic>>(
-      '/me',
-    );
+    final response = await _restClient.get<Map<String, dynamic>>('/me');
     return DataSourceResponse<Map<String, dynamic>>(
       data: response.data ?? const <String, dynamic>{},
       hasSuccess: response.statusCode == 200 && response.data != null,

@@ -183,7 +183,7 @@ Regras de validacao:
 - `coverUrl` deve estar preenchido; recomendado que seja uma das imagens de `imageUrls`.
 - `videoUrl` e opcional; quando preenchido, deve ser URL valida.
 - `price`, `areaM2`, `bedrooms`, `bathrooms`, `garageSpaces` e `propertyAgeYears` devem ser inteiros.
-- `bedrooms`, `bathrooms` e `garageSpaces` devem ficar entre 0 e 5.
+- `bedrooms`, `bathrooms` e `garageSpaces` devem ficar entre 0 e 10.
 - `propertyAgeYears` deve ficar entre 0 e 50.
 - Se `isNewDevelopment=true`, backend salva `propertyAgeYears=0` e garante `na-planta` em `tagSlugs`.
 - Se `isNewDevelopment=false`, backend usa `propertyAgeYears` informado.
@@ -290,7 +290,7 @@ Campos:
 - URL de video/apresentacao;
 - valor com mascara/exemplo;
 - metros quadrados como inteiro;
-- quartos, banheiros e vagas com slider 0 a 5;
+- quartos, banheiros e vagas com slider 0 a 10;
 - idade do imovel com slider 0 a 50;
 - checkbox `Imovel na planta`;
 - tags.

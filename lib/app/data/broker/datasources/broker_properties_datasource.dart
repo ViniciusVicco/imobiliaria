@@ -12,7 +12,9 @@ class BrokerPropertiesDatasource with BrokerPropertiesEndpoints {
   }) async {
     final response = await _restClient.get<Map<String, dynamic>>(
       brokerProperties,
-      queryParameters: <String, dynamic>{'status': status},
+      queryParameters: <String, dynamic>{
+        if (status.trim().isNotEmpty) 'status': status,
+      },
     );
 
     return DataSourceResponse<Map<String, dynamic>>(
@@ -48,7 +50,8 @@ class BrokerPropertiesDatasource with BrokerPropertiesEndpoints {
     );
   }
 
-  Future<DataSourceResponse<Map<String, dynamic>>> createBrokerPropertyDraft() async {
+  Future<DataSourceResponse<Map<String, dynamic>>>
+  createBrokerPropertyDraft() async {
     final response = await _restClient.post<Map<String, dynamic>>(
       '$brokerProperties/draft',
     );
@@ -149,7 +152,8 @@ class BrokerPropertiesDatasource with BrokerPropertiesEndpoints {
     );
   }
 
-  Future<DataSourceResponse<Map<String, dynamic>>> createAdminPropertyDraft() async {
+  Future<DataSourceResponse<Map<String, dynamic>>>
+  createAdminPropertyDraft() async {
     final response = await _restClient.post<Map<String, dynamic>>(
       '$adminProperties/draft',
     );

@@ -100,10 +100,7 @@ class PropertyFormValidator {
       if (condition) changedFields.add(field);
     }
 
-    countIf(
-      'title',
-      _normalized(form.title) != _normalized(original.title),
-    );
+    countIf('title', _normalized(form.title) != _normalized(original.title));
     countIf(
       'description',
       _normalized(form.description) != _normalized(original.description),
@@ -123,8 +120,14 @@ class PropertyFormValidator {
       _normalized(form.subNeighborhood) !=
           _normalized(original.subNeighborhood),
     );
-    countIf('coverUrl', _normalized(form.coverUrl) != _normalized(original.coverUrl));
-    countIf('videoUrl', _normalized(form.videoUrl) != _normalized(original.videoUrl));
+    countIf(
+      'coverUrl',
+      _normalized(form.coverUrl) != _normalized(original.coverUrl),
+    );
+    countIf(
+      'videoUrl',
+      _normalized(form.videoUrl) != _normalized(original.videoUrl),
+    );
     countIf('areaM2', form.areaM2 != original.areaM2);
     countIf('bedrooms', form.bedrooms != original.bedrooms);
     countIf('bathrooms', form.bathrooms != original.bathrooms);
@@ -141,7 +144,8 @@ class PropertyFormValidator {
     );
     countIf(
       'brokerId',
-      _normalized(form.brokerId ?? '') != _normalized(original.broker?.id ?? ''),
+      _normalized(form.brokerId ?? '') !=
+          _normalized(original.broker?.id ?? ''),
     );
     countIf(
       'tagSlugs',
@@ -154,10 +158,12 @@ class PropertyFormValidator {
         .length;
     countIf('images', activeImageUrls.length != originalActiveImageCount);
 
-    changedFields.addAll(_meaningfulDraftContentFields(
-      form: form,
-      activeImageUrls: activeImageUrls,
-    ));
+    changedFields.addAll(
+      _meaningfulDraftContentFields(
+        form: form,
+        activeImageUrls: activeImageUrls,
+      ),
+    );
 
     return changedFields.length;
   }

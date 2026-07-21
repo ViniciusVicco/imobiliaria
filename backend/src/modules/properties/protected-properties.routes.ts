@@ -46,9 +46,9 @@ const propertyPayloadSchema = z.object({
   imageUrls: z.array(z.string().trim().url()).max(12).default([]),
   videoUrl: z.string().trim().url().optional().or(z.literal('')),
   areaM2: z.coerce.number().int().min(0),
-  bedrooms: z.coerce.number().int().min(0).max(5).default(0),
-  bathrooms: z.coerce.number().int().min(0).max(5),
-  garageSpaces: z.coerce.number().int().min(0).max(5),
+  bedrooms: z.coerce.number().int().min(0).max(10).default(0),
+  bathrooms: z.coerce.number().int().min(0).max(10),
+  garageSpaces: z.coerce.number().int().min(0).max(10),
   propertyAgeYears: z.coerce.number().int().min(0).max(50).default(0),
   price: z.coerce.number().int().min(0),
   tagSlugs: z.array(z.string().trim().min(1)).default([]),
@@ -147,9 +147,18 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
     async (request) => {
       const query = listPropertiesQuerySchema.parse(request.query);
       const brokerId = request.authenticatedUser?.id ?? '';
+      const countWhere = buildListWhere(query, {
+        brokerId,
+        omitStatus: true,
+        excludeInactiveWhenNoStatus: true,
+      });
       return listProperties({
         query,
-        where: buildListWhere(query, { brokerId }),
+        where: buildListWhere(query, {
+          brokerId,
+          excludeInactiveWhenNoStatus: true,
+        }),
+        countWhere,
       });
     },
   );
@@ -217,10 +226,13 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const validationError = await validateActiveTags(normalizeTagSlugs(payload));
       if (validationError) return sendApiError({ reply, ...validationError });
 
+      const nextStatus =
+        existing.status === 'published' ? 'pending_review' : existing.status;
       const property = await upsertPropertyWithMedia({
         id: params.id,
         payload,
         brokerId,
+        status: nextStatus,
       });
 
       return mapPropertyDetail(property);
@@ -395,12 +407,15 @@ const propertyListInclude = {
 async function listProperties({
   query,
   where,
+  countWhere,
 }: {
   query: z.infer<typeof listPropertiesQuerySchema>;
   where: Prisma.PropertyWhereInput;
+  countWhere?: Prisma.PropertyWhereInput;
 }) {
   const skip = (query.page - 1) * query.pageSize;
-  const [properties, total] = await Promise.all([
+  const statusCountWhere = countWhere ?? where;
+  const [properties, total, published, pendingReview, sold] = await Promise.all([
     prisma.property.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
@@ -409,8 +424,14 @@ async function listProperties({
       include: propertyListInclude,
     }),
     prisma.property.count({ where }),
+    prisma.property.count({ where: { ...statusCountWhere, status: 'published' } }),
+    prisma.property.count({
+      where: { ...statusCountWhere, status: 'pending_review' },
+    }),
+    prisma.property.count({ where: { ...statusCountWhere, status: 'sold' } }),
   ]);
 
+  const all = published + pendingReview + sold;
   return {
     items: properties.map(mapPropertyListItem),
     pagination: {
@@ -419,16 +440,31 @@ async function listProperties({
       total,
       totalPages: Math.ceil(total / query.pageSize),
     },
+    statusCounts: {
+      all,
+      published,
+      pending_review: pendingReview,
+      sold,
+    },
   };
 }
 
 function buildListWhere(
   query: z.infer<typeof listPropertiesQuerySchema>,
-  options: { brokerId?: string },
+  options: {
+    brokerId?: string;
+    omitStatus?: boolean;
+    excludeInactiveWhenNoStatus?: boolean;
+  },
 ): Prisma.PropertyWhereInput {
   return {
     ...(options.brokerId ? { brokerId: options.brokerId } : {}),
-    ...(query.status ? { status: query.status } : {}),
+    ...(!options.omitStatus && query.status
+      ? { status: query.status }
+      : {}),
+    ...(!query.status && options.excludeInactiveWhenNoStatus
+      ? { status: { not: 'inactive' } }
+      : {}),
     ...(query.query
       ? {
           OR: [
@@ -700,6 +736,7 @@ async function upsertPropertyWithMedia({
         propertyAgeYears,
         price: payload.price,
         isFeatured: payload.isFeatured,
+        ...(status ? { status } : {}),
       },
     });
 

@@ -16,8 +16,4 @@ class ProtectedRouteAccessEntity {
   bool get canAccess => status == ProtectedRouteAccessStatus.allowed;
 }
 
-enum ProtectedRouteAccessStatus {
-  allowed,
-  redirect,
-  blocked,
-}
+enum ProtectedRouteAccessStatus { allowed, redirect, blocked }

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -11,6 +13,7 @@ import {
 import { sendApiError } from '../../shared/http/errors.js';
 import { hashPassword } from '../../shared/security/password.js';
 import { generateTemporaryPassword } from '../../shared/security/temporary-password.js';
+import { buildBrokerCode } from '../../shared/users/broker-code.js';
 
 const duplicateEmailMessage = 'Esse e-mail já se encontra na nossa base de dados';
 
@@ -63,26 +66,33 @@ export async function adminBrokersRoutes(app: FastifyInstance) {
 
         const broker = await prisma.user.create({
           data: {
+            id: randomUUID(),
             name: body.name,
             email,
             phone: body.phone?.trim() || null,
             role: 'broker',
             passwordHash,
+            brokerCode: '',
             createdBy: currentUser.id,
             updatedBy: currentUser.id,
           },
         });
 
+        const brokerWithCode = await prisma.user.update({
+          where: { id: broker.id },
+          data: { brokerCode: buildBrokerCode(broker.id) },
+        });
+
         return {
-          id: broker.id,
-          name: broker.name,
-          email: broker.email,
-          phone: broker.phone ?? '',
-          role: broker.role,
-          isActive: broker.isActive,
-          createdAt: broker.createdAt.toISOString(),
-          updatedAt: broker.updatedAt.toISOString(),
-          lastLoginAt: broker.lastLoginAt?.toISOString() ?? null,
+          id: brokerWithCode.id,
+          name: brokerWithCode.name,
+          email: brokerWithCode.email,
+          phone: brokerWithCode.phone ?? '',
+          role: brokerWithCode.role,
+          isActive: brokerWithCode.isActive,
+          createdAt: brokerWithCode.createdAt.toISOString(),
+          updatedAt: brokerWithCode.updatedAt.toISOString(),
+          lastLoginAt: brokerWithCode.lastLoginAt?.toISOString() ?? null,
         };
       } catch (error) {
         if (

@@ -62,8 +62,14 @@ export async function requireAuthenticatedUser(
     name: user.name,
     email: user.email,
     phone: user.phone,
+    whatsapp: user.whatsapp,
+    creci: user.creci,
+    about: user.about,
+    avatarUrl: user.avatarUrl,
+    brokerCode: user.brokerCode,
     role: user.role,
     isActive: user.isActive,
+    createdAt: user.createdAt,
   };
 }
 

@@ -159,10 +159,12 @@ class BrokerPropertiesResultEntity {
   const BrokerPropertiesResultEntity({
     required this.items,
     required this.pagination,
+    this.statusCounts = const <String, int>{},
   });
 
   final List<BrokerPropertyEntity> items;
   final BrokerPropertiesPaginationEntity pagination;
+  final Map<String, int> statusCounts;
 }
 
 class BrokerPropertyFormEntity {

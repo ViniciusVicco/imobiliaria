@@ -7,7 +7,9 @@ import 'package:imobiliaria/app/data/broker/repositories/broker_properties_repos
 import 'package:imobiliaria/app/data/media/datasources/media_datasource.dart';
 import 'package:imobiliaria/app/data/media/repositories/media_repository.dart';
 import 'package:imobiliaria/app/data/users/datasources/auth_datasource.dart';
+import 'package:imobiliaria/app/data/users/datasources/user_profile_datasource.dart';
 import 'package:imobiliaria/app/data/users/repositories/auth_repository.dart';
+import 'package:imobiliaria/app/data/users/repositories/user_profile_repository.dart';
 import 'package:imobiliaria/app/data/property_segments/datasources/property_segments_datasource.dart';
 import 'package:imobiliaria/app/data/property_segments/repositories/property_segments_repository.dart';
 import 'package:imobiliaria/app/domain/admin/usecases/create_admin_broker_use_case.dart';
@@ -33,14 +35,20 @@ import 'package:imobiliaria/app/domain/property_segments/usecases/get_home_brand
 import 'package:imobiliaria/app/domain/property_segments/usecases/resolve_property_segment_route_use_case.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/search_published_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/get_current_user_session_use_case.dart';
+import 'package:imobiliaria/app/domain/users/usecases/get_user_profile_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/logout_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/resolve_protected_route_access_use_case.dart';
+import 'package:imobiliaria/app/domain/users/usecases/update_user_password_use_case.dart';
+import 'package:imobiliaria/app/domain/users/usecases/update_user_profile_use_case.dart';
+import 'package:imobiliaria/app/domain/users/usecases/upload_user_avatar_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/watch_current_user_session_use_case.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_brokers_controller.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_brokers_store.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_properties_controller.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_properties_store.dart';
+import 'package:imobiliaria/app/presentation/main/pages/broker/broker_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/broker/broker_store.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/broker_properties_controller.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/broker_properties_store.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/property_form_controller.dart';
@@ -87,6 +95,18 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         store: get<AdminBrokersStore>(),
         getAdminBrokers: get<GetAdminBrokersUseCase>(),
         createAdminBroker: get<CreateAdminBrokerUseCase>(),
+      ),
+    );
+    registerFactory(
+      () => BrokerController(
+        store: get<BrokerStore>(),
+        getBrokerProperties: get<GetBrokerPropertiesUseCase>(),
+        getPropertyMediaFile: get<GetPropertyMediaFileUseCase>(),
+        getUserProfile: get<GetUserProfileUseCase>(),
+        updateUserProfile: get<UpdateUserProfileUseCase>(),
+        updateUserPassword: get<UpdateUserPasswordUseCase>(),
+        uploadUserAvatar: get<UploadUserAvatarUseCase>(),
+        navigator: get<AppNavigator>(),
       ),
     );
     registerFactory(
@@ -151,6 +171,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     registerSingleton(PropertySegmentsHomeStore());
     registerFactory(() => PropertySearchStore());
     registerFactory(() => AuthGuardStore());
+    registerFactory(() => BrokerStore());
     registerFactory(() => AdminBrokersStore());
     registerFactory(() => BrokerPropertiesStore());
     registerFactory(() => PropertyFormStore());
@@ -163,6 +184,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => PropertySegmentsDatasource(restClient: get<RestClient>()),
     );
     registerFactory(() => AuthDatasource(restClient: get<RestClient>()));
+    registerFactory(() => UserProfileDatasource(restClient: get<RestClient>()));
     registerFactory(
       () => AdminBrokersDatasource(restClient: get<RestClient>()),
     );
@@ -180,6 +202,9 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       ),
     );
     registerFactory(() => AuthRepository(datasource: get<AuthDatasource>()));
+    registerFactory(
+      () => UserProfileRepository(datasource: get<UserProfileDatasource>()),
+    );
     registerFactory(
       () => AdminBrokersRepository(datasource: get<AdminBrokersDatasource>()),
     );
@@ -221,6 +246,18 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     registerFactory(() => LogoutUseCase(repository: get<AuthRepository>()));
     registerFactory(
       () => GetCurrentUserSessionUseCase(repository: get<AuthRepository>()),
+    );
+    registerFactory(
+      () => GetUserProfileUseCase(repository: get<UserProfileRepository>()),
+    );
+    registerFactory(
+      () => UpdateUserProfileUseCase(repository: get<UserProfileRepository>()),
+    );
+    registerFactory(
+      () => UpdateUserPasswordUseCase(repository: get<UserProfileRepository>()),
+    );
+    registerFactory(
+      () => UploadUserAvatarUseCase(repository: get<UserProfileRepository>()),
     );
     registerFactory(
       () => WatchCurrentUserSessionUseCase(repository: get<AuthRepository>()),

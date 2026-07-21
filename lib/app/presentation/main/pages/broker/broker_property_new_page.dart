@@ -21,9 +21,7 @@ class _BrokerPropertyNewPageState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final wasCreated = await controller.createDraftAndOpenForm(
-        replace: true,
-      );
+      final wasCreated = await controller.createDraftAndOpenForm(replace: true);
       if (!wasCreated && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -40,8 +38,6 @@ class _BrokerPropertyNewPageState
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

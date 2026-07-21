@@ -386,7 +386,16 @@ class _PropertyManagementCoverImageState
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes != null && bytes.isNotEmpty) {
-          return Image.memory(bytes, fit: widget.fit);
+          return Image.memory(
+            bytes,
+            fit: widget.fit,
+            errorBuilder: (context, error, stackTrace) {
+              return const ColoredBox(
+                color: DSColors.surfaceContainerHighest,
+                child: Center(child: Icon(Icons.image_not_supported)),
+              );
+            },
+          );
         }
 
         if (snapshot.connectionState != ConnectionState.done) {
@@ -648,19 +657,19 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
               _slider(
                 label: 'Quartos',
                 value: _bedrooms,
-                max: 5,
+                max: 10,
                 onChanged: (value) => setState(() => _bedrooms = value),
               ),
               _slider(
                 label: 'Banheiros',
                 value: _bathrooms,
-                max: 5,
+                max: 10,
                 onChanged: (value) => setState(() => _bathrooms = value),
               ),
               _slider(
                 label: 'Vagas',
                 value: _garageSpaces,
-                max: 5,
+                max: 10,
                 onChanged: (value) => setState(() => _garageSpaces = value),
               ),
               CheckboxListTile(

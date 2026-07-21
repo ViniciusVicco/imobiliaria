@@ -13,9 +13,7 @@ class BrokerPropertiesRepository {
 
   Future<DualResponse<Failure, BrokerPropertiesResultEntity>>
   getBrokerProperties({required String status}) {
-    return _getProperties(
-      () => datasource.getBrokerProperties(status: status),
-    );
+    return _getProperties(() => datasource.getBrokerProperties(status: status));
   }
 
   Future<DualResponse<Failure, BrokerPropertyEntity>> getBrokerProperty(
@@ -32,7 +30,8 @@ class BrokerPropertiesRepository {
     );
   }
 
-  Future<DualResponse<Failure, BrokerPropertyEntity>> createBrokerPropertyDraft() {
+  Future<DualResponse<Failure, BrokerPropertyEntity>>
+  createBrokerPropertyDraft() {
     return _getProperty(() => datasource.createBrokerPropertyDraft());
   }
 
@@ -55,10 +54,7 @@ class BrokerPropertiesRepository {
   }
 
   Future<DualResponse<Failure, BrokerPropertiesResultEntity>>
-  getAdminProperties({
-    required String status,
-    required String query,
-  }) {
+  getAdminProperties({required String status, required String query}) {
     return _getProperties(
       () => datasource.getAdminProperties(status: status, query: query),
     );
@@ -87,7 +83,8 @@ class BrokerPropertiesRepository {
     );
   }
 
-  Future<DualResponse<Failure, BrokerPropertyEntity>> createAdminPropertyDraft() {
+  Future<DualResponse<Failure, BrokerPropertyEntity>>
+  createAdminPropertyDraft() {
     return _getProperty(() => datasource.createAdminPropertyDraft());
   }
 

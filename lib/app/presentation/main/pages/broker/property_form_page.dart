@@ -146,6 +146,10 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
   final PropertyFormValidator _validator = const PropertyFormValidator();
   PropertyFormValidationResult? _validationResult;
   bool get _isNew => widget.property.id.isEmpty;
+  bool get _shouldSaveForReview =>
+      !widget.isAdmin &&
+      (widget.property.status == 'published' ||
+          widget.property.status == 'pending_review');
 
   @override
   void initState() {
@@ -222,7 +226,13 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
               FilledButton.icon(
                 onPressed: widget.isBusy ? null : _saveDraft,
                 icon: const Icon(Icons.save_outlined),
-                label: const Text('Salvar alteracoes'),
+                label: Text(
+                  widget.isAdmin
+                      ? 'Salvar alteracoes'
+                      : _shouldSaveForReview
+                      ? 'Salvar e enviar para revisao'
+                      : 'Salvar alteracoes',
+                ),
               ),
               const SizedBox(width: DSSpacing.sm),
             ],
@@ -497,7 +507,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       SnackBar(
         content: Text(
           wasSaved
-              ? 'Alteracoes salvas.'
+              ? _saveSuccessMessage()
               : widget.controller.store.errorMessage ??
                     'Nao foi possivel salvar as alteracoes.',
         ),
@@ -556,6 +566,17 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
             : MainRoutes.brokerProperties,
       );
     }
+  }
+
+  String _saveSuccessMessage() {
+    if (widget.isAdmin) return 'Alteracoes salvas.';
+    if (widget.property.status == 'published') {
+      return 'Alteracoes salvas e enviadas para revisao. O imovel nao fica publico ate confirmacao admin.';
+    }
+    if (widget.property.status == 'pending_review') {
+      return 'Alteracoes salvas e mantidas em revisao.';
+    }
+    return 'Alteracoes salvas.';
   }
 
   void _showCurrentError(String fallbackMessage) {
