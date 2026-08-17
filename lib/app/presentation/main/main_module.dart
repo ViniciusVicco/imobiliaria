@@ -1,9 +1,16 @@
 //Aqui fica o modulo principal
 import 'package:legend_core/legend_core.dart';
+import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.dart';
 
+import 'pages/admin/admin_brokers_page.dart';
+import 'pages/admin/admin_home_page.dart';
+import 'pages/admin/admin_properties_page.dart';
+import 'pages/broker/broker_page.dart';
+import 'pages/broker/property_form_page.dart';
 import 'pages/property_segments/property_segments_home_page.dart';
 import 'pages/search/property_search_page.dart';
 import 'pages/segment_details/segment_details_page.dart';
+import 'widgets/auth/auth_guard_page.dart';
 import 'main_routes.dart';
 import 'main_injector.dart';
 
@@ -19,8 +26,61 @@ class MainModule extends Module {
   @override
   Map<String, RouteBuilder> get routes => <String, RouteBuilder>{
     MainRoutes.home: (context, arguments) => PropertySegmentsHomePage(),
+    MainRoutes.stock: (context, arguments) => PropertySearchPage(
+      routeData: arguments is ModuleRouteData ? arguments : null,
+    ),
     MainRoutes.search: (context, arguments) => PropertySearchPage(
       routeData: arguments is ModuleRouteData ? arguments : null,
+    ),
+    MainRoutes.broker: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.broker,
+      requestedRoute: MainRoutes.broker,
+      child: BrokerPage(),
+    ),
+    MainRoutes.brokerProperties: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.broker,
+      requestedRoute: MainRoutes.brokerProperties,
+      child: BrokerPage(),
+    ),
+    MainRoutes.brokerPropertyNew: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.broker,
+      requestedRoute: MainRoutes.brokerPropertyNew,
+      child: PropertyFormPage(),
+    ),
+    MainRoutes.brokerPropertyEdit: (context, arguments) => AuthGuardPage(
+      requiredRole: UserRole.broker,
+      requestedRoute: MainRoutes.brokerPropertyEdit,
+      child: PropertyFormPage(
+        routeData: arguments is ModuleRouteData ? arguments : null,
+      ),
+    ),
+    MainRoutes.admin: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.admin,
+      child: AdminHomePage(),
+    ),
+    MainRoutes.adminUsers: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminUsers,
+      child: AdminBrokersPage(),
+    ),
+    MainRoutes.adminProperties: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminProperties,
+      child: AdminPropertiesPage(),
+    ),
+    MainRoutes.adminPropertyNew: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminPropertyNew,
+      child: PropertyFormPage(mode: PropertyFormMode.admin),
+    ),
+    MainRoutes.adminPropertyEdit: (context, arguments) => AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminPropertyEdit,
+      child: PropertyFormPage(
+        mode: PropertyFormMode.admin,
+        routeData: arguments is ModuleRouteData ? arguments : null,
+      ),
     ),
     MainRoutes.commercial: (context, arguments) => const SegmentDetailsPage(
       title: 'Commercial Spaces',
@@ -33,9 +93,9 @@ class MainModule extends Module {
           'Catalog for houses, apartments and family-oriented properties.',
     ),
     MainRoutes.investments: (context, arguments) => const SegmentDetailsPage(
-      title: 'Investment Assets',
+      title: 'Novidades na planta',
       description:
-          'Catalog for investment opportunities and upcoming projects.',
+          'Rota temporaria para oportunidades com tag na planta. Os imóveis a venda usam /estoque?city=Palmas&tag=na-planta.',
     ),
     MainRoutes
         .announceProperty: (context, arguments) => const SegmentDetailsPage(

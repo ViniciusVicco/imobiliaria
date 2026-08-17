@@ -1,0 +1,70 @@
+class SearchPropertyEntity {
+  const SearchPropertyEntity({
+    required this.id,
+    required this.title,
+    required this.segment,
+    required this.propertyType,
+    required this.city,
+    required this.neighborhood,
+    required this.subNeighborhood,
+    required this.coverUrl,
+    required this.areaM2,
+    required this.bathrooms,
+    required this.garageSpaces,
+    required this.propertyAgeYears,
+    required this.price,
+    this.tags = const <String>[],
+    this.bedrooms,
+  });
+
+  final String id;
+  final String title;
+  final String segment;
+  final String propertyType;
+  final String city;
+  final String neighborhood;
+  final String subNeighborhood;
+  final String coverUrl;
+  final int areaM2;
+  final int? bedrooms;
+  final int bathrooms;
+  final int garageSpaces;
+  final int propertyAgeYears;
+  final int price;
+  final List<String> tags;
+}
+
+class PropertySearchPaginationEntity {
+  const PropertySearchPaginationEntity({
+    required this.page,
+    required this.pageSize,
+    required this.total,
+    required this.totalPages,
+  });
+
+  final int page;
+  final int pageSize;
+  final int total;
+  final int totalPages;
+}
+
+class PropertySearchResultEntity {
+  const PropertySearchResultEntity({
+    required this.items,
+    required this.pagination,
+    required this.priceRange,
+  });
+
+  final List<SearchPropertyEntity> items;
+  final PropertySearchPaginationEntity pagination;
+  final PropertySearchPriceRangeEntity priceRange;
+}
+
+class PropertySearchPriceRangeEntity {
+  const PropertySearchPriceRangeEntity({this.min, this.max});
+
+  final int? min;
+  final int? max;
+
+  bool get isAvailable => min != null && max != null;
+}

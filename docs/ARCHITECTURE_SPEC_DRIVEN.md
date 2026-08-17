@@ -24,6 +24,10 @@ Regra de ouro:
 - O core modular (`packages/core`) continua como base de DI, modulo e ciclo de vida.
 - O fluxo de dominio foi padronizado em `data/domain/presentation` dentro de `lib/app`.
 - Rotas principais em ingles, alinhadas com a estrategia web do modulo.
+- A persistencia de produto passa a evoluir para backend Node + PostgreSQL local/dev/prod.
+- Autenticacao e autorizacao devem ser proprias do backend Node + PostgreSQL; Firebase nao faz parte do fluxo vigente de usuarios.
+- Guia operacional de auth: `docs/guides/AUTH_JWT_POSTGRES_GUIDE.md`.
+- O acesso HTTP no Flutter deve passar por `RestClient` no `packages/core` e ser injetado nos datasources.
 
 ## 4) Padrao oficial de pastas
 ### 4.1) Packages
@@ -73,9 +77,12 @@ Detalhamento:
 ### DataSource
 - Apenas acesso externo, cache, storage ou adaptacao de payload.
 - Sem regra de negocio de tela.
+- Pode chamar API HTTP via `RestClient` ou fallback local de desenvolvimento.
+- Endpoints de feature devem ficar isolados em `lib/app/data/api/`, evitando paths hardcoded espalhados.
 
 ## 6) Roteamento e modulos (estado atual)
 - Rotas principais do modulo: `/home`, `/commercial`, `/residential`, `/investments`, `/announce-property`.
+- Segmentos oficiais de imoveis: `residential` e `commercial`; `/investments` permanece apenas como rota temporaria/compatibilidade para oportunidades com `tag=na-planta`.
 - Home renderiza grid com 4 cards de entrada e navega pelos segmentos.
 - Navegacao segue fluxo de negocio: botao -> controller -> usecase -> repository -> datasource -> rota.
 - A pagina de detalhe de segmento ainda e placeholder, ate as specs de catalogo e anuncio evoluirem.
@@ -106,27 +113,65 @@ Padrao de uso:
 - `context.isDesktopLayout`/`context.isMobileLayout` estao disponiveis para decisao de grid/coluna.
 - Tokens de espacamento e radius via `DSSpacing` e `DSRadius`.
 
-## 9) Dependencias por responsabilidade
-### 9.1) App principal
+## 9) Organizacao de widgets e componentes
+Regra de decisao:
+- Alta repeticao, pouca logica e nenhuma dependencia de dominio: mover para `packages/design_system`.
+- Logica de tela, entidades da feature, copy de negocio ou callbacks do controller: manter em `lib/app/presentation/<module>/pages/<feature>/widgets/`.
+- Logica pura de transformacao/filtro fica como helper local da feature; se virar regra de negocio compartilhada, mover para domain/usecase.
+
+### 9.1) Design system
+- Nao depende de entities, controllers, usecases, rotas, injectors ou assets do app.
+- Recebe dados por parametros primitivos, callbacks e widgets filhos.
+- Pode conter infraestrutura visual reutilizavel, como cards base, grids responsivos, wrappers de media/embed e componentes de layout.
+- Componentes publicos devem usar prefixo `DS` e ser exportados por `packages/design_system/lib/design_system.dart`.
+
+### 9.2) Widgets de feature
+- Podem conhecer entities, textos de negocio e decisoes especificas da tela.
+- Devem ser agrupados por contexto de uso, por exemplo `widgets/search`, `widgets/video`, `widgets/navigation` e `widgets/featured_properties`.
+- A page principal deve ficar como orquestradora: le estado, chama controller e compoe secoes.
+- Widgets continuam respeitando o fluxo `widget -> controller -> useCase -> repository -> datasource`.
+
+## 10) Dependencias por responsabilidade
+### 10.1) App principal
 - `legend_core`
 - `design_system`
+- `dio`, quando o app usar `RestClient` diretamente por injecao.
 - Dependencias de produto devem ficar no app apenas quando houver uso real na feature.
 
-### 9.2) Design system
+### 10.2) Design system
 - Dependencias de layout/design: `responsive_framework`, `flutter_svg`, `cached_network_image`, `cupertino_icons`.
+- Dependencias de media/embed so entram aqui quando forem wrappers visuais reutilizaveis e nao carregarem regra de negocio do app.
 
-### 9.3) Core
+### 10.3) Core
 - Dependencias estruturais do core ficam em `packages/core`, como `dio` para requests cancelaveis e `logger` para mixins de log.
 
-## 10) Backlog spec-driven (proximas fases)
-- Spec 1: Home showcase com dados reais e filtros iniciais.
-- Spec 2: Catalogo residencial.
-- Spec 3: Catalogo comercial.
-- Spec 4: Investimentos na planta.
-- Spec 5: Fluxo Anunciar imovel.
-- Spec 6: Observabilidade, performance web e testes.
+## 11) Backlog spec-driven (proximas fases)
+- Spec 1: Home showcase com dados reais via API local.
+- Spec 2: Backend Node + PostgreSQL, Auth/Profile e Admin Users.
+- Spec 3: Catalogo residencial.
+- Spec 4: Catalogo comercial.
+- Spec 5: Investimentos na planta.
+- Spec 6: Fluxo Anunciar imovel.
+- Spec 7: Observabilidade, performance web e testes.
 
-## 11) Template de spec
+## 11.1) Estado atual de infraestrutura local
+- Backend Node/Fastify criado em `backend/`.
+- PostgreSQL local usa bancos `seletta_local` e `seletta_shadow`.
+- Prisma controla migrations e seed.
+- Endpoints MVP ja previstos:
+  - `GET /api/v1/health`
+  - `POST /api/v1/auth/login`
+  - `GET /api/v1/me`
+  - `GET /api/v1/home/brand-content`
+  - `GET /api/v1/home/featured-properties`
+  - `GET /api/v1/properties/search`
+  - `GET /api/v1/properties/:id`
+- VS Code possui tasks/launch:
+  - `front-end-local`
+  - `back-end-local`
+  - compound `local-full-stack`
+
+## 12) Template de spec
 ```md
 # Spec X.Y - <titulo>
 
@@ -166,7 +211,7 @@ Padrao de uso:
 - Integracao:
 ```
 
-## 12) Definition of Done por spec
+## 13) Definition of Done por spec
 - Fluxo arquitetural respeitado (`widget -> controller -> useCase -> repository -> datasource`).
 - Nenhum acesso HTTP direto em widget/controller.
 - Funciona em viewport mobile e desktop.

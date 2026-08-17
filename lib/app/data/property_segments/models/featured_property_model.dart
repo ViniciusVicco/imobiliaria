@@ -8,12 +8,14 @@ class FeaturedPropertyModel extends FeaturedPropertyEntity {
     required super.propertyType,
     required super.city,
     required super.neighborhood,
+    required super.subNeighborhood,
     required super.coverUrl,
     required super.areaM2,
     required super.bathrooms,
     required super.garageSpaces,
     required super.propertyAgeYears,
     required super.price,
+    super.tags,
     super.bedrooms,
   });
 
@@ -25,6 +27,7 @@ class FeaturedPropertyModel extends FeaturedPropertyEntity {
       propertyType: json['propertyType'] as String,
       city: json['city'] as String,
       neighborhood: json['neighborhood'] as String,
+      subNeighborhood: json['subNeighborhood'] as String? ?? '',
       coverUrl: json['coverUrl'] as String,
       areaM2: json['areaM2'] as int,
       bedrooms: json['bedrooms'] as int?,
@@ -32,6 +35,9 @@ class FeaturedPropertyModel extends FeaturedPropertyEntity {
       garageSpaces: json['garageSpaces'] as int,
       propertyAgeYears: json['propertyAgeYears'] as int,
       price: json['price'] as int,
+      tags: (json['tags'] as List<dynamic>? ?? const <dynamic>[])
+          .map((tag) => tag.toString())
+          .toList(),
     );
   }
 }
