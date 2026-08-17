@@ -94,12 +94,13 @@ class PropertySegmentsHomeController extends Controller {
     );
   }
 
+  void onStockPressed() {
+    _navigator.pushNamed(MainRoutes.stock);
+  }
+
   Future<void> onNewDevelopmentsPressed() async {
     store.setFilters(
-      const PropertySearchFiltersEntity(
-        tag: 'na-planta',
-        tagOnly: true,
-      ),
+      const PropertySearchFiltersEntity(tag: 'na-planta', tagOnly: true),
     );
     await onSearchSubmitted();
   }
@@ -124,7 +125,9 @@ class PropertySegmentsHomeController extends Controller {
     );
   }
 
-  Future<void> onPropertyWhatsappPressed(FeaturedPropertyEntity property) async {
+  Future<void> onPropertyWhatsappPressed(
+    FeaturedPropertyEntity property,
+  ) async {
     await _openWhatsappWithMessage(
       'Vi uma oportunidade ${property.title} - ${property.id} e gostaria de saber mais',
     );

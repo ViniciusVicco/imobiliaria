@@ -24,9 +24,12 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.get('/properties/search', async (request) => {
     const query = searchQuerySchema.parse(request.query);
     const where = buildPublishedPropertyWhere(query);
+    const facetWhere = buildPublishedPropertyWhere(query, {
+      ignorePrice: true,
+    });
     const skip = (query.page - 1) * query.pageSize;
 
-    const [properties, total, brandContent] = await Promise.all([
+    const [properties, total, brandContent, priceRange] = await Promise.all([
       prisma.property.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
@@ -36,6 +39,11 @@ export async function propertiesRoutes(app: FastifyInstance) {
       }),
       prisma.property.count({ where }),
       prisma.brandContent.findUnique({ where: { id: 'home' } }),
+      prisma.property.aggregate({
+        where: facetWhere,
+        _min: { price: true },
+        _max: { price: true },
+      }),
     ]);
 
     return {
@@ -62,6 +70,12 @@ export async function propertiesRoutes(app: FastifyInstance) {
         pageSize: query.pageSize,
         total,
         totalPages: Math.ceil(total / query.pageSize),
+      },
+      facets: {
+        priceRange: {
+          min: priceRange._min.price,
+          max: priceRange._max.price,
+        },
       },
     };
   });
@@ -128,6 +142,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
 
 function buildPublishedPropertyWhere(
   query: z.infer<typeof searchQuerySchema>,
+  options: { ignorePrice?: boolean } = {},
 ): Prisma.PropertyWhereInput {
   const normalizedSegment =
     query.segment === 'investments' ? undefined : query.segment;
@@ -145,7 +160,7 @@ function buildPublishedPropertyWhere(
     ...(query.garageSpacesMin
       ? { garageSpaces: { gte: query.garageSpacesMin } }
       : {}),
-    ...(query.priceMin || query.priceMax
+    ...(!options.ignorePrice && (query.priceMin || query.priceMax)
       ? {
           price: {
             ...(query.priceMin ? { gte: query.priceMin } : {}),

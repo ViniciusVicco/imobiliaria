@@ -6,6 +6,7 @@ import 'package:imobiliaria/app/assets/custom_assets.dart';
 class PropertySegmentsTopNavigation extends StatelessWidget {
   const PropertySegmentsTopNavigation({
     super.key,
+    required this.onStockPressed,
     required this.onNewDevelopmentsPressed,
     required this.onContactPressed,
     required this.onAboutPressed,
@@ -15,6 +16,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
     required this.hasAuthenticatedUser,
   });
 
+  final VoidCallback onStockPressed;
   final VoidCallback onNewDevelopmentsPressed;
   final VoidCallback onContactPressed;
   final VoidCallback onAboutPressed;
@@ -46,6 +48,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
                 final logo = _LogoMark(isCompact: isCompact);
                 final links = _NavigationLinks(
                   isCompact: isCompact,
+                  onStockPressed: onStockPressed,
                   onNewDevelopmentsPressed: onNewDevelopmentsPressed,
                   onContactPressed: onContactPressed,
                   onAboutPressed: onAboutPressed,
@@ -127,6 +130,7 @@ class _LogoMark extends StatelessWidget {
 class _NavigationLinks extends StatelessWidget {
   const _NavigationLinks({
     required this.isCompact,
+    required this.onStockPressed,
     required this.onNewDevelopmentsPressed,
     required this.onContactPressed,
     required this.onAboutPressed,
@@ -134,6 +138,7 @@ class _NavigationLinks extends StatelessWidget {
   });
 
   final bool isCompact;
+  final VoidCallback onStockPressed;
   final VoidCallback onNewDevelopmentsPressed;
   final VoidCallback onContactPressed;
   final VoidCallback onAboutPressed;
@@ -142,6 +147,10 @@ class _NavigationLinks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final linkButtons = <Widget>[
+      _NavigationLinkButton(
+        onPressed: onStockPressed,
+        label: 'Imóveis a venda',
+      ),
       _NavigationLinkButton(
         onPressed: onNewDevelopmentsPressed,
         label: 'Novidades na planta',
@@ -194,9 +203,9 @@ class _NavigationLinkButton extends StatelessWidget {
           horizontal: DSSpacing.md,
           vertical: DSSpacing.sm,
         ),
-        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-        ),
+        textStyle: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
       ),
       child: Text(
         label,
@@ -253,9 +262,9 @@ class _LoginButton extends StatelessWidget {
           horizontal: DSSpacing.md,
           vertical: DSSpacing.sm,
         ),
-        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-        ),
+        textStyle: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
       ),
       icon: Icon(hasAuthenticatedUser ? Icons.dashboard_outlined : Icons.login),
       label: Text(hasAuthenticatedUser ? 'Acessar Painel' : 'Entrar'),

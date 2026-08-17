@@ -1,7 +1,8 @@
 # Spec 6.0 - Formulario Centralizado de Propriedades
 
 ## Status
-- Planejada.
+- Parcialmente implementada.
+- A pagina, controller, store, validacao, rotas new/edit e integracao de midia ja existem.
 - Substitui o fluxo definitivo de criacao/edicao por modal descrito na Spec 4.0.
 - Consolida a experiencia de formulario dedicada usando o upload R2 e fluxo incremental da Spec 5.0.
 - A Spec 4.0 continua como historico do CRUD v1.
@@ -25,14 +26,30 @@ A experiencia final deve ser uma pagina dedicada e ampla, usada tanto por corret
 - Broker nao envia nem altera `brokerId`.
 - Upload real de imagens continua via backend/R2.
 - Video continua sendo URL YouTube, sem upload para R2 nesta fase.
-- O modal antigo pode permanecer temporariamente no codigo, mas deixa de ser o fluxo principal.
+- O modal antigo deixou de ser o fluxo principal; as rotas dedicadas usam `PropertyFormPage`.
+
+## Estado implementado
+
+- `/broker/properties/new` cria um `draft` tecnico e abre a edicao.
+- `/admin/properties/new` cria um `draft` tecnico e abre a edicao.
+- Broker salva e envia para `pending_review`.
+- Admin salva e publica como `published`.
+- Imagens sao enviadas antes da finalizacao, promovidas no backend e associadas ao imovel.
+- Admin pode selecionar corretor responsavel; broker nao pode alterar `brokerId`.
+- Campos de tags, destaque, desenvolvimento novo e video YouTube ja estao no formulario.
+
+Ainda pendente:
+
+- Testes backend/Flutter do fluxo completo.
+- Validacao manual com R2 configurado, especialmente rollback de falha na promocao de midia.
+- Area administrativa dedicada para revisar/aprovar pendencias.
 
 ## Escopo
 Em escopo:
 - Criar rotas dedicadas de novo/editar para broker e admin.
-- Substituir o fluxo principal de grid -> modal por grid -> pagina dedicada.
+- Manter o fluxo principal de grid -> pagina dedicada.
 - Criar pagina/formulario centralizado e responsivo.
-- Permitir criacao incremental com `draft` antes do upload.
+- Permitir criacao incremental com `draft` tecnico antes do preenchimento/upload.
 - Integrar fotos/capa via endpoints de midia da Spec 5.0.
 - Diferenciar salvamento/publicacao conforme modo `broker` ou `admin`.
 - Exibir campos admin-only, como corretor responsavel.

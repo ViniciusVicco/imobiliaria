@@ -1,7 +1,7 @@
 # Spec 5.0 - Upload de Midia com Cloudflare R2
 
 ## Status
-- Primeiro corte backend implementado.
+- Backend e integracao Flutter implementados no fluxo atual de propriedades.
 - Substitui a abordagem v1 de URL manual para imagens de imoveis.
 - Backend sera responsavel pelo upload para Cloudflare R2.
 - Flutter nao envia direto para R2 nesta fase.
@@ -12,8 +12,9 @@
   - Migration `20260623120000_r2_media_lifecycle` aplicada localmente.
   - `npm.cmd run build` passou.
 - Pendente:
-  - Validacao manual com login, draft, upload real para R2, set cover, pending-delete e restore.
-  - Integracao Flutter.
+  - Validacao manual com R2 configurado para login, draft, upload, set cover, pending-delete e restore.
+  - Cobertura automatizada do ciclo de vida.
+  - Confirmar/implementar limpeza automatica das midias em `pending_delete`.
 
 ## Contexto
 O CRUD de imoveis da Spec 4.0 usa URLs manuais para capa, galeria e video. Isso foi suficiente para uma primeira entrega, mas nao e adequado para uso real por corretores.

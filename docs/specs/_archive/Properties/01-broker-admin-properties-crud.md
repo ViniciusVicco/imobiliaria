@@ -1,18 +1,16 @@
 # Spec 4.0 - Broker/Admin Properties CRUD
 
 ## Status
-- Implementada em primeira versao funcional.
-- Backend protegido implementado e registrado em `backend/src/modules/properties/protected-properties.routes.ts`.
-- Flutter broker/admin implementado com fluxo `Widget -> Controller -> UseCase -> Repository -> Datasource -> RestClient`.
-- Firebase removido do bootstrap Flutter e das dependencias declaradas do app.
-- Validacao concluida: `npm.cmd run build` em `backend/`.
-- Validacao pendente: `flutter analyze`, `flutter test`, `dart format` e `flutter pub get` travaram por timeout da toolchain Dart/Flutter nesta maquina.
+- Baseline historico implementado e supersedido pela `docs/specs/properties/02-unified-property-form.md`.
+- Mantida para registrar a origem do CRUD protegido broker/admin.
+- A regra antiga de broker criar diretamente como `published` nao e mais valida.
+- Os contratos detalhados abaixo sao historicos; para o comportamento atual, consultar `properties/02` e `media/01`.
 
 ## Estado atual implementado
 - Broker lista apenas os proprios imoveis em `/broker/properties`.
-- Broker cria imovel proprio com `status=published`.
+- Broker cria/finaliza imovel proprio com `status=pending_review`.
 - Broker edita apenas imovel proprio.
-- Broker altera status para `published`, `inactive`, `sold` ou `draft`.
+- `draft` e usado apenas durante o pre-cadastro tecnico; nao e uma aba/acao de publicacao do produto.
 - Admin lista e edita imoveis de todos em `/admin/properties`.
 - Admin altera status de qualquer imovel.
 - Admin pode preservar/alterar `brokerId` apenas para corretor ativo.
@@ -20,8 +18,8 @@
 - `isNewDevelopment=true` salva `propertyAgeYears=0` e garante `na-planta` em `tagSlugs`.
 - Busca/detalhe publico continuam retornando apenas `status=published`.
 - Busca/detalhe publico retornam `brokerContact` com fallback institucional.
-- Tela `/broker` mostra CTA para `Meus imoveis`.
-- Tela `/broker/properties` tem tabs `Anunciados`, `Vendas` e `Excluidos`, grid, criacao/edicao por dialog e acoes de status.
+- Tela `/broker` concentra as tabs `Meus imoveis` e `Meu perfil`.
+- `/broker/properties` permanece como rota de compatibilidade e renderiza o painel do broker.
 - Tela `/admin/properties` foi adicionada ao `AdminLayout`, com filtro por status, busca textual, edicao e acoes de status.
 
 ## Contexto
@@ -30,14 +28,14 @@ O painel do corretor precisa sair do placeholder e permitir que corretores geren
 O banco atual ja possui a base necessaria para esta v1:
 - `properties.broker_id` vincula o imovel ao corretor.
 - `properties.cover_url` guarda a imagem de capa.
-- `properties.status` controla `draft`, `published`, `sold` e `inactive`.
-- `property_media` guarda imagens e video por URL.
+- `properties.status` controla `draft`, `pending_review`, `published`, `sold` e `inactive`.
+- `property_media` guarda imagens e video, com imagens publicas promovidas pelo fluxo R2.
 
-Nesta fase, nao havera upload real de arquivos. Fotos e video serao informados por URL manual e salvos no PostgreSQL.
+O upload real de imagens passou a ser tratado pela spec de midia/R2; URL manual nao e mais o fluxo principal.
 
 ## Decisoes fechadas
-- Midia v1: URL manual, sem multipart/storage.
-- Novo imovel criado por corretor entra como `published`.
+- Midia: upload via backend/R2, conforme `media/01`.
+- Novo imovel criado por corretor entra como `pending_review` ao ser finalizado.
 - Admin pode listar, editar, inativar e marcar venda de qualquer imovel.
 - Corretor pode listar, criar, editar, inativar e marcar venda apenas dos proprios imoveis.
 - Remover significa mudar `status` para `inactive`, sem exclusao fisica.
@@ -52,11 +50,11 @@ Em escopo:
 - Criar grid operacional de imoveis no painel do corretor.
 - Criar formulario de criacao e edicao de imovel.
 - Criar acoes de editar, remover/inativar e sinalizar venda.
-- Salvar foto de capa, galeria de fotos por URL e video/apresentacao por URL.
+- Salvar foto de capa, galeria e video/apresentacao.
 - Atualizar API publica para retornar contato WhatsApp do corretor quando existir.
 
 Fora de escopo:
-- Upload real de imagens/videos.
+- Upload real de imagens e integracao R2; video continua por URL YouTube.
 - Compressao ou processamento de midia.
 - Aba completa de excluidos, alem do status e filtro preparado.
 - Fluxo de aprovacao editorial por admin.
@@ -81,7 +79,7 @@ Regras:
 - Corretor so acessa imoveis com `broker_id` igual ao usuario autenticado.
 - `brokerId` nunca vem do frontend.
 - Ao criar, backend fixa `brokerId=request.authenticatedUser.id`.
-- Ao criar, backend fixa `status=published`.
+- Ao finalizar, broker usa `status=pending_review`; admin usa `status=published`.
 - Ao tentar acessar imovel de outro corretor, retornar `404 PROPERTY_NOT_FOUND`.
 
 ### Admin properties
@@ -179,8 +177,8 @@ Body:
 Regras de validacao:
 - `title`, `segment`, `propertyType`, `city`, `neighborhood`, `coverUrl`, `areaM2`, `price`, `bathrooms` e `garageSpaces` sao obrigatorios.
 - `neighborhood` nao pode ser vazio.
-- `imageUrls` deve ter minimo 4 e maximo 12 URLs.
-- `coverUrl` deve estar preenchido; recomendado que seja uma das imagens de `imageUrls`.
+- No fluxo atual, imagens usam `mediaIds`/`coverMediaId`; `imageUrls` e contrato legado.
+- `coverUrl` deve apontar para uma imagem ativa da propria propriedade.
 - `videoUrl` e opcional; quando preenchido, deve ser URL valida.
 - `price`, `areaM2`, `bedrooms`, `bathrooms`, `garageSpaces` e `propertyAgeYears` devem ser inteiros.
 - `bedrooms`, `bathrooms` e `garageSpaces` devem ficar entre 0 e 10.
@@ -188,7 +186,7 @@ Regras de validacao:
 - Se `isNewDevelopment=true`, backend salva `propertyAgeYears=0` e garante `na-planta` em `tagSlugs`.
 - Se `isNewDevelopment=false`, backend usa `propertyAgeYears` informado.
 - `tagSlugs` deve conter apenas tags conhecidas e ativas em `property_tags`.
-- Criacao de broker fixa `status=published`.
+- Criacao/finalizacao de broker usa `status=pending_review`.
 - Edicao nao pode alterar `brokerId` pela rota broker.
 
 Persistencia de midia:
@@ -214,7 +212,8 @@ Status permitidos:
 - `published`: anunciado/publico.
 - `inactive`: removido/inativado.
 - `sold`: venda sinalizada.
-- `draft`: reservado para uso futuro.
+- `draft`: estado tecnico de pre-cadastro.
+- `pending_review`: enviado pelo broker para aprovacao administrativa.
 
 Regras:
 - `inactive` remove o imovel da visualizacao publica.

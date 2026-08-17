@@ -22,7 +22,7 @@ CREATE DATABASE seletta_shadow OWNER admin_local;
 A autenticacao passa a ser propria do backend. O PostgreSQL guarda usuarios, senha com hash, roles e status ativo; o backend emite e valida JWT Bearer e aplica as regras de negocio por role.
 
 ## Objetivos
-- Criar API propria para Home, Search, Auth/Profile, Admin Users e futuramente Imoveis.
+- Criar API propria para Home, Search, Auth/Profile, Admin Users e propriedades protegidas.
 - Usar PostgreSQL local para desenvolvimento rapido e barato.
 - Manter a arquitetura Flutter atual: `widget -> controller -> useCase -> repository -> datasource`.
 - Trocar fluxos legados de autenticacao/dominio por HTTP API propria.
@@ -43,6 +43,7 @@ A autenticacao passa a ser propria do backend. O PostgreSQL guarda usuarios, sen
 - Flutter Home foi ligado aos endpoints HTTP via `RestClient`, com fallback para mocks.
 - `RestClient`, `RestClientAbstract` e `RestEnv` foram adicionados/exportados no `packages/core`.
 - Endpoints da feature Home foram centralizados em `PropertySegmentsEndpoints`.
+- CRUD protegido de propriedades, ciclo de vida de midia R2 e perfil do corretor foram adicionados desde a versao inicial desta spec.
 
 ## Publicos E Papeis
 - Publico: navega Home, busca imoveis e consulta detalhes publicados.
@@ -90,7 +91,7 @@ Permite que admins gerenciem corretores e administradores.
 
 ### Broker Properties
 Cadastro e manutencao de imoveis pelo corretor/admin foram detalhados na spec propria:
-`docs/specs/properties/01-broker-admin-properties-crud.md`.
+`docs/specs/properties/02-unified-property-form.md`.
 
 ### Leads
 Fase futura para contatos de clientes publicos.
@@ -422,7 +423,7 @@ Resposta:
 ```
 
 ## Broker Properties - Spec Propria
-Detalhamento oficial: `docs/specs/properties/01-broker-admin-properties-crud.md`.
+Detalhamento oficial: `docs/specs/properties/02-unified-property-form.md`.
 
 ### `GET /api/v1/broker/properties`
 Broker ativo lista apenas seus imoveis.
@@ -440,7 +441,7 @@ Broker edita apenas imovel proprio.
 Broker muda status permitido dentro de seu escopo.
 
 ## Admin Properties - Spec Propria
-Detalhamento oficial: `docs/specs/properties/01-broker-admin-properties-crud.md`.
+Detalhamento oficial: `docs/specs/properties/02-unified-property-form.md`.
 
 ### `GET /api/v1/admin/properties`
 Admin lista todos os imoveis.
@@ -572,7 +573,7 @@ Futuro.
 11. Migrar `AuthRepository` para login e perfil via API propria.
 12. Implementar Admin Users.
 13. Implementar relatorio simples de imoveis por corretor.
-14. Implementar Broker/Admin Properties conforme `docs/specs/properties/01-broker-admin-properties-crud.md`.
+14. Evoluir Broker/Admin Properties conforme `docs/specs/properties/02-unified-property-form.md`.
 
 ## Fora Do MVP
 - Upload definitivo de imagens.

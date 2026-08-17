@@ -26,6 +26,9 @@ class MainModule extends Module {
   @override
   Map<String, RouteBuilder> get routes => <String, RouteBuilder>{
     MainRoutes.home: (context, arguments) => PropertySegmentsHomePage(),
+    MainRoutes.stock: (context, arguments) => PropertySearchPage(
+      routeData: arguments is ModuleRouteData ? arguments : null,
+    ),
     MainRoutes.search: (context, arguments) => PropertySearchPage(
       routeData: arguments is ModuleRouteData ? arguments : null,
     ),
@@ -92,7 +95,7 @@ class MainModule extends Module {
     MainRoutes.investments: (context, arguments) => const SegmentDetailsPage(
       title: 'Novidades na planta',
       description:
-          'Rota temporaria para oportunidades com tag na planta. A busca publica usa /search?city=Palmas&tag=na-planta.',
+          'Rota temporaria para oportunidades com tag na planta. Os imóveis a venda usam /estoque?city=Palmas&tag=na-planta.',
     ),
     MainRoutes
         .announceProperty: (context, arguments) => const SegmentDetailsPage(

@@ -6,7 +6,10 @@ import 'package:legend_core/legend_core.dart';
 
 class PropertySegmentsHomeStore extends Store {
   final AppState state = AppState();
-  PropertySearchFiltersEntity filters = const PropertySearchFiltersEntity();
+  PropertySearchFiltersEntity filters = const PropertySearchFiltersEntity(
+    segment: PropertySegment.residential,
+    propertyType: ResidentialPropertyType.apartment,
+  );
   List<FeaturedPropertyEntity> featuredProperties =
       const <FeaturedPropertyEntity>[];
   HomeBrandContentEntity? brandContent;

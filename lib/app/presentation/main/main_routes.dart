@@ -4,6 +4,7 @@ abstract final class MainRoutes {
   static const String residential = '/residential';
   static const String investments = '/investments';
   static const String announceProperty = '/announce-property';
+  static const String stock = '/estoque';
   static const String search = '/search';
   static const String login = '/login';
   static const String broker = '/broker';

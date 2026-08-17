@@ -49,7 +49,7 @@ class PropertySegmentsRepository {
   }) async {
     try {
       return SuccessResponse<Failure, Uri>(
-        Uri(path: '/search', queryParameters: filters.toQueryParameters()),
+        Uri(path: '/estoque', queryParameters: filters.toQueryParameters()),
       );
     } catch (_) {
       return ErrorResponse<Failure, Uri>(HomeShowcaseFailure());

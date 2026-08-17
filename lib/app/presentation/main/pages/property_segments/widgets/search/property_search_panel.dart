@@ -13,6 +13,14 @@ class PropertySearchPanel extends StatefulWidget {
     required this.onFiltersChanged,
     required this.onSegmentChanged,
     required this.onSubmit,
+    this.title = 'Busca em Palmas',
+    this.allowAll = false,
+    this.vertical = false,
+    this.autoSubmitShortcuts = true,
+    this.onClear,
+    this.priceRangeMin,
+    this.priceRangeMax,
+    this.submitLabel = 'Buscar',
   });
 
   final PropertySearchFiltersEntity filters;
@@ -22,6 +30,14 @@ class PropertySearchPanel extends StatefulWidget {
   final ValueChanged<PropertySearchFiltersEntity> onFiltersChanged;
   final ValueChanged<PropertySegment> onSegmentChanged;
   final VoidCallback onSubmit;
+  final String title;
+  final bool allowAll;
+  final bool vertical;
+  final bool autoSubmitShortcuts;
+  final VoidCallback? onClear;
+  final int? priceRangeMin;
+  final int? priceRangeMax;
+  final String submitLabel;
 
   @override
   State<PropertySearchPanel> createState() => _PropertySearchPanelState();
@@ -30,7 +46,8 @@ class PropertySearchPanel extends StatefulWidget {
 class _PropertySearchPanelState extends State<PropertySearchPanel> {
   bool _showAdvancedFilters = false;
 
-  bool get isWide => MediaQuery.of(context).size.width >= 920;
+  bool get isWide =>
+      !widget.vertical && MediaQuery.of(context).size.width >= 920;
 
   @override
   void didUpdateWidget(covariant PropertySearchPanel oldWidget) {
@@ -73,7 +90,7 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'Busca em Palmas',
+              widget.title,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: DSSpacing.md),
@@ -97,6 +114,7 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                       child: _SegmentDropdown(
                         key: ValueKey(widget.filters.segment.value),
                         value: widget.filters.segment,
+                        allowAll: widget.allowAll,
                         onChanged: widget.onSegmentChanged,
                       ),
                     ),
@@ -109,7 +127,13 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                           '${widget.filters.segment.value}-${widget.filters.propertyType.value}',
                         ),
                         value: widget.filters.propertyType,
-                        options: widget.filters.segment.propertyTypes,
+                        options: widget.filters.segment.propertyTypes
+                            .where(
+                              (option) =>
+                                  widget.allowAll ||
+                                  option != AnyPropertyType.any,
+                            )
+                            .toList(),
                         onChanged: (value) => widget.onFiltersChanged(
                           widget.filters.copyWith(
                             propertyType: value,
@@ -127,7 +151,7 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                       child: FilledButton.icon(
                         onPressed: widget.onSubmit,
                         icon: const Icon(Icons.search),
-                        label: const Text('Buscar'),
+                        label: Text(widget.submitLabel),
                       ),
                     ),
                   ),
@@ -202,9 +226,8 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                 ),
               ),
             ),
-            AnimatedCrossFade(
-              firstChild: const SizedBox.shrink(),
-              secondChild: Padding(
+            if (_showAdvancedFilters)
+              Padding(
                 padding: const EdgeInsets.only(top: DSSpacing.sm),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -269,20 +292,23 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                         _PriceRangeSlider(
                           properties: widget.properties,
                           filters: widget.filters,
+                          availableMin: widget.priceRangeMin,
+                          availableMax: widget.priceRangeMax,
                           onChanged: widget.onFiltersChanged,
                         ),
+                        if (widget.onClear != null) ...<Widget>[
+                          const SizedBox(height: DSSpacing.md),
+                          OutlinedButton.icon(
+                            onPressed: widget.onClear,
+                            icon: const Icon(Icons.filter_alt_off_outlined),
+                            label: const Text('Limpar filtros'),
+                          ),
+                        ],
                       ],
                     );
                   },
                 ),
               ),
-              crossFadeState: _showAdvancedFilters
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 220),
-              firstCurve: Curves.easeOutCubic,
-              secondCurve: Curves.easeOutCubic,
-            ),
           ],
         ),
       ),
@@ -291,7 +317,7 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
 
   void _selectLocation(String value) {
     _updateNeighborhood(value);
-    widget.onSubmit();
+    if (widget.autoSubmitShortcuts) widget.onSubmit();
   }
 
   void _updateNeighborhood(String value) {
@@ -309,11 +335,13 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
     widget.queryController.text = filters.query;
     widget.blockOrNeighborhoodController.text = filters.blockOrNeighborhood;
     widget.onFiltersChanged(filters);
-    widget.onSubmit();
+    if (widget.autoSubmitShortcuts) widget.onSubmit();
   }
 }
 
-List<String> _buildNeighborhoodOptions(List<FeaturedPropertyEntity> properties) {
+List<String> _buildNeighborhoodOptions(
+  List<FeaturedPropertyEntity> properties,
+) {
   final neighborhoods = properties
       .map((property) => property.subNeighborhood.trim())
       .where((neighborhood) => neighborhood.isNotEmpty)
@@ -402,10 +430,7 @@ class _QuickFilterChips extends StatelessWidget {
         _QuickFilterChip(
           label: 'Na planta',
           onPressed: () => onFiltersSelected(
-            const PropertySearchFiltersEntity(
-              tag: 'na-planta',
-              tagOnly: true,
-            ),
+            const PropertySearchFiltersEntity(tag: 'na-planta', tagOnly: true),
           ),
         ),
       ],
@@ -468,10 +493,12 @@ class _SegmentDropdown extends StatelessWidget {
   const _SegmentDropdown({
     super.key,
     required this.value,
+    required this.allowAll,
     required this.onChanged,
   });
 
   final PropertySegment value;
+  final bool allowAll;
   final ValueChanged<PropertySegment> onChanged;
 
   @override
@@ -483,6 +510,7 @@ class _SegmentDropdown extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: DSRadius.sm),
       ),
       items: PropertySegment.values
+          .where((segment) => allowAll || segment != PropertySegment.all)
           .map(
             (segment) => DropdownMenuItem<PropertySegment>(
               value: segment,
@@ -568,26 +596,30 @@ class _PriceRangeSlider extends StatelessWidget with DesignSystemMixin {
   const _PriceRangeSlider({
     required this.properties,
     required this.filters,
+    required this.availableMin,
+    required this.availableMax,
     required this.onChanged,
   });
 
   final List<FeaturedPropertyEntity> properties;
   final PropertySearchFiltersEntity filters;
+  final int? availableMin;
+  final int? availableMax;
   final ValueChanged<PropertySearchFiltersEntity> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    if (properties.isEmpty) {
+    if (properties.isEmpty && (availableMin == null || availableMax == null)) {
       return const SizedBox.shrink();
     }
 
     final prices = properties.map((property) => property.price).toList();
-    final minPrice = prices.reduce(
-      (value, element) => value < element ? value : element,
-    );
-    final maxPrice = prices.reduce(
-      (value, element) => value > element ? value : element,
-    );
+    final minPrice =
+        availableMin ??
+        prices.reduce((value, element) => value < element ? value : element);
+    final maxPrice =
+        availableMax ??
+        prices.reduce((value, element) => value > element ? value : element);
 
     if (minPrice == maxPrice) {
       return _PriceRangeSummary(

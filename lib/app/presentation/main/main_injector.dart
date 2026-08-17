@@ -88,6 +88,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => PropertySearchController(
         store: get<PropertySearchStore>(),
         searchPublishedProperties: get<SearchPublishedPropertiesUseCase>(),
+        navigator: get<AppNavigator>(),
       ),
     );
     registerFactory(

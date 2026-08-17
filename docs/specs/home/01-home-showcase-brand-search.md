@@ -20,7 +20,7 @@ The sketch defines this hierarchy:
 5. Seletta video presentation.
 6. Footer/institutional cards with brand details.
 
-The Home starts a search and sends the user to `/search`. The advanced result grid, scroll behavior, and optimized filters live in the search page, not directly inside the Home.
+The Home starts a search and sends the user to `/estoque`. The editable result grid and optimized filters live in the Stock page, not only inside the Home.
 
 The product is local to Palmas, Tocantins. Search copy, quick filters, and hidden defaults should reflect this scope.
 
@@ -33,21 +33,22 @@ The product is local to Palmas, Tocantins. Search copy, quick filters, and hidde
   - Keep city hidden and defaulted to `Palmas` in state/query contract.
   - Add quick local chips for common Palmas searches.
   - Keep advanced filters collapsed behind `Mais filtros`.
-  - Navigate search submit to `/search` with query parameters.
+  - Navigate search submit to `/estoque` with query parameters.
   - Make `Novidades na planta` navigate to the same search flow with the `na-planta` tag preselected.
   - Render featured property cards on Home.
   - Add a Seletta video section using the initial YouTube URL.
   - Add lower-page cards for contact, about, and mission details.
 - Out of scope:
-  - Full implementation of advanced `/search` page grid.
+  - Detail, sorting and favorites inside `/estoque`.
   - SEO strategy for `Na planta` landing pages.
   - Lead capture, favorite, compare, financing simulation, and property detail page.
   - Real CMS/admin editing for institutional content.
 
 ## Routes
 - `/home`: showcase page.
-- `/search`: search results destination.
-- `/investments`: remains available temporarily for compatibility, but `Novidades na planta` uses `/search?city=Palmas&tag=na-planta`.
+- `/estoque`: canonical public inventory destination.
+- `/search`: compatibility alias for old shared URLs.
+- `/investments`: remains available temporarily for compatibility, but `Novidades na planta` uses `/estoque?city=Palmas&tag=na-planta`.
 
 ## Backend Integration
 Local backend base URL:
@@ -129,21 +130,21 @@ When the user submits the Home search:
 - Controller validates and normalizes the selected filters.
 - UseCase builds a search request/query object.
 - Repository maps it into route-safe query parameters.
-- Navigator opens `/search` with the current filters.
+- Navigator opens `/estoque` with the current filters.
 
 Example:
 ```txt
-/search?segment=residential&propertyType=apartment&bedroomsMin=2&bathroomsMin=1&garageSpacesMin=1&priceMin=300000&priceMax=900000
+/estoque?segment=residential&propertyType=apartment&bedroomsMin=2&bathroomsMin=1&garageSpacesMin=1&priceMin=300000&priceMax=900000
 ```
 
 Hidden city example:
 ```txt
-/search?city=Palmas&segment=commercial&propertyType=commercial-room
+/estoque?city=Palmas&segment=commercial&propertyType=commercial-room
 ```
 
 `Novidades na planta` behavior:
 ```txt
-/search?city=Palmas&tag=na-planta
+/estoque?city=Palmas&tag=na-planta
 ```
 
 ## Featured Cards
@@ -168,7 +169,7 @@ For commercial cards, bedroom count can be omitted.
 
 ## Institutional Sections
 ### Top Navigation
-- `Novidades na planta`: navigates to `/search?city=Palmas&tag=na-planta`.
+- `Novidades na planta`: navigates to `/estoque?city=Palmas&tag=na-planta`.
 - `Contatos`: scrolls to the contact card near the bottom of Home.
 - `Sobre nos`: scrolls to the about card near the bottom of Home.
 - `Missao`: scrolls to the mission card near the bottom of Home.
@@ -200,23 +201,23 @@ These cards are the target of top navigation scroll actions.
 - UseCase calls only Repository? [ ]
 - Repository concentrates `try/catch`, mapping, and `Failure`? [ ]
 - Search state/query mapping is not built directly inside Widget? [ ]
-- Navigation to `/search` is triggered by Controller via injected `AppNavigator`? [ ]
+- Navigation to `/estoque` is triggered by Controller via injected `AppNavigator`? [ ]
 
 ## Functional Requirements
 1. Home displays top navigation with all required entries.
-2. Clicking `Novidades na planta` opens `/search` with `tag=na-planta`.
+2. Clicking `Novidades na planta` opens `/estoque` with `tag=na-planta`.
 3. Clicking `Contatos`, `Sobre nos`, or `Missao` scrolls to the corresponding lower Home card.
 4. Home displays a short brand message before the search block.
 5. Home displays a search/filter block with the required fields.
 6. City field exists in the filter contract, defaults to `Palmas`, and is visually hidden.
 7. Selecting `residential` enables residential property types.
 8. Selecting `commercial` enables commercial property types.
-9. Submitting search navigates to `/search` with route-safe query parameters.
+9. Submitting search navigates to `/estoque` with route-safe query parameters.
 10. Home displays featured cards with cover photo, core property facts, and up to 3 tags.
 11. Home displays a Seletta video section.
 12. Home displays lower explicit cards for contact, about, and mission.
 13. Home keeps advanced filters collapsed until the user clicks `Mais filtros`.
-14. Quick local chips apply filters and navigate to `/search`.
+14. Quick local chips apply filters and navigate to `/estoque`.
 
 ## Non-Functional Requirements
 1. Responsive layout for mobile and desktop using `design_system`.
@@ -280,17 +281,17 @@ These cards are the target of top navigation scroll actions.
 
 ## Acceptance Criteria (Given/When/Then)
 1. Given user opens `/home`, when the page renders, then top navigation, brand message, search block, featured cards, video, and lower brand cards are visible.
-2. Given user clicks `Novidades na planta`, when navigation completes, then `/search` opens with `city=Palmas` and `tag=na-planta`.
+2. Given user clicks `Novidades na planta`, when navigation completes, then `/estoque` opens with `city=Palmas` and `tag=na-planta`.
 3. Given user clicks `Missao`, when the action runs, then the page scrolls to the mission card.
 4. Given user selects `residential`, when property type options open, then only residential types are shown.
 5. Given user selects `commercial`, when property type options open, then only commercial types are shown.
 6. Given city exists in state, when Home renders, then city is not shown as a visible control.
-7. Given user submits search, when filters are valid, then app navigates to `/search` with deterministic query params.
+7. Given user submits search, when filters are valid, then app navigates to `/estoque` with deterministic query params.
 8. Given mobile viewport, when Home renders, then search controls stack without overflow.
 9. Given desktop viewport, when Home renders, then featured cards use a multi-column layout.
 10. Given Home loads, when user has not opened advanced filters, then bedrooms, bathrooms, garage spaces, price, and keyword are hidden.
 11. Given user clicks `Mais filtros`, when the panel opens, then advanced filters are available without changing current filters.
-12. Given user clicks a local quick chip, when navigation completes, then `/search` opens with the chip filter applied.
+12. Given user clicks a local quick chip, when navigation completes, then `/estoque` opens with the chip filter applied.
 13. Given a featured property has more than 3 tags, when the card renders, then only the first 3 are shown.
 
 ## Technical Plan
@@ -298,19 +299,19 @@ These cards are the target of top navigation scroll actions.
   - `presentation/main/pages/property_segments`: Home page, controller, store.
   - `domain/property_segments`: search filter entity, featured property entity, use cases.
   - `data/property_segments`: datasource methods, models, repository methods, failures.
-  - `presentation/main`: route declarations for `/search`.
+  - `presentation/main`: route declarations for `/estoque` and `/search`.
 - New or updated use cases:
   - `BuildPropertySearchQueryUseCase`
   - `GetFeaturedPropertiesUseCase`
   - `GetHomeBrandContentUseCase`
 - New or updated routes:
-  - `MainRoutes.search = '/search'`
-- Search page:
-  - Minimum placeholder page may be created to receive and display query parameters.
-  - Full optimized grid belongs to a later search/catalog spec unless implementation scope is expanded.
+  - `MainRoutes.stock = '/estoque'`
+  - `MainRoutes.search = '/search'` as compatibility alias.
+- Stock page:
+  - Receives query parameters, renders editable filters and the public grid.
 - Backend:
   - Home brand content and featured properties are served by Node/PostgreSQL.
-  - Search endpoint exists in backend and must be integrated into `/search` in the next frontend slice.
+  - Search endpoint is integrated into `/estoque` and its `/search` alias.
 
 ## File Targets (Planned)
 - `lib/app/domain/property_segments/entities/property_search_filters_entity.dart`
@@ -343,7 +344,7 @@ These cards are the target of top navigation scroll actions.
 - Use compact controls and progressive disclosure on mobile.
 - Keep a single filter entity with explicit defaults.
 - Keep quick chips as presentation-level shortcuts backed by the same filter entity.
-- Treat `/search` as functional route now and revisit `/investments`/`Na planta` SEO strategy in a dedicated spec.
+- Treat `/estoque` as the canonical functional route and revisit `/investments`/`Na planta` SEO strategy in a dedicated spec.
 - Allow card facts to be optional per segment.
 - Render video as thumbnail/CTA first; defer embed.
 
@@ -352,7 +353,7 @@ These cards are the target of top navigation scroll actions.
   - Search query use case maps filters to stable query params.
   - Residential property types are returned only for residential segment.
   - Commercial property types are returned only for commercial segment.
-  - Tag shortcut `Na planta` maps to `/search?city=Palmas&tag=na-planta`.
+  - Tag shortcut `Na planta` maps to `/estoque?city=Palmas&tag=na-planta`.
   - Repository maps featured property payloads and errors to `DualResponse`.
 - Widget:
   - Home renders required sections.
@@ -364,28 +365,28 @@ These cards are the target of top navigation scroll actions.
   - Featured cards render facts without overflow.
   - Navigation links trigger expected controller actions.
 - Integration:
-  - Submit Home search and land on `/search` with expected query params.
-  - Click `Novidades na planta` and land on `/search?city=Palmas&tag=na-planta`.
+  - Submit Home search and land on `/estoque` with expected query params.
+  - Click `Novidades na planta` and land on `/estoque?city=Palmas&tag=na-planta`.
   - Click lower-section nav links and verify scroll target.
 
 ## Rollout Strategy
 1. Add contracts/entities and datasource-backed placeholder content. [done]
 2. Build Home layout sections with static/mock data through repository. [done]
-3. Add search query mapping and `/search` placeholder route. [done]
+3. Add search query mapping and `/search` compatibility route. [done]
 4. Wire top navigation scroll and `Novidades na planta`. [done]
 5. Serve Home content from backend Node/PostgreSQL with controlled error state when API is unavailable. [done]
-6. Integrate `/search` page with `GET /api/v1/properties/search`. [next]
+6. Integrate `/estoque` page with `GET /api/v1/properties/search`. [done]
 7. Validate mobile/desktop layout and accessibility basics.
 
 ## Definition of Done (Spec 1.2)
 - Home structure matches the sketch: nav, mission/message, search, highlights, video, brand cards.
-- Search submits to `/search` with stable query params.
+- Search submits to `/estoque` with stable query params.
 - `Novidades na planta` preselects `tag=na-planta`.
 - Segment selection controls property type options.
 - City exists in filter state/query contract as `Palmas` but is hidden.
 - Home search defaults to compact local Palmas controls.
 - Advanced filters are available under `Mais filtros`.
-- Quick local chips apply shortcuts into `/search`.
+- Quick local chips apply shortcuts into `/estoque`.
 - Featured cards show required property facts.
 - Architecture flow is respected end to end.
 - Errors are mapped in repository as `Failure`.

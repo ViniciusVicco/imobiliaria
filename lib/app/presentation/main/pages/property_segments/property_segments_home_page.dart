@@ -93,6 +93,7 @@ class _PropertySegmentsHomePageState
                 slivers: <Widget>[
                   SliverToBoxAdapter(
                     child: PropertySegmentsTopNavigation(
+                      onStockPressed: controller.onStockPressed,
                       onNewDevelopmentsPressed: () =>
                           controller.onNewDevelopmentsPressed(),
                       onContactPressed: () => _scrollTo(_contactKey),

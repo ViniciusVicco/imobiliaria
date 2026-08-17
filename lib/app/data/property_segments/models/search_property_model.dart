@@ -64,12 +64,19 @@ class PropertySearchResultModel extends PropertySearchResultEntity {
   const PropertySearchResultModel({
     required super.items,
     required super.pagination,
+    required super.priceRange,
   });
 
   factory PropertySearchResultModel.fromJson(Map<String, dynamic> json) {
     final items = json['items'] as List<dynamic>? ?? const <dynamic>[];
     final pagination =
-        json['pagination'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+        json['pagination'] as Map<String, dynamic>? ??
+        const <String, dynamic>{};
+    final facets =
+        json['facets'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final priceRange =
+        facets['priceRange'] as Map<String, dynamic>? ??
+        const <String, dynamic>{};
 
     return PropertySearchResultModel(
       items: items
@@ -77,6 +84,10 @@ class PropertySearchResultModel extends PropertySearchResultEntity {
           .map(SearchPropertyModel.fromJson)
           .toList(),
       pagination: PropertySearchPaginationModel.fromJson(pagination),
+      priceRange: PropertySearchPriceRangeEntity(
+        min: priceRange['min'] as int?,
+        max: priceRange['max'] as int?,
+      ),
     );
   }
 }

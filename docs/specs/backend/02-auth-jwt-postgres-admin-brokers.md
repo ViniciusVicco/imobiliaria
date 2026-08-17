@@ -23,7 +23,7 @@ Corretores e administradores precisam autenticar por email/senha propria da plat
 - Primeiro admin: seed/script local controlado, nunca credencial hardcoded no app.
 - Frontend nunca envia nem decide `isAdmin`, `role` ou `isActive` para liberar acesso.
 
-## Escopo
+## Escopo original e estado atual
 Em escopo:
 - Definir modelo relacional de usuarios com senha local.
 - Definir login/logout/me com JWT Bearer.
@@ -32,12 +32,12 @@ Em escopo:
 - Definir relatorio inicial de quantidade de imoveis por corretor.
 - Definir migracao do Flutter para auth via API propria.
 
+Estado atual: login, `/me`, perfil, troca de senha, avatar, guards Flutter e rotas admin de usuarios/corretores ja estao implementados. As regras de propriedades e midia foram detalhadas nas specs de `properties` e `media`.
+
 Fora de escopo:
 - Autenticacao de clientes publicos.
 - Recuperacao completa de senha por email.
 - Refresh token persistente.
-- CRUD completo de imoveis.
-- Upload de fotos.
 - Leads persistidos.
 - Auditoria detalhada de acoes administrativas.
 

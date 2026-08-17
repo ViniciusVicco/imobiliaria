@@ -1,5 +1,9 @@
 # Spec 1 - Painel Amigavel do Corretor
 
+## Status
+- Painel `/broker`, tabs de imoveis/perfil, perfil via `/me/*` e upload de avatar ja estao implementados no Flutter/backend.
+- Pendente: notificacao de venda por e-mail para admins ativos e cobertura de testes.
+
 ## Contexto
 O corretor precisa de uma experiencia mais direta apos o login, focada nas duas acoes que ele mais usa:
 - gerenciar os proprios imoveis;
@@ -36,6 +40,7 @@ Fora de escopo:
 - `phone` existente no banco representa celular.
 - WhatsApp e celular sao campos separados.
 - `creci` e opcional.
+- `about` e editavel no perfil e representa a apresentacao profissional do corretor.
 - Avatar usa upload real via backend/R2.
 - Avatar atualiza imediatamente apos upload bem-sucedido, sem depender de `Salvar alteracoes`.
 - `Salvar alteracoes` so habilita quando algum campo de texto editavel mudar.
@@ -218,10 +223,18 @@ Regras:
 - Salvar somente hash.
 - Nunca retornar senha ou hash.
 
-Resposta:
+Resposta atual (perfil atualizado, sem senha/hash):
 ```json
 {
-  "success": true
+  "id": "user_id",
+  "name": "Nome completo",
+  "email": "corretor@seletta.local",
+  "phone": "(63) 99999-0000",
+  "whatsapp": "(63) 99999-1111",
+  "creci": "TO-00000",
+  "avatarUrl": "https://cdn.seletta.../avatars/user_id/avatar.webp",
+  "role": "broker",
+  "isActive": true
 }
 ```
 

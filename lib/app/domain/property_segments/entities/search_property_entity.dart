@@ -52,8 +52,19 @@ class PropertySearchResultEntity {
   const PropertySearchResultEntity({
     required this.items,
     required this.pagination,
+    required this.priceRange,
   });
 
   final List<SearchPropertyEntity> items;
   final PropertySearchPaginationEntity pagination;
+  final PropertySearchPriceRangeEntity priceRange;
+}
+
+class PropertySearchPriceRangeEntity {
+  const PropertySearchPriceRangeEntity({this.min, this.max});
+
+  final int? min;
+  final int? max;
+
+  bool get isAvailable => min != null && max != null;
 }
