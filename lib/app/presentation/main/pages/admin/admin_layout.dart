@@ -10,11 +10,13 @@ class AdminLayout extends StatelessWidget {
     required this.title,
     required this.currentRoute,
     required this.child,
+    this.notificationCount = 0,
   });
 
   final String title;
   final String currentRoute;
   final Widget child;
+  final int notificationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,10 @@ class AdminLayout extends StatelessWidget {
               children: <Widget>[
                 SizedBox(
                   width: 260,
-                  child: _AdminSidebar(currentRoute: currentRoute),
+                  child: _AdminSidebar(
+                    currentRoute: currentRoute,
+                    notificationCount: notificationCount,
+                  ),
                 ),
                 const VerticalDivider(width: 1),
                 Expanded(child: child),
@@ -38,7 +43,10 @@ class AdminLayout extends StatelessWidget {
 
           return Column(
             children: <Widget>[
-              _AdminTopTabs(currentRoute: currentRoute),
+              _AdminTopTabs(
+                currentRoute: currentRoute,
+                notificationCount: notificationCount,
+              ),
               const Divider(height: 1),
               Expanded(child: child),
             ],
@@ -50,9 +58,13 @@ class AdminLayout extends StatelessWidget {
 }
 
 class _AdminSidebar extends StatelessWidget {
-  const _AdminSidebar({required this.currentRoute});
+  const _AdminSidebar({
+    required this.currentRoute,
+    required this.notificationCount,
+  });
 
   final String currentRoute;
+  final int notificationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -66,15 +78,24 @@ class _AdminSidebar extends StatelessWidget {
             children: <Widget>[
               Text(
                 'Admin',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: DSSpacing.lg),
               _AdminNavButton(
                 label: 'Gerenciar corretores',
                 icon: Icons.groups_outlined,
                 route: MainRoutes.adminUsers,
+                currentRoute: currentRoute,
+              ),
+              const SizedBox(height: DSSpacing.sm),
+              _AdminNavButton(
+                label: notificationCount > 0
+                    ? 'Pendencias ($notificationCount)'
+                    : 'Pendencias',
+                icon: Icons.notifications_active_outlined,
+                route: MainRoutes.adminReview,
                 currentRoute: currentRoute,
               ),
               const SizedBox(height: DSSpacing.sm),
@@ -93,9 +114,13 @@ class _AdminSidebar extends StatelessWidget {
 }
 
 class _AdminTopTabs extends StatelessWidget {
-  const _AdminTopTabs({required this.currentRoute});
+  const _AdminTopTabs({
+    required this.currentRoute,
+    required this.notificationCount,
+  });
 
   final String currentRoute;
+  final int notificationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +136,14 @@ class _AdminTopTabs extends StatelessWidget {
             currentRoute: currentRoute,
           ),
           const SizedBox(width: DSSpacing.sm),
+          _AdminNavButton(
+            label: notificationCount > 0
+                ? 'Pendencias ($notificationCount)'
+                : 'Pendencias',
+            icon: Icons.notifications_active_outlined,
+            route: MainRoutes.adminReview,
+            currentRoute: currentRoute,
+          ),
           _AdminNavButton(
             label: 'Gerenciar imoveis',
             icon: Icons.home_work_outlined,

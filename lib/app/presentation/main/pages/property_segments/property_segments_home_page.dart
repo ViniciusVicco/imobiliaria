@@ -126,6 +126,7 @@ class _PropertySegmentsHomePageState
                             onFiltersChanged: controller.updateFilters,
                             onSegmentChanged: controller.updateSegment,
                             onSubmit: () => controller.onSearchSubmitted(),
+                            allowAll: true,
                           ),
                           const SizedBox(height: DSSpacing.xl),
                           FeaturedPropertiesSection(

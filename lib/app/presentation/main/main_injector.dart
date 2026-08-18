@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:imobiliaria/app/data/admin/datasources/admin_brokers_datasource.dart';
+import 'package:imobiliaria/app/data/admin/datasources/admin_notifications_datasource.dart';
 import 'package:imobiliaria/app/data/admin/repositories/admin_brokers_repository.dart';
+import 'package:imobiliaria/app/data/admin/repositories/admin_notifications_repository.dart';
 import 'package:imobiliaria/app/data/api/auth_token_interceptor.dart';
 import 'package:imobiliaria/app/data/broker/datasources/broker_properties_datasource.dart';
 import 'package:imobiliaria/app/data/broker/repositories/broker_properties_repository.dart';
@@ -14,7 +16,11 @@ import 'package:imobiliaria/app/data/property_segments/datasources/property_segm
 import 'package:imobiliaria/app/data/property_segments/repositories/property_segments_repository.dart';
 import 'package:imobiliaria/app/domain/admin/usecases/create_admin_broker_use_case.dart';
 import 'package:imobiliaria/app/domain/admin/usecases/get_admin_brokers_use_case.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/get_admin_notifications_use_case.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/mark_admin_notification_read_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/create_admin_property_use_case.dart';
+import 'package:imobiliaria/app/domain/broker/usecases/approve_admin_property_use_case.dart';
+import 'package:imobiliaria/app/domain/broker/usecases/reject_admin_property_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_admin_properties_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_admin_property_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_broker_property_use_case.dart';
@@ -148,6 +154,10 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         saveAdminProperty: get<SaveAdminPropertyUseCase>(),
         updateAdminPropertyStatus: get<UpdateAdminPropertyStatusUseCase>(),
         navigator: get<AppNavigator>(),
+        approveAdminProperty: get<ApproveAdminPropertyUseCase>(),
+        rejectAdminProperty: get<RejectAdminPropertyUseCase>(),
+        getAdminNotifications: get<GetAdminNotificationsUseCase>(),
+        markAdminNotificationRead: get<MarkAdminNotificationReadUseCase>(),
       ),
     );
   }
@@ -193,6 +203,9 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       () => BrokerPropertiesDatasource(restClient: get<RestClient>()),
     );
     registerFactory(() => MediaDatasource(restClient: get<RestClient>()));
+    registerFactory(
+      () => AdminNotificationsDatasource(restClient: get<RestClient>()),
+    );
   }
 
   @override
@@ -215,6 +228,11 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
       ),
     );
     registerFactory(() => MediaRepository(datasource: get<MediaDatasource>()));
+    registerFactory(
+      () => AdminNotificationsRepository(
+        datasource: get<AdminNotificationsDatasource>(),
+      ),
+    );
   }
 
   @override
@@ -313,6 +331,26 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
     registerFactory(
       () => UpdateAdminPropertyStatusUseCase(
         repository: get<BrokerPropertiesRepository>(),
+      ),
+    );
+    registerFactory(
+      () => ApproveAdminPropertyUseCase(
+        repository: get<BrokerPropertiesRepository>(),
+      ),
+    );
+    registerFactory(
+      () => RejectAdminPropertyUseCase(
+        repository: get<BrokerPropertiesRepository>(),
+      ),
+    );
+    registerFactory(
+      () => GetAdminNotificationsUseCase(
+        repository: get<AdminNotificationsRepository>(),
+      ),
+    );
+    registerFactory(
+      () => MarkAdminNotificationReadUseCase(
+        repository: get<AdminNotificationsRepository>(),
       ),
     );
     registerFactory(

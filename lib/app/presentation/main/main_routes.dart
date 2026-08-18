@@ -14,6 +14,7 @@ abstract final class MainRoutes {
   static const String admin = '/admin';
   static const String adminUsers = '/admin/users';
   static const String adminProperties = '/admin/properties';
+  static const String adminReview = '/admin/review';
   static const String adminPropertyNew = '/admin/properties/new';
   static const String adminPropertyEdit = '/admin/properties/:id/edit';
 

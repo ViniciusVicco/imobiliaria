@@ -40,6 +40,11 @@ class PropertyStatusTabs extends StatelessWidget {
           label: Text('Vendas'),
         ),
         ButtonSegment<String>(
+          value: 'draft',
+          icon: Icon(Icons.edit_note_outlined),
+          label: Text('Rascunhos'),
+        ),
+        ButtonSegment<String>(
           value: 'inactive',
           icon: Icon(Icons.visibility_off_outlined),
           label: Text('Excluidos'),
@@ -61,6 +66,9 @@ class PropertyManagementGrid extends StatelessWidget {
     this.showBroker = false,
     this.onCreate,
     this.loadMediaFile,
+    this.onApprove,
+    this.onReject,
+    this.onStatusChange,
   });
 
   final List<BrokerPropertyEntity> properties;
@@ -70,6 +78,9 @@ class PropertyManagementGrid extends StatelessWidget {
   final bool showBroker;
   final VoidCallback? onCreate;
   final PropertyMediaFileLoader? loadMediaFile;
+  final ValueChanged<BrokerPropertyEntity>? onApprove;
+  final ValueChanged<BrokerPropertyEntity>? onReject;
+  final void Function(BrokerPropertyEntity, String)? onStatusChange;
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +118,11 @@ class PropertyManagementGrid extends StatelessWidget {
               onDeactivate: () => onDeactivate(property),
               showBroker: showBroker,
               loadMediaFile: loadMediaFile,
+              onApprove: onApprove == null ? null : () => onApprove!(property),
+              onReject: onReject == null ? null : () => onReject!(property),
+              onStatusChange: onStatusChange == null
+                  ? null
+                  : (status) => onStatusChange!(property, status),
             );
           },
         );
@@ -170,6 +186,9 @@ class PropertyManagementCard extends StatelessWidget {
     required this.onDeactivate,
     this.showBroker = false,
     this.loadMediaFile,
+    this.onApprove,
+    this.onReject,
+    this.onStatusChange,
   });
 
   final BrokerPropertyEntity property;
@@ -178,6 +197,9 @@ class PropertyManagementCard extends StatelessWidget {
   final VoidCallback onDeactivate;
   final bool showBroker;
   final PropertyMediaFileLoader? loadMediaFile;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+  final ValueChanged<String>? onStatusChange;
 
   @override
   Widget build(BuildContext context) {
@@ -241,6 +263,46 @@ class PropertyManagementCard extends StatelessWidget {
                               : onDeactivate,
                           icon: const Icon(Icons.visibility_off_outlined),
                         ),
+                        if (onApprove != null)
+                          IconButton.filledTonal(
+                            tooltip: 'Aprovar',
+                            onPressed: onApprove,
+                            icon: const Icon(Icons.check_circle_outline),
+                          ),
+                        if (onReject != null)
+                          IconButton.filledTonal(
+                            tooltip: 'Rejeitar',
+                            onPressed: onReject,
+                            icon: const Icon(Icons.cancel_outlined),
+                          ),
+                        if (onStatusChange != null)
+                          PopupMenuButton<String>(
+                            tooltip: 'Alterar status',
+                            onSelected: onStatusChange,
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(
+                                value: 'draft',
+                                child: Text('Rascunho'),
+                              ),
+                              PopupMenuItem(
+                                value: 'pending_review',
+                                child: Text('Em revisao'),
+                              ),
+                              PopupMenuItem(
+                                value: 'published',
+                                child: Text('Publicado'),
+                              ),
+                              PopupMenuItem(
+                                value: 'sold',
+                                child: Text('Vendido'),
+                              ),
+                              PopupMenuItem(
+                                value: 'inactive',
+                                child: Text('Inativo'),
+                              ),
+                            ],
+                            icon: const Icon(Icons.more_vert),
+                          ),
                       ],
                     ),
                   ),
@@ -321,13 +383,15 @@ class PropertyManagementCard extends StatelessWidget {
 
   PropertyMediaEntity? _coverMedia(BrokerPropertyEntity property) {
     final coverUrl = property.coverUrl.trim();
+    PropertyMediaEntity? firstActiveImage;
     for (final media in property.media) {
       if (!media.isImage || !media.isActive) continue;
+      firstActiveImage ??= media;
       if (media.url.trim() == coverUrl || media.publicUrl.trim() == coverUrl) {
         return media;
       }
     }
-    return null;
+    return firstActiveImage;
   }
 }
 

@@ -7,6 +7,7 @@ import { env } from './config/env.js';
 import { adminBrokersRoutes } from './modules/admin/admin-brokers.routes.js';
 import { adminReportsRoutes } from './modules/admin/admin-reports.routes.js';
 import { adminUsersRoutes } from './modules/admin/admin-users.routes.js';
+import { adminNotificationsRoutes } from './modules/admin/admin-notifications.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { homeRoutes } from './modules/home/home.routes.js';
@@ -78,6 +79,7 @@ export async function buildApp() {
       await api.register(adminBrokersRoutes);
       await api.register(adminUsersRoutes);
       await api.register(adminReportsRoutes);
+      await api.register(adminNotificationsRoutes);
       await api.register(homeRoutes);
       await api.register(propertiesRoutes);
       await api.register(protectedPropertiesRoutes);

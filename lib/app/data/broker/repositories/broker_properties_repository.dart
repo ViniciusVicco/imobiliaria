@@ -54,9 +54,17 @@ class BrokerPropertiesRepository {
   }
 
   Future<DualResponse<Failure, BrokerPropertiesResultEntity>>
-  getAdminProperties({required String status, required String query}) {
+  getAdminProperties({
+    required String status,
+    required String query,
+    bool featured = false,
+  }) {
     return _getProperties(
-      () => datasource.getAdminProperties(status: status, query: query),
+      () => datasource.getAdminProperties(
+        status: status,
+        query: query,
+        featured: featured,
+      ),
     );
   }
 
@@ -94,6 +102,21 @@ class BrokerPropertiesRepository {
   }) {
     return _getProperty(
       () => datasource.updateAdminPropertyStatus(id: id, status: status),
+    );
+  }
+
+  Future<DualResponse<Failure, BrokerPropertyEntity>> approveAdminProperty(
+    String id,
+  ) {
+    return _getProperty(() => datasource.approveAdminProperty(id));
+  }
+
+  Future<DualResponse<Failure, BrokerPropertyEntity>> rejectAdminProperty({
+    required String id,
+    String? note,
+  }) {
+    return _getProperty(
+      () => datasource.rejectAdminProperty(id: id, note: note),
     );
   }
 

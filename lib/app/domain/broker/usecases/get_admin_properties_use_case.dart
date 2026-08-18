@@ -10,7 +10,12 @@ class GetAdminPropertiesUseCase {
   Future<DualResponse<Failure, BrokerPropertiesResultEntity>> call({
     required String status,
     required String query,
+    bool featured = false,
   }) {
-    return repository.getAdminProperties(status: status, query: query);
+    return repository.getAdminProperties(
+      status: status,
+      query: query,
+      featured: featured,
+    );
   }
 }

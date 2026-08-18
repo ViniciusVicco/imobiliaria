@@ -1,8 +1,10 @@
 import type { Prisma } from '@prisma/client';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 
+import { env } from '../../config/env.js';
 import { prisma } from '../../shared/database/prisma.js';
+import { getR2Object } from '../../shared/storage/r2-client.js';
 
 const searchQuerySchema = z.object({
   city: z.string().trim().default('Palmas'),
@@ -35,7 +37,18 @@ export async function propertiesRoutes(app: FastifyInstance) {
         orderBy: { updatedAt: 'desc' },
         skip,
         take: query.pageSize,
-        include: { broker: true },
+        include: {
+          broker: true,
+          media: {
+            where: {
+              type: 'image',
+              status: 'active',
+              deletedAt: null,
+            },
+            orderBy: { sortOrder: 'asc' },
+            take: 1,
+          },
+        },
       }),
       prisma.property.count({ where }),
       prisma.brandContent.findUnique({ where: { id: 'home' } }),
@@ -55,7 +68,12 @@ export async function propertiesRoutes(app: FastifyInstance) {
         city: property.city,
         neighborhood: property.neighborhood,
         subNeighborhood: property.subNeighborhood ?? '',
-        coverUrl: property.coverUrl,
+        coverUrl: publicCoverUrl({
+          request,
+          propertyId: property.id,
+          coverUrl: property.coverUrl,
+          mediaId: property.media[0]?.id,
+        }),
         tags: property.tagSlugs.slice(0, 3),
         areaM2: property.areaM2,
         bedrooms: property.bedrooms,
@@ -137,6 +155,36 @@ export async function propertiesRoutes(app: FastifyInstance) {
         await prisma.brandContent.findUnique({ where: { id: 'home' } }),
       ),
     };
+  });
+
+  app.get('/properties/:id/cover', async (request, reply) => {
+    const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
+    const property = await prisma.property.findFirst({
+      where: { id, status: 'published' },
+      include: {
+        media: {
+          where: {
+            type: 'image',
+            status: 'active',
+            deletedAt: null,
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
+
+    if (!property) return reply.code(404).send();
+
+    const media = property.media.find(
+      (item) => item.publicUrl === property.coverUrl || item.url === property.coverUrl,
+    ) ?? property.media[0];
+    if (!media?.storageKey) return reply.code(404).send();
+
+    const file = await getR2Object(media.storageKey);
+    return reply
+      .header('Content-Type', media.mimeType ?? file.contentType ?? 'application/octet-stream')
+      .header('Cache-Control', 'public, max-age=300')
+      .send(file.body);
   });
 }
 
@@ -257,4 +305,32 @@ function mapBrokerContact(
     phone: brokerPhone || fallbackPhone,
     whatsapp: brokerPhone || fallbackPhone,
   };
+}
+
+function publicCoverUrl({
+  request,
+  propertyId,
+  coverUrl,
+  mediaId,
+}: {
+  request: FastifyRequest;
+  propertyId: string;
+  coverUrl: string;
+  mediaId?: string;
+}) {
+  const r2BaseUrl = env.R2_PUBLIC_BASE_URL.replace(/\/$/, '');
+  if (!mediaId || !r2BaseUrl || !coverUrl.startsWith(`${r2BaseUrl}/`)) {
+    return coverUrl;
+  }
+
+  const forwardedProto = request.headers['x-forwarded-proto'];
+  const forwardedHost = request.headers['x-forwarded-host'];
+  const protocol = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)
+    ?.split(',')[0]
+    ?.trim() || request.protocol;
+  const host = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)
+    ?.split(',')[0]
+    ?.trim() || request.headers.host || request.hostname;
+
+  return `${protocol}://${host}/api/v1/properties/${propertyId}/cover`;
 }

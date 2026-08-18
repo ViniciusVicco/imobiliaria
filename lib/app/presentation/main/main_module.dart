@@ -69,6 +69,11 @@ class MainModule extends Module {
       requestedRoute: MainRoutes.adminProperties,
       child: AdminPropertiesPage(),
     ),
+    MainRoutes.adminReview: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminReview,
+      child: AdminPropertiesPage(reviewOnly: true),
+    ),
     MainRoutes.adminPropertyNew: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,
       requestedRoute: MainRoutes.adminPropertyNew,

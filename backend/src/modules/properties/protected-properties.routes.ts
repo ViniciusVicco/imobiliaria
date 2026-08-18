@@ -17,6 +17,10 @@ import {
   requireActiveBroker,
 } from '../auth/auth.middleware.js';
 import { buildPropertyMediaStorageKey } from '../media/media.routes.js';
+import {
+  notifyAdminsOfPropertyReview,
+  recordPropertyStatusChange,
+} from '../../shared/notifications/admin-property-review.js';
 
 const propertyStatusSchema = z.enum([
   'draft',
@@ -32,6 +36,7 @@ const listPropertiesQuerySchema = z.object({
   query: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(24),
+  featured: z.coerce.boolean().optional(),
 });
 
 const propertyPayloadSchema = z.object({
@@ -226,13 +231,28 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const validationError = await validateActiveTags(normalizeTagSlugs(payload));
       if (validationError) return sendApiError({ reply, ...validationError });
 
-      const nextStatus =
-        existing.status === 'published' ? 'pending_review' : existing.status;
+      if (existing.status === 'published') {
+        const revision = await prisma.propertyRevision.create({
+          data: {
+            propertyId: params.id,
+            submittedBy: brokerId,
+            snapshot: payload,
+          },
+          include: { property: { include: propertyDetailInclude } },
+        });
+        await notifyAdminsOfPropertyReview({
+          propertyId: params.id,
+          revisionId: revision.id,
+          type: 'resubmission',
+        });
+        return mapPropertyDetail(revision.property);
+      }
+
       const property = await upsertPropertyWithMedia({
         id: params.id,
         payload,
         brokerId,
-        status: nextStatus,
+        status: existing.status,
       });
 
       return mapPropertyDetail(property);
@@ -259,11 +279,44 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
         if (finalizationError) return sendApiError({ reply, ...finalizationError });
       }
 
+      if (payload.status === 'pending_review' && existing.status === 'published') {
+        const pendingRevision = await prisma.propertyRevision.findFirst({
+          where: { propertyId: params.id, status: 'pending' },
+        });
+        if (pendingRevision) {
+          await recordPropertyStatusChange({
+            propertyId: params.id,
+            actorId: brokerId,
+            fromStatus: existing.status,
+            toStatus: 'pending_review',
+            source: 'broker_submission',
+          });
+        }
+        return mapPropertyDetail(await prisma.property.findUniqueOrThrow({
+          where: { id: params.id },
+          include: propertyDetailInclude,
+        }));
+      }
+
       const property = await prisma.property.update({
         where: { id: params.id },
         data: { status: payload.status },
         include: propertyDetailInclude,
       });
+
+      await recordPropertyStatusChange({
+        propertyId: params.id,
+        actorId: brokerId,
+        fromStatus: existing.status,
+        toStatus: payload.status,
+        source: payload.status === 'pending_review' ? 'broker_submission' : 'broker_status',
+      });
+      if (payload.status === 'pending_review' && existing.status !== 'pending_review') {
+        await notifyAdminsOfPropertyReview({
+          propertyId: params.id,
+          type: existing.status === 'draft' ? 'new_submission' : 'resubmission',
+        });
+      }
 
       return mapPropertyDetail(property);
     },
@@ -280,6 +333,157 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
           brokerId: query.brokerId,
         }),
       });
+    },
+  );
+
+  app.get(
+    '/admin/properties/review',
+    { preHandler: requireActiveAdmin },
+    async (request) => {
+      const query = listPropertiesQuerySchema.parse(request.query);
+      const properties = await prisma.property.findMany({
+        where: {
+          ...buildListWhere({ ...query, status: undefined }, { brokerId: query.brokerId }),
+          ...(query.status
+            ? query.status === 'pending_review'
+              ? { OR: [{ status: 'pending_review' }, { revisions: { some: { status: 'pending' } } }] }
+              : { status: query.status }
+            : { OR: [{ status: 'pending_review' }, { revisions: { some: { status: 'pending' } } }] }),
+          ...(query.featured === undefined ? {} : { isFeatured: query.featured }),
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+        include: propertyListInclude,
+      });
+      const total = await prisma.property.count({
+        where: {
+          ...buildListWhere({ ...query, status: undefined }, { brokerId: query.brokerId }),
+          ...(query.status
+            ? query.status === 'pending_review'
+              ? { OR: [{ status: 'pending_review' }, { revisions: { some: { status: 'pending' } } }] }
+              : { status: query.status }
+            : { OR: [{ status: 'pending_review' }, { revisions: { some: { status: 'pending' } } }] }),
+          ...(query.featured === undefined ? {} : { isFeatured: query.featured }),
+        },
+      });
+      return {
+        items: properties.map(mapPropertyListItem),
+        pagination: {
+          page: query.page,
+          pageSize: query.pageSize,
+          total,
+          totalPages: Math.ceil(total / query.pageSize),
+        },
+      };
+    },
+  );
+
+  app.get(
+    '/admin/properties/:id/revisions',
+    { preHandler: requireActiveAdmin },
+    async (request) => {
+      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
+      return prisma.propertyRevision.findMany({
+        where: { propertyId: id },
+        orderBy: { submittedAt: 'desc' },
+        include: {
+          submitter: { select: { id: true, name: true, email: true } },
+          reviewer: { select: { id: true, name: true } },
+        },
+      });
+    },
+  );
+
+  app.post(
+    '/admin/properties/:id/approve',
+    { preHandler: requireActiveAdmin },
+    async (request, reply) => {
+      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
+      const adminId = request.authenticatedUser?.id ?? '';
+      const property = await prisma.property.findUnique({ where: { id } });
+      if (!property) return sendPropertyNotFound(reply);
+      const revision = await prisma.propertyRevision.findFirst({
+        where: { propertyId: id, status: 'pending' },
+        orderBy: { submittedAt: 'desc' },
+      });
+
+      if (revision) {
+        const payload = propertyPayloadSchema.parse(revision.snapshot);
+        const updated = await upsertPropertyWithMedia({
+          id,
+          payload,
+          brokerId: property.brokerId,
+          status: 'published',
+        });
+        await prisma.$transaction([
+          prisma.propertyRevision.update({
+            where: { id: revision.id },
+            data: { status: 'approved', reviewedBy: adminId, reviewedAt: new Date() },
+          }),
+          prisma.propertyStatusHistory.create({
+            data: {
+              propertyId: id,
+              actorId: adminId,
+              fromStatus: property.status,
+              toStatus: 'published',
+              source: 'review_approval',
+            },
+          }),
+        ]);
+        return mapPropertyDetail(updated);
+      }
+
+      const updated = await prisma.property.update({
+        where: { id },
+        data: { status: 'published' },
+        include: propertyDetailInclude,
+      });
+      await recordPropertyStatusChange({
+        propertyId: id,
+        actorId: adminId,
+        fromStatus: property.status,
+        toStatus: 'published',
+        source: 'review_approval',
+      });
+      return mapPropertyDetail(updated);
+    },
+  );
+
+  app.post(
+    '/admin/properties/:id/reject',
+    { preHandler: requireActiveAdmin },
+    async (request, reply) => {
+      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
+      const { note } = z.object({ note: z.string().trim().max(2000).optional() }).parse(request.body ?? {});
+      const adminId = request.authenticatedUser?.id ?? '';
+      const property = await prisma.property.findUnique({ where: { id } });
+      if (!property) return sendPropertyNotFound(reply);
+      const revision = await prisma.propertyRevision.findFirst({
+        where: { propertyId: id, status: 'pending' },
+        orderBy: { submittedAt: 'desc' },
+      });
+      const nextStatus = property.status === 'published' ? 'published' : 'draft';
+      await prisma.$transaction([
+        ...(revision ? [prisma.propertyRevision.update({
+          where: { id: revision.id },
+          data: { status: 'rejected', note: note || null, reviewedBy: adminId, reviewedAt: new Date() },
+        })] : []),
+        prisma.property.update({ where: { id }, data: { status: nextStatus } }),
+        prisma.propertyStatusHistory.create({
+          data: {
+            propertyId: id,
+            actorId: adminId,
+            fromStatus: property.status,
+            toStatus: nextStatus,
+            note: note || null,
+            source: 'review_rejection',
+          },
+        }),
+      ]);
+      return mapPropertyDetail(await prisma.property.findUniqueOrThrow({
+        where: { id }, include: propertyDetailInclude,
+      }));
     },
   );
 
@@ -378,6 +582,14 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
         include: propertyDetailInclude,
       });
 
+      await recordPropertyStatusChange({
+        propertyId: params.id,
+        actorId: request.authenticatedUser?.id ?? '',
+        fromStatus: existing.status,
+        toStatus: payload.status,
+        source: 'admin_status',
+      });
+
       return mapPropertyDetail(property);
     },
   );
@@ -459,7 +671,10 @@ function buildListWhere(
 ): Prisma.PropertyWhereInput {
   return {
     ...(options.brokerId ? { brokerId: options.brokerId } : {}),
-    ...(!options.omitStatus && query.status
+    ...(query.featured === undefined ? {} : { isFeatured: query.featured }),
+    ...(!options.omitStatus && query.status === 'pending_review'
+      ? { OR: [{ status: 'pending_review' }, { revisions: { some: { status: 'pending' } } }] }
+      : !options.omitStatus && query.status
       ? { status: query.status }
       : {}),
     ...(!query.status && options.excludeInactiveWhenNoStatus

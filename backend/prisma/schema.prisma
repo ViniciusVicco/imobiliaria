@@ -28,6 +28,10 @@ model User {
   lastLoginAt  DateTime? @map("last_login_at")
 
   properties Property[] @relation("BrokerProperties")
+  submittedRevisions PropertyRevision[] @relation("RevisionSubmitter")
+  reviewedRevisions PropertyRevision[] @relation("RevisionReviewer")
+  notifications AdminNotification[]
+  statusHistory PropertyStatusHistory[]
 
   @@map("users")
 }
@@ -73,12 +77,75 @@ model Property {
 
   broker User?           @relation("BrokerProperties", fields: [brokerId], references: [id])
   media  PropertyMedia[]
+  revisions PropertyRevision[]
+  statusHistory PropertyStatusHistory[]
+  notifications AdminNotification[]
 
   @@index([status, isFeatured])
   @@index([city, segment, propertyType])
   @@index([neighborhood])
   @@index([subNeighborhood])
   @@map("properties")
+}
+
+model PropertyRevision {
+  id          String         @id @default(uuid())
+  propertyId  String         @map("property_id")
+  submittedBy String         @map("submitted_by")
+  reviewedBy  String?        @map("reviewed_by")
+  snapshot    Json
+  status      RevisionStatus @default(pending)
+  note        String?
+  submittedAt DateTime       @default(now()) @map("submitted_at")
+  reviewedAt  DateTime?      @map("reviewed_at")
+
+  property  Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  submitter User     @relation("RevisionSubmitter", fields: [submittedBy], references: [id])
+  reviewer  User?    @relation("RevisionReviewer", fields: [reviewedBy], references: [id])
+  notifications AdminNotification[]
+
+  @@index([propertyId, status, submittedAt])
+  @@map("property_revisions")
+}
+
+model PropertyStatusHistory {
+  id         String         @id @default(uuid())
+  propertyId String         @map("property_id")
+  actorId    String         @map("actor_id")
+  fromStatus PropertyStatus? @map("from_status")
+  toStatus   PropertyStatus  @map("to_status")
+  note       String?
+  source     String          @default("manual")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  actor    User     @relation(fields: [actorId], references: [id])
+
+  @@index([propertyId, createdAt])
+  @@map("property_status_history")
+}
+
+model AdminNotification {
+  id           String             @id @default(uuid())
+  adminId      String             @map("admin_id")
+  propertyId   String             @map("property_id")
+  revisionId   String?            @map("revision_id")
+  type         AdminNotificationType
+  title        String
+  message      String
+  isRead       Boolean            @default(false) @map("is_read")
+  emailStatus  NotificationEmailStatus @default(pending) @map("email_status")
+  emailError   String?            @map("email_error")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  readAt       DateTime?          @map("read_at")
+
+  admin    User             @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  property Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  revision PropertyRevision? @relation(fields: [revisionId], references: [id], onDelete: SetNull)
+
+  @@index([adminId, isRead, createdAt])
+  @@index([revisionId])
+  @@map("admin_notifications")
 }
 
 model PropertyTag {
@@ -144,4 +211,22 @@ enum MediaType {
 enum MediaStatus {
   active
   pending_delete
+}
+
+enum RevisionStatus {
+  pending
+  approved
+  rejected
+  superseded
+}
+
+enum AdminNotificationType {
+  new_submission
+  resubmission
+}
+
+enum NotificationEmailStatus {
+  pending
+  sent
+  failed
 }

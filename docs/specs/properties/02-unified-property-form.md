@@ -1,7 +1,7 @@
 # Spec 6.0 - Formulario Centralizado de Propriedades
 
 ## Status
-- Parcialmente implementada.
+- Implementada com fluxo de revisao administrativa.
 - A pagina, controller, store, validacao, rotas new/edit e integracao de midia ja existem.
 - Substitui o fluxo definitivo de criacao/edicao por modal descrito na Spec 4.0.
 - Consolida a experiencia de formulario dedicada usando o upload R2 e fluxo incremental da Spec 5.0.
@@ -38,11 +38,11 @@ A experiencia final deve ser uma pagina dedicada e ampla, usada tanto por corret
 - Admin pode selecionar corretor responsavel; broker nao pode alterar `brokerId`.
 - Campos de tags, destaque, desenvolvimento novo e video YouTube ja estao no formulario.
 
-Ainda pendente:
+Validacao pendente:
 
 - Testes backend/Flutter do fluxo completo.
 - Validacao manual com R2 configurado, especialmente rollback de falha na promocao de midia.
-- Area administrativa dedicada para revisar/aprovar pendencias.
+- Acabamento da comparacao visual de revisoes.
 
 ## Escopo
 Em escopo:

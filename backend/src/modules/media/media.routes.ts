@@ -400,16 +400,24 @@ async function findAccessibleMedia({
   mediaId: string;
   user: AuthenticatedUser;
 }) {
+  const propertyAccess = user.role === 'broker'
+    ? {
+        property: {
+          brokerId: user.id,
+        },
+      }
+    : {
+        propertyId: {
+          not: null,
+        },
+      };
+
   return prisma.propertyMedia.findFirst({
     where: {
       id: mediaId,
       deletedAt: null,
       OR: [
-        {
-          property: {
-            ...(user.role === 'broker' ? { brokerId: user.id } : {}),
-          },
-        },
+        propertyAccess,
         {
           propertyId: null,
           uploadedBy: user.id,

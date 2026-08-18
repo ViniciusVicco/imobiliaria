@@ -4,6 +4,10 @@ import 'package:imobiliaria/app/domain/broker/usecases/get_admin_properties_use_
 import 'package:imobiliaria/app/domain/broker/usecases/save_admin_property_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/update_admin_property_status_use_case.dart';
 import 'package:imobiliaria/app/domain/media/usecases/get_property_media_file_use_case.dart';
+import 'package:imobiliaria/app/domain/broker/usecases/approve_admin_property_use_case.dart';
+import 'package:imobiliaria/app/domain/broker/usecases/reject_admin_property_use_case.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/get_admin_notifications_use_case.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/mark_admin_notification_read_use_case.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_properties_store.dart';
 import 'package:legend_core/legend_core.dart';
@@ -18,6 +22,10 @@ class AdminPropertiesController extends Controller {
     required this.saveAdminProperty,
     required this.updateAdminPropertyStatus,
     required this.navigator,
+    required this.approveAdminProperty,
+    required this.rejectAdminProperty,
+    required this.getAdminNotifications,
+    required this.markAdminNotificationRead,
   });
 
   final AdminPropertiesStore store;
@@ -27,19 +35,62 @@ class AdminPropertiesController extends Controller {
   final SaveAdminPropertyUseCase saveAdminProperty;
   final UpdateAdminPropertyStatusUseCase updateAdminPropertyStatus;
   final AppNavigator navigator;
+  final ApproveAdminPropertyUseCase approveAdminProperty;
+  final RejectAdminPropertyUseCase rejectAdminProperty;
+  final GetAdminNotificationsUseCase getAdminNotifications;
+  final MarkAdminNotificationReadUseCase markAdminNotificationRead;
 
-  Future<void> loadProperties({String? status, String? query}) async {
-    store.setFilters(status: status, query: query);
+  Future<void> loadProperties({
+    String? status,
+    String? query,
+    bool? featured,
+  }) async {
+    store.setFilters(status: status, query: query, featured: featured);
     store.setLoading();
 
     final result = await getAdminProperties.call(
       status: store.selectedStatus,
       query: store.query,
+      featured: store.featured,
     );
     result.getResult(
       onSuccess: (data) => store.setProperties(data.items),
       onError: (error) => store.setError(error.message),
     );
+    final notifications = await getAdminNotifications.call();
+    notifications.getResult(
+      onSuccess: (data) => store.setUnreadNotifications(data.unreadCount),
+      onError: (_) {},
+    );
+  }
+
+  Future<bool> approve(String id) async {
+    store.setLoading();
+    final result = await approveAdminProperty.call(id);
+    var ok = false;
+    result.getResult(
+      onSuccess: (_) => ok = true,
+      onError: (error) => store.setError(error.message),
+    );
+    if (ok) await loadProperties(status: store.selectedStatus);
+    return ok;
+  }
+
+  Future<bool> reject({required String id, String? note}) async {
+    store.setLoading();
+    final result = await rejectAdminProperty.call(id: id, note: note);
+    var ok = false;
+    result.getResult(
+      onSuccess: (_) => ok = true,
+      onError: (error) => store.setError(error.message),
+    );
+    if (ok) await loadProperties(status: store.selectedStatus);
+    return ok;
+  }
+
+  Future<void> markNotificationRead(String id) async {
+    await markAdminNotificationRead.call(id);
+    await loadProperties(status: store.selectedStatus);
   }
 
   Future<bool> saveProperty({

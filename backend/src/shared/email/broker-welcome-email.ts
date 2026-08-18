@@ -25,6 +25,54 @@ export async function sendBrokerWelcomeEmail({
   email,
   temporaryPassword,
 }: SendBrokerWelcomeEmailParams) {
+  await sendSmtpEmail({
+    to: email,
+    subject: 'Seu acesso ao painel Seletta',
+    text: buildBrokerWelcomeText({ name, email, temporaryPassword }),
+    html: buildBrokerWelcomeHtml({ name, email, temporaryPassword }),
+  });
+}
+
+export async function sendAdminPropertyReviewEmail({
+  email,
+  propertyTitle,
+  brokerName,
+  eventLabel,
+  propertyId,
+}: {
+  email: string;
+  propertyTitle: string;
+  brokerName: string;
+  eventLabel: string;
+  propertyId: string;
+}) {
+  const text = [
+    `Um imovel foi ${eventLabel} e aguarda aprovacao.`,
+    '',
+    `Imovel: ${propertyTitle}`,
+    `Corretor: ${brokerName}`,
+    `ID: ${propertyId}`,
+  ].join('\n');
+  const html = `<p>Um imovel foi <strong>${escapeHtml(eventLabel)}</strong> e aguarda aprovacao.</p><p><strong>Imovel:</strong> ${escapeHtml(propertyTitle)}<br><strong>Corretor:</strong> ${escapeHtml(brokerName)}<br><strong>ID:</strong> ${escapeHtml(propertyId)}</p>`;
+  await sendSmtpEmail({
+    to: email,
+    subject: `Imovel aguardando aprovacao: ${propertyTitle}`,
+    text,
+    html,
+  });
+}
+
+async function sendSmtpEmail({
+  to,
+  subject,
+  text,
+  html,
+}: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}) {
   if (!env.GMAIL_SMTP_SECRET) {
     throw new EmailDeliveryError('Configure a chave GMAIL_SMTP_SECRET do Gmail.');
   }
@@ -43,9 +91,9 @@ export async function sendBrokerWelcomeEmail({
     await client.send(Buffer.from(env.GMAIL_SMTP_USER).toString('base64'), 334);
     await client.send(Buffer.from(gmailPassword).toString('base64'), 235);
     await client.send(`MAIL FROM:<${env.GMAIL_SMTP_USER}>`, 250);
-    await client.send(`RCPT TO:<${email}>`, [250, 251]);
+    await client.send(`RCPT TO:<${to}>`, [250, 251]);
     await client.send('DATA', 354);
-    await client.send(buildEmailMessage({ name, email, temporaryPassword }), 250);
+    await client.send(buildEmailMessage({ to, subject, text, html }), 250);
     await client.send('QUIT', 221);
   } finally {
     client.close();
@@ -123,20 +171,23 @@ async function connectToGmailSmtp(): Promise<SmtpClient> {
 }
 
 function buildEmailMessage({
-  name,
-  email,
-  temporaryPassword,
-}: SendBrokerWelcomeEmailParams) {
+  to,
+  subject,
+  text,
+  html,
+}: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}) {
   const fromName = encodeHeader(env.GMAIL_SMTP_FROM);
-  const subject = encodeHeader('Seu acesso ao painel Seletta');
-  const text = buildBrokerWelcomeText({ name, email, temporaryPassword });
-  const html = buildBrokerWelcomeHtml({ name, email, temporaryPassword });
   const boundary = `seletta-${Date.now()}`;
 
   return [
     `From: ${fromName} <${env.GMAIL_SMTP_USER}>`,
-    `To: ${email}`,
-    `Subject: ${subject}`,
+    `To: ${to}`,
+    `Subject: ${encodeHeader(subject)}`,
     'MIME-Version: 1.0',
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     '',

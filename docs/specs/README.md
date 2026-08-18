@@ -81,8 +81,8 @@ Este diretorio organiza as specs por dominio de produto. A numeracao dentro de c
 
 4. Broker finaliza em `pending_review`; admin finaliza em `published`. `draft` permanece somente como estado tecnico de pre-cadastro.
 
-5. Pedido de destaque e pendencias admin entram depois do formulario centralizado.
-   - Ainda nao existe uma spec dedicada de `Admin/Pendencias` ou `Highlights`.
+5. A central admin de pendencias, revisoes, observacoes e notificacoes foi implementada junto ao fluxo do formulario.
+   - Pedidos de destaque como workflow independente continuam fora desta entrega.
 
 6. Bairros/sub-bairros precisam de CRUD proprio antes de endurecer filtros e formulario.
    - `levantamentos.md` diz que devem ser gerenciados por CRUD.
@@ -90,8 +90,8 @@ Este diretorio organiza as specs por dominio de produto. A numeracao dentro de c
 
 ## Ordem recomendada hoje
 
-1. Cobrir com testes o formulario, midia e guards de broker/admin.
-2. Validar manualmente o fluxo completo com R2 configurado.
-3. Implementar notificacao de venda para admins ativos ou retirar essa promessa das telas atuais.
+1. Cobrir com testes o formulario, midia, revisoes e guards de broker/admin.
+2. Validar manualmente o fluxo completo com R2 e SMTP configurados.
+3. Implementar notificacao de venda para admins ativos.
 4. Validar manualmente Home -> Estoque, filtros e paginacao com a API local.
-5. Criar specs novas para `Admin/Pendencias`, `PropertyLocations` e `Highlights`, se esses blocos forem prioridade.
+5. Criar spec dedicada para `PropertyLocations` e `Highlights` quando esses blocos forem prioridade.

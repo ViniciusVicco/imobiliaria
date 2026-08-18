@@ -6,11 +6,14 @@ class AdminPropertiesStore extends Store {
   List<BrokerPropertyEntity> properties = const <BrokerPropertyEntity>[];
   String selectedStatus = 'published';
   String query = '';
+  bool featured = false;
   String? _errorMessage;
+  int unreadNotifications = 0;
 
-  void setFilters({String? status, String? query}) {
+  void setFilters({String? status, String? query, bool? featured}) {
     if (status != null) selectedStatus = status;
     if (query != null) this.query = query;
+    if (featured != null) this.featured = featured;
   }
 
   void setLoading() {
@@ -30,4 +33,8 @@ class AdminPropertiesStore extends Store {
   }
 
   String? get errorMessage => _errorMessage;
+
+  void setUnreadNotifications(int value) {
+    unreadNotifications = value;
+  }
 }

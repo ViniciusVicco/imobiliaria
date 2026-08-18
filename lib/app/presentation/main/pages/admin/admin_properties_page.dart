@@ -9,7 +9,9 @@ import 'package:imobiliaria/app/presentation/main/pages/broker/widgets/property_
 import 'package:legend_core/legend_core.dart';
 
 class AdminPropertiesPage extends StatefulWidget {
-  const AdminPropertiesPage({super.key});
+  const AdminPropertiesPage({super.key, this.reviewOnly = false});
+
+  final bool reviewOnly;
 
   @override
   State<AdminPropertiesPage> createState() => _AdminPropertiesPageState();
@@ -28,7 +30,9 @@ class _AdminPropertiesPageState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadProperties();
+      controller.loadProperties(
+        status: widget.reviewOnly ? 'pending_review' : null,
+      );
     });
   }
 
@@ -42,7 +46,10 @@ class _AdminPropertiesPageState
   Widget build(BuildContext context) {
     return AdminLayout(
       title: 'Gerenciar imoveis',
-      currentRoute: MainRoutes.adminProperties,
+      currentRoute: widget.reviewOnly
+          ? MainRoutes.adminReview
+          : MainRoutes.adminProperties,
+      notificationCount: controller.store.unreadNotifications,
       child: ValueListenableBuilder<AppStateEnum>(
         valueListenable: controller.store.state,
         builder: (context, state, child) {
@@ -52,7 +59,7 @@ class _AdminPropertiesPageState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Imoveis',
+                  widget.reviewOnly ? 'Pendencias de aprovacao' : 'Imoveis',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: DSSpacing.md),
@@ -61,11 +68,20 @@ class _AdminPropertiesPageState
                   runSpacing: DSSpacing.sm,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
-                    PropertyStatusTabs(
-                      selectedStatus: controller.store.selectedStatus,
-                      onChanged: (status) =>
-                          controller.loadProperties(status: status),
-                    ),
+                    if (!widget.reviewOnly)
+                      PropertyStatusTabs(
+                        selectedStatus: controller.store.selectedStatus,
+                        onChanged: (status) =>
+                            controller.loadProperties(status: status),
+                      ),
+                    if (!widget.reviewOnly)
+                      FilterChip(
+                        selected: controller.store.featured,
+                        label: const Text('Destacados'),
+                        avatar: const Icon(Icons.star_outline),
+                        onSelected: (value) =>
+                            controller.loadProperties(featured: value),
+                      ),
                     SizedBox(
                       width: 320,
                       child: TextField(
@@ -102,7 +118,7 @@ class _AdminPropertiesPageState
                       properties: controller.store.properties,
                       showBroker: true,
                       loadMediaFile: controller.loadMediaFile,
-                      onCreate: _createDraft,
+                      onCreate: widget.reviewOnly ? null : _createDraft,
                       onEdit: controller.openEditForm,
                       onMarkSold: (property) => _confirmStatus(
                         property: property,
@@ -114,6 +130,14 @@ class _AdminPropertiesPageState
                         status: 'inactive',
                         message: 'Remover este imovel da vitrine publica?',
                       ),
+                      onApprove: widget.reviewOnly
+                          ? (property) => controller.approve(property.id)
+                          : null,
+                      onReject: widget.reviewOnly
+                          ? (property) => _reject(property)
+                          : null,
+                      onStatusChange: (property, status) => controller
+                          .updateStatus(id: property.id, status: status),
                     ),
                     _ => const SizedBox.shrink(),
                   },
@@ -169,5 +193,40 @@ class _AdminPropertiesPageState
         context,
       ).showSnackBar(const SnackBar(content: Text('Status atualizado.')));
     }
+  }
+
+  Future<void> _reject(BrokerPropertyEntity property) async {
+    final noteController = TextEditingController();
+    final note = await showDialog<String?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rejeitar imovel'),
+        content: TextField(
+          controller: noteController,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Observacao para o corretor (opcional)',
+            hintText: 'Informe o que precisa ser corrigido.',
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, noteController.text),
+            child: const Text('Rejeitar'),
+          ),
+        ],
+      ),
+    );
+    noteController.dispose();
+    if (note == null) return;
+    final ok = await controller.reject(id: property.id, note: note);
+    if (ok && mounted)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Imovel devolvido para correcao.')),
+      );
   }
 }
