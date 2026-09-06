@@ -43,6 +43,7 @@ import 'package:imobiliaria/app/domain/property_segments/usecases/search_publish
 import 'package:imobiliaria/app/domain/users/usecases/get_current_user_session_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/get_user_profile_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/logout_use_case.dart';
+import 'package:imobiliaria/app/domain/users/session_store.dart';
 import 'package:imobiliaria/app/domain/users/usecases/resolve_protected_route_access_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/update_user_password_use_case.dart';
 import 'package:imobiliaria/app/domain/users/usecases/update_user_profile_use_case.dart';
@@ -65,6 +66,7 @@ import 'package:imobiliaria/app/presentation/main/pages/search/property_search_c
 import 'package:imobiliaria/app/presentation/main/pages/search/property_search_store.dart';
 import 'package:imobiliaria/app/presentation/main/widgets/auth/auth_guard_controller.dart';
 import 'package:imobiliaria/app/presentation/main/widgets/auth/auth_guard_store.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/auth/session_controller.dart';
 import 'package:imobiliaria/env/rest_base_enviroment.dart';
 import 'package:legend_core/legend_core.dart';
 
@@ -72,13 +74,20 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
   @override
   void controllers() {
     registerFactory(
+      () => SessionController(
+        store: get<SessionStore>(),
+        getCurrentUserSession: get<GetCurrentUserSessionUseCase>(),
+        logoutUseCase: get<LogoutUseCase>(),
+        navigator: get<AppNavigator>(),
+      ),
+    );
+    registerFactory(
       () => PropertySegmentsHomeController(
         store: get<PropertySegmentsHomeStore>(),
         resolveSegmentRoute: get<ResolvePropertySegmentRouteUseCase>(),
         buildPropertySearchQuery: get<BuildPropertySearchQueryUseCase>(),
         getFeaturedProperties: get<GetFeaturedPropertiesUseCase>(),
         getHomeBrandContent: get<GetHomeBrandContentUseCase>(),
-        getCurrentUserSession: get<GetCurrentUserSessionUseCase>(),
         navigator: get<AppNavigator>(),
       ),
     );
@@ -87,6 +96,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
         store: get<AuthGuardStore>(),
         getCurrentUserSession: get<GetCurrentUserSessionUseCase>(),
         resolveProtectedRouteAccess: get<ResolveProtectedRouteAccessUseCase>(),
+        sessionStore: get<SessionStore>(),
         navigator: get<AppNavigator>(),
       ),
     );
@@ -172,7 +182,11 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
           connectTimeout: const Duration(seconds: 2),
           receiveTimeout: const Duration(seconds: 5),
         ),
-        interceptors: <Interceptor>[AuthTokenInterceptor()],
+        interceptors: <Interceptor>[
+          AuthTokenInterceptor(
+            onSessionInvalidated: () => get<SessionStore>().clearSession(),
+          ),
+        ],
       ),
     );
   }
@@ -180,6 +194,7 @@ class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
   @override
   void stores() {
     registerSingleton(PropertySegmentsHomeStore());
+    registerSingleton(SessionStore.instance);
     registerFactory(() => PropertySearchStore());
     registerFactory(() => AuthGuardStore());
     registerFactory(() => BrokerStore());

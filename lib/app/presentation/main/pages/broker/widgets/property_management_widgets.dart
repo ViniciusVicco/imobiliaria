@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
 import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart';
@@ -573,6 +574,8 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
   late final TextEditingController _coverUrlController;
   late final TextEditingController _videoUrlController;
   late final TextEditingController _areaController;
+  late final TextEditingController _privateAreaController;
+  late final TextEditingController _totalAreaController;
   late final TextEditingController _priceController;
   late final TextEditingController _tagsController;
   late final TextEditingController _brokerIdController;
@@ -601,6 +604,12 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
     _coverUrlController = TextEditingController(text: initial.coverUrl);
     _videoUrlController = TextEditingController(text: initial.videoUrl);
     _areaController = TextEditingController(text: initial.areaM2.toString());
+    _privateAreaController = TextEditingController(
+      text: initial.privateAreaM2.toString(),
+    );
+    _totalAreaController = TextEditingController(
+      text: initial.totalAreaM2.toString(),
+    );
     _priceController = TextEditingController(text: initial.price.toString());
     _tagsController = TextEditingController(text: initial.tagSlugs.join(', '));
     _brokerIdController = TextEditingController(text: initial.brokerId ?? '');
@@ -630,6 +639,8 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
     _coverUrlController.dispose();
     _videoUrlController.dispose();
     _areaController.dispose();
+    _privateAreaController.dispose();
+    _totalAreaController.dispose();
     _priceController.dispose();
     _tagsController.dispose();
     _brokerIdController.dispose();
@@ -713,9 +724,37 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
               _field(_videoUrlController, 'Video URL opcional'),
               Row(
                 children: <Widget>[
-                  Expanded(child: _field(_areaController, 'Metros quadrados')),
+                  Expanded(
+                    child: _field(
+                      _areaController,
+                      'Metros quadrados',
+                      integersOnly: true,
+                    ),
+                  ),
                   const SizedBox(width: DSSpacing.md),
-                  Expanded(child: _field(_priceController, 'Valor em reais')),
+                  Expanded(
+                    child: _field(
+                      _privateAreaController,
+                      'Área privativa (m²)',
+                      integersOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: DSSpacing.md),
+                  Expanded(
+                    child: _field(
+                      _totalAreaController,
+                      'Área total (m²)',
+                      integersOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: DSSpacing.md),
+                  Expanded(
+                    child: _field(
+                      _priceController,
+                      'Valor em reais',
+                      integersOnly: true,
+                    ),
+                  ),
                 ],
               ),
               _slider(
@@ -793,12 +832,23 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
     TextEditingController controller,
     String label, {
     int maxLines = 1,
+    bool integersOnly = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: DSSpacing.sm),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        keyboardType: integersOnly ? TextInputType.number : null,
+        inputFormatters: integersOnly
+            ? <TextInputFormatter>[
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  return RegExp(r'^\d*$').hasMatch(newValue.text)
+                      ? newValue
+                      : oldValue;
+                }),
+              ]
+            : null,
         decoration: InputDecoration(labelText: label),
       ),
     );
@@ -859,6 +909,8 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
           .toList(),
       videoUrl: _videoUrlController.text,
       areaM2: int.tryParse(_areaController.text.trim()) ?? 0,
+      privateAreaM2: int.tryParse(_privateAreaController.text.trim()) ?? 0,
+      totalAreaM2: int.tryParse(_totalAreaController.text.trim()) ?? 0,
       bedrooms: _bedrooms.round(),
       bathrooms: _bathrooms.round(),
       garageSpaces: _garageSpaces.round(),

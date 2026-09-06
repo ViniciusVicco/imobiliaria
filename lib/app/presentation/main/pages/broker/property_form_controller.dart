@@ -69,6 +69,8 @@ class PropertyFormController extends Controller {
         videoUrl: '',
         tags: const <String>[],
         areaM2: 0,
+        privateAreaM2: 0,
+        totalAreaM2: 0,
         bedrooms: 0,
         bathrooms: 1,
         garageSpaces: 0,

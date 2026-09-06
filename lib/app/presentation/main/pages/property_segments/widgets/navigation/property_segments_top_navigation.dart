@@ -2,6 +2,7 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/assets/custom_assets.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/auth/session_action.dart';
 
 class PropertySegmentsTopNavigation extends StatelessWidget {
   const PropertySegmentsTopNavigation({
@@ -12,8 +13,6 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
     required this.onAboutPressed,
     required this.onMissionPressed,
     required this.onWhatsappPressed,
-    required this.onLoginPressed,
-    required this.hasAuthenticatedUser,
   });
 
   final VoidCallback onStockPressed;
@@ -22,8 +21,6 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
   final VoidCallback onAboutPressed;
   final VoidCallback onMissionPressed;
   final VoidCallback onWhatsappPressed;
-  final VoidCallback onLoginPressed;
-  final bool hasAuthenticatedUser;
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +54,7 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
                 final whatsappButton = _WhatsappButton(
                   onPressed: onWhatsappPressed,
                 );
-                final loginButton = _LoginButton(
-                  onPressed: onLoginPressed,
-                  hasAuthenticatedUser: hasAuthenticatedUser,
-                );
+                const loginButton = SessionAction();
 
                 if (isCompact) {
                   return Column(
@@ -239,35 +233,6 @@ class _WhatsappButton extends StatelessWidget {
       ),
       icon: const Icon(BootstrapIcons.whatsapp),
       label: const Text('Contate-nos'),
-    );
-  }
-}
-
-class _LoginButton extends StatelessWidget {
-  const _LoginButton({
-    required this.onPressed,
-    required this.hasAuthenticatedUser,
-  });
-
-  final VoidCallback onPressed;
-  final bool hasAuthenticatedUser;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 46),
-        padding: const EdgeInsets.symmetric(
-          horizontal: DSSpacing.md,
-          vertical: DSSpacing.sm,
-        ),
-        textStyle: Theme.of(
-          context,
-        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-      ),
-      icon: Icon(hasAuthenticatedUser ? Icons.dashboard_outlined : Icons.login),
-      label: Text(hasAuthenticatedUser ? 'Acessar Painel' : 'Entrar'),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/auth/session_action.dart';
 import 'package:legend_core/legend_core.dart';
 
 class AdminLayout extends StatelessWidget {
@@ -21,7 +22,10 @@ class AdminLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: const <Widget>[SessionAction(compact: true)],
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 820;

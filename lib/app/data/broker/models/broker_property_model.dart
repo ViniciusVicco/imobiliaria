@@ -16,6 +16,8 @@ class BrokerPropertyModel extends BrokerPropertyEntity {
     required super.videoUrl,
     required super.tags,
     required super.areaM2,
+    required super.privateAreaM2,
+    required super.totalAreaM2,
     required super.bedrooms,
     required super.bathrooms,
     required super.garageSpaces,
@@ -66,6 +68,8 @@ class BrokerPropertyModel extends BrokerPropertyEntity {
           .map((tag) => tag.toString())
           .toList(),
       areaM2: json['areaM2'] as int? ?? 0,
+      privateAreaM2: json['privateAreaM2'] as int? ?? 0,
+      totalAreaM2: json['totalAreaM2'] as int? ?? 0,
       bedrooms: json['bedrooms'] as int? ?? 0,
       bathrooms: json['bathrooms'] as int? ?? 0,
       garageSpaces: json['garageSpaces'] as int? ?? 0,

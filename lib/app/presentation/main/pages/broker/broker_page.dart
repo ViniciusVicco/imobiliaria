@@ -6,6 +6,7 @@ import 'package:imobiliaria/app/domain/users/entities/user_profile_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/broker_controller.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/widgets/property_management_widgets.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/auth/session_action.dart';
 import 'package:intl/intl.dart';
 import 'package:legend_core/legend_core.dart';
 
@@ -61,9 +62,18 @@ class _BrokerPageState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      _TopTabs(
-                        selectedIndex: _tabIndex,
-                        onChanged: (index) => setState(() => _tabIndex = index),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: _TopTabs(
+                              selectedIndex: _tabIndex,
+                              onChanged: (index) =>
+                                  setState(() => _tabIndex = index),
+                            ),
+                          ),
+                          const SizedBox(width: DSSpacing.md),
+                          const SessionAction(compact: true),
+                        ],
                       ),
                       const SizedBox(height: 30),
                       if (_tabIndex == 0)

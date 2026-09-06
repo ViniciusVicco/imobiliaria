@@ -65,6 +65,8 @@ model Property {
   subNeighborhood  String?        @map("sub_neighborhood")
   coverUrl         String         @map("cover_url")
   areaM2           Int?           @map("area_m2")
+  privateAreaM2    Int?           @map("private_area_m2")
+  totalAreaM2      Int?           @map("total_area_m2")
   bedrooms         Int?
   bathrooms        Int?
   garageSpaces     Int?           @map("garage_spaces")

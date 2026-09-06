@@ -100,9 +100,6 @@ class _PropertySegmentsHomePageState
                       onAboutPressed: () => _scrollTo(_aboutKey),
                       onMissionPressed: () => _scrollTo(_missionKey),
                       onWhatsappPressed: () => controller.onWhatsappPressed(),
-                      onLoginPressed: () => controller.onLoginPressed(),
-                      hasAuthenticatedUser:
-                          controller.store.authenticatedUser != null,
                     ),
                   ),
                   SliverToBoxAdapter(

@@ -4,6 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthTokenInterceptor extends Interceptor {
+  AuthTokenInterceptor({this.onSessionInvalidated});
+
+  final void Function()? onSessionInvalidated;
+
   static const String accessTokenKey = 'seletta_access_token';
   static const Set<int> _sessionInvalidStatusCodes = <int>{401, 403, 404};
   static const Set<String> _protectedPaths = <String>{'/me', '/auth/logout'};
@@ -61,6 +65,7 @@ class AuthTokenInterceptor extends Interceptor {
           _sessionInvalidStatusCodes.contains(statusCode)) {
         final preferences = await SharedPreferences.getInstance();
         await preferences.remove(accessTokenKey);
+        onSessionInvalidated?.call();
       }
     } catch (_) {
       // Keep the original HTTP error as the source of truth.

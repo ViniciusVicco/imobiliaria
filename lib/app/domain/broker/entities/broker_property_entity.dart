@@ -15,6 +15,8 @@ class BrokerPropertyEntity {
     required this.videoUrl,
     required this.tags,
     required this.areaM2,
+    required this.privateAreaM2,
+    required this.totalAreaM2,
     required this.bedrooms,
     required this.bathrooms,
     required this.garageSpaces,
@@ -40,6 +42,8 @@ class BrokerPropertyEntity {
   final String videoUrl;
   final List<String> tags;
   final int areaM2;
+  final int privateAreaM2;
+  final int totalAreaM2;
   final int bedrooms;
   final int bathrooms;
   final int garageSpaces;
@@ -65,6 +69,8 @@ class BrokerPropertyEntity {
     String? videoUrl,
     List<String>? tags,
     int? areaM2,
+    int? privateAreaM2,
+    int? totalAreaM2,
     int? bedrooms,
     int? bathrooms,
     int? garageSpaces,
@@ -90,6 +96,8 @@ class BrokerPropertyEntity {
       videoUrl: videoUrl ?? this.videoUrl,
       tags: tags ?? this.tags,
       areaM2: areaM2 ?? this.areaM2,
+      privateAreaM2: privateAreaM2 ?? this.privateAreaM2,
+      totalAreaM2: totalAreaM2 ?? this.totalAreaM2,
       bedrooms: bedrooms ?? this.bedrooms,
       bathrooms: bathrooms ?? this.bathrooms,
       garageSpaces: garageSpaces ?? this.garageSpaces,
@@ -116,6 +124,8 @@ class BrokerPropertyEntity {
       imageUrls: imageUrls,
       videoUrl: videoUrl,
       areaM2: areaM2,
+      privateAreaM2: privateAreaM2,
+      totalAreaM2: totalAreaM2,
       bedrooms: bedrooms,
       bathrooms: bathrooms,
       garageSpaces: garageSpaces,
@@ -180,6 +190,8 @@ class BrokerPropertyFormEntity {
     required this.imageUrls,
     required this.videoUrl,
     required this.areaM2,
+    required this.privateAreaM2,
+    required this.totalAreaM2,
     required this.bedrooms,
     required this.bathrooms,
     required this.garageSpaces,
@@ -207,6 +219,8 @@ class BrokerPropertyFormEntity {
       imageUrls: <String>['', '', '', ''],
       videoUrl: '',
       areaM2: 1,
+      privateAreaM2: 1,
+      totalAreaM2: 1,
       bedrooms: 0,
       bathrooms: 1,
       garageSpaces: 0,
@@ -230,6 +244,8 @@ class BrokerPropertyFormEntity {
   final List<String> imageUrls;
   final String videoUrl;
   final int areaM2;
+  final int privateAreaM2;
+  final int totalAreaM2;
   final int bedrooms;
   final int bathrooms;
   final int garageSpaces;
@@ -259,6 +275,8 @@ class BrokerPropertyFormEntity {
           .toList(),
       'videoUrl': videoUrl.trim(),
       'areaM2': areaM2,
+      'privateAreaM2': privateAreaM2,
+      'totalAreaM2': totalAreaM2,
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,
       'garageSpaces': garageSpaces,

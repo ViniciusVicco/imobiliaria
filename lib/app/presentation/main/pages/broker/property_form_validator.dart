@@ -68,6 +68,12 @@ class PropertyFormValidator {
     if (form.areaM2 <= 0) {
       messages.add('Informe a metragem maior que zero.');
     }
+    if (form.privateAreaM2 <= 0) {
+      messages.add('Informe a área privativa maior que zero.');
+    }
+    if (form.totalAreaM2 <= 0) {
+      messages.add('Informe a área total maior que zero.');
+    }
     if (form.price <= 0) {
       messages.add('Informe o valor do imovel maior que zero.');
     }
@@ -129,6 +135,8 @@ class PropertyFormValidator {
       _normalized(form.videoUrl) != _normalized(original.videoUrl),
     );
     countIf('areaM2', form.areaM2 != original.areaM2);
+    countIf('privateAreaM2', form.privateAreaM2 != original.privateAreaM2);
+    countIf('totalAreaM2', form.totalAreaM2 != original.totalAreaM2);
     countIf('bedrooms', form.bedrooms != original.bedrooms);
     countIf('bathrooms', form.bathrooms != original.bathrooms);
     countIf('garageSpaces', form.garageSpaces != original.garageSpaces);
@@ -183,6 +191,8 @@ class PropertyFormValidator {
       fields.add('neighborhood');
     }
     if (form.areaM2 > 0) fields.add('areaM2');
+    if (form.privateAreaM2 > 0) fields.add('privateAreaM2');
+    if (form.totalAreaM2 > 0) fields.add('totalAreaM2');
     if (form.price > 0) fields.add('price');
     if (activeImageUrls.isNotEmpty) fields.add('images');
     if (_normalized(form.coverUrl).isNotEmpty) fields.add('coverUrl');

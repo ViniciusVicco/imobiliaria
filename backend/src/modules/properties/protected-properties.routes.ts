@@ -51,6 +51,8 @@ const propertyPayloadSchema = z.object({
   imageUrls: z.array(z.string().trim().url()).max(12).default([]),
   videoUrl: z.string().trim().url().optional().or(z.literal('')),
   areaM2: z.coerce.number().int().min(0),
+  privateAreaM2: z.coerce.number().int().min(0).default(0),
+  totalAreaM2: z.coerce.number().int().min(0).default(0),
   bedrooms: z.coerce.number().int().min(0).max(10).default(0),
   bathrooms: z.coerce.number().int().min(0).max(10),
   garageSpaces: z.coerce.number().int().min(0).max(10),
@@ -98,6 +100,8 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
           subNeighborhood: '',
           coverUrl: '',
           areaM2: null,
+          privateAreaM2: null,
+          totalAreaM2: null,
           bedrooms: null,
           bathrooms: null,
           garageSpaces: null,
@@ -131,6 +135,8 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
           subNeighborhood: '',
           coverUrl: '',
           areaM2: null,
+          privateAreaM2: null,
+          totalAreaM2: null,
           bedrooms: null,
           bathrooms: null,
           garageSpaces: null,
@@ -839,6 +845,8 @@ async function createPropertyWithTemporaryMedia({
           subNeighborhood: payload.subNeighborhood,
           coverUrl: promotedCover.publicUrl,
           areaM2: payload.areaM2,
+          privateAreaM2: payload.privateAreaM2,
+          totalAreaM2: payload.totalAreaM2,
           bedrooms: payload.bedrooms,
           bathrooms: payload.bathrooms,
           garageSpaces: payload.garageSpaces,
@@ -925,6 +933,8 @@ async function upsertPropertyWithMedia({
         subNeighborhood: payload.subNeighborhood,
         coverUrl: payload.coverUrl,
         areaM2: payload.areaM2,
+        privateAreaM2: payload.privateAreaM2,
+        totalAreaM2: payload.totalAreaM2,
         bedrooms: payload.bedrooms,
         bathrooms: payload.bathrooms,
         garageSpaces: payload.garageSpaces,
@@ -945,6 +955,8 @@ async function upsertPropertyWithMedia({
         subNeighborhood: payload.subNeighborhood,
         coverUrl: payload.coverUrl,
         areaM2: payload.areaM2,
+        privateAreaM2: payload.privateAreaM2,
+        totalAreaM2: payload.totalAreaM2,
         bedrooms: payload.bedrooms,
         bathrooms: payload.bathrooms,
         garageSpaces: payload.garageSpaces,
@@ -1062,6 +1074,8 @@ function validatePayloadReadyForPublication(
   if (
     hasMissingText ||
     payload.areaM2 <= 0 ||
+    payload.privateAreaM2 <= 0 ||
+    payload.totalAreaM2 <= 0 ||
     payload.price <= 0
   ) {
     return {
@@ -1163,6 +1177,8 @@ function validatePayloadRequiredFields(
   if (
     hasMissingText ||
     payload.areaM2 <= 0 ||
+    payload.privateAreaM2 <= 0 ||
+    payload.totalAreaM2 <= 0 ||
     payload.price <= 0 ||
     payload.bathrooms === null ||
     payload.garageSpaces === null
@@ -1208,6 +1224,8 @@ async function validatePropertyReadyForPublication(propertyId: string) {
   const hasMissingText = requiredFields.some((value) => !value.trim());
   const hasMissingNumbers =
     !property.areaM2 ||
+    !property.privateAreaM2 ||
+    !property.totalAreaM2 ||
     property.bathrooms === null ||
     property.garageSpaces === null ||
     !property.price;
@@ -1278,6 +1296,8 @@ function mapPropertyListItem(
     coverUrl: property.coverUrl,
     tags: property.tagSlugs,
     areaM2: property.areaM2,
+    privateAreaM2: property.privateAreaM2,
+    totalAreaM2: property.totalAreaM2,
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms,
     garageSpaces: property.garageSpaces,

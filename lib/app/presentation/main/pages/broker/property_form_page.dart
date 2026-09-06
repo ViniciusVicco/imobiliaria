@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imobiliaria/app/domain/admin/entities/admin_broker_entity.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
 import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart';
@@ -10,6 +11,7 @@ import 'package:imobiliaria/app/presentation/main/main_routes.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_layout.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/helpers/property_image_picker.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/property_form_controller.dart';
+import 'package:imobiliaria/app/presentation/main/widgets/auth/session_action.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/property_form_validator.dart';
 import 'package:legend_core/legend_core.dart';
 
@@ -54,6 +56,7 @@ class _PropertyFormPageState
     final page = Scaffold(
       appBar: AppBar(
         title: Text(_isAdmin ? 'Editar imovel' : 'Meu imovel'),
+        actions: const <Widget>[SessionAction(compact: true)],
         leading: IconButton(
           onPressed: () => Module.get<MainModule>().navigator.pop(),
           icon: const Icon(Icons.arrow_back),
@@ -132,6 +135,8 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
   late final TextEditingController _neighborhoodController;
   late final TextEditingController _subNeighborhoodController;
   late final TextEditingController _areaController;
+  late final TextEditingController _privateAreaController;
+  late final TextEditingController _totalAreaController;
   late final TextEditingController _priceController;
   late final TextEditingController _videoController;
   late final TextEditingController _tagsController;
@@ -168,6 +173,12 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       text: property.subNeighborhood,
     );
     _areaController = TextEditingController(text: property.areaM2.toString());
+    _privateAreaController = TextEditingController(
+      text: property.privateAreaM2.toString(),
+    );
+    _totalAreaController = TextEditingController(
+      text: property.totalAreaM2.toString(),
+    );
     _priceController = TextEditingController(text: property.price.toString());
     _videoController = TextEditingController(text: property.videoUrl);
     _tagsController = TextEditingController(text: property.tags.join(', '));
@@ -190,6 +201,8 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     _neighborhoodController.dispose();
     _subNeighborhoodController.dispose();
     _areaController.dispose();
+    _privateAreaController.dispose();
+    _totalAreaController.dispose();
     _priceController.dispose();
     _videoController.dispose();
     _tagsController.dispose();
@@ -319,9 +332,37 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  Expanded(child: _field(_areaController, 'Metros quadrados')),
+                  Expanded(
+                    child: _field(
+                      _areaController,
+                      'Metros quadrados',
+                      integersOnly: true,
+                    ),
+                  ),
                   const SizedBox(width: DSSpacing.md),
-                  Expanded(child: _field(_priceController, 'Valor em reais')),
+                  Expanded(
+                    child: _field(
+                      _privateAreaController,
+                      'Área privativa (m²)',
+                      integersOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: DSSpacing.md),
+                  Expanded(
+                    child: _field(
+                      _totalAreaController,
+                      'Área total (m²)',
+                      integersOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: DSSpacing.md),
+                  Expanded(
+                    child: _field(
+                      _priceController,
+                      'Valor em reais',
+                      integersOnly: true,
+                    ),
+                  ),
                 ],
               ),
               _slider(
@@ -440,12 +481,23 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     TextEditingController controller,
     String label, {
     int maxLines = 1,
+    bool integersOnly = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: DSSpacing.sm),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        keyboardType: integersOnly ? TextInputType.number : null,
+        inputFormatters: integersOnly
+            ? <TextInputFormatter>[
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  return RegExp(r'^\d*$').hasMatch(newValue.text)
+                      ? newValue
+                      : oldValue;
+                }),
+              ]
+            : null,
         onChanged: (_) => _updateFormState(() {}),
         decoration: InputDecoration(labelText: label),
       ),
@@ -651,6 +703,8 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       imageUrls: const <String>[],
       videoUrl: _videoController.text,
       areaM2: int.tryParse(_areaController.text.trim()) ?? 0,
+      privateAreaM2: int.tryParse(_privateAreaController.text.trim()) ?? 0,
+      totalAreaM2: int.tryParse(_totalAreaController.text.trim()) ?? 0,
       bedrooms: _bedrooms.round(),
       bathrooms: _bathrooms.round(),
       garageSpaces: _garageSpaces.round(),
