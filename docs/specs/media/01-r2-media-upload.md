@@ -1,4 +1,4 @@
-# Spec 5.0 - Upload de Midia com Cloudflare R2
+# Spec 1 ? Upload de m?dia com Cloudflare R2
 
 ## Status
 - Backend e integracao Flutter implementados no fluxo atual de propriedades.

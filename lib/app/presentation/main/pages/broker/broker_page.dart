@@ -5,8 +5,8 @@ import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart
 import 'package:imobiliaria/app/domain/users/entities/user_profile_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/broker_controller.dart';
-import 'package:imobiliaria/app/presentation/main/pages/broker/widgets/property_management_widgets.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/session_action.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/property/property_management_widgets.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/session_action.dart';
 import 'package:intl/intl.dart';
 import 'package:legend_core/legend_core.dart';
 

@@ -66,13 +66,6 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
     }
   }
 
-  Widget buildVerticalPadding({required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: child,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final neighborhoodOptions = _buildNeighborhoodOptions(widget.properties);
@@ -99,7 +92,8 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                 final mainFields = <DSWeightedField>[
                   DSWeightedField(
                     flex: 3,
-                    builder: (context) => buildVerticalPadding(
+                    builder: (context) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: _NeighborhoodDropdown(
                         controller: widget.blockOrNeighborhoodController,
                         value: widget.filters.blockOrNeighborhood,
@@ -110,7 +104,8 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                   ),
                   DSWeightedField(
                     flex: 2,
-                    builder: (context) => buildVerticalPadding(
+                    builder: (context) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: _SegmentDropdown(
                         key: ValueKey(widget.filters.segment.value),
                         value: widget.filters.segment,
@@ -121,7 +116,8 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                   ),
                   DSWeightedField(
                     flex: 2,
-                    builder: (context) => buildVerticalPadding(
+                    builder: (context) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: _PropertyTypeDropdown(
                         key: ValueKey(
                           '${widget.filters.segment.value}-${widget.filters.propertyType.value}',

@@ -10,7 +10,7 @@ import 'pages/broker/property_form_page.dart';
 import 'pages/property_segments/property_segments_home_page.dart';
 import 'pages/search/property_search_page.dart';
 import 'pages/segment_details/segment_details_page.dart';
-import 'widgets/auth/auth_guard_page.dart';
+import 'pages/widgets/auth/auth_guard_page.dart';
 import 'main_routes.dart';
 import 'main_injector.dart';
 
@@ -21,7 +21,7 @@ class MainModule extends Module {
   String get initialRoute => MainRoutes.home;
 
   @override
-  ModuleInjector<MainModule> get injector => PropertySegmentsModuleInjector();
+  ModuleInjector<MainModule> get injector => MainInjector();
 
   @override
   Map<String, RouteBuilder> get routes => <String, RouteBuilder>{

@@ -1,7 +1,7 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
-import 'package:imobiliaria/app/presentation/main/pages/admin/admin_layout.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/admin/admin_layout.dart';
 
 class AdminHomePage extends StatelessWidget {
   const AdminHomePage({super.key});

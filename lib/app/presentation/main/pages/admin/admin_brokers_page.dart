@@ -4,7 +4,7 @@ import 'package:imobiliaria/app/domain/admin/entities/admin_broker_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_brokers_controller.dart';
-import 'package:imobiliaria/app/presentation/main/pages/admin/admin_layout.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/admin/admin_layout.dart';
 import 'package:legend_core/legend_core.dart';
 
 class AdminBrokersPage extends StatefulWidget {
@@ -15,7 +15,8 @@ class AdminBrokersPage extends StatefulWidget {
 }
 
 class _AdminBrokersPageState
-    extends StateController<MainModule, AdminBrokersPage, AdminBrokersController> {
+    extends
+        StateController<MainModule, AdminBrokersPage, AdminBrokersController> {
   @override
   void initState() {
     super.initState();
@@ -100,14 +101,13 @@ class _AdminBrokersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (brokers.isEmpty) {
-      return const Center(
-        child: Text('Nenhum corretor cadastrado.'),
-      );
+      return const Center(child: Text('Nenhum corretor cadastrado.'));
     }
 
     return ListView.separated(
       itemCount: brokers.length,
-      separatorBuilder: (context, index) => const SizedBox(height: DSSpacing.sm),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: DSSpacing.sm),
       itemBuilder: (context, index) {
         final broker = brokers[index];
         return DecoratedBox(
@@ -144,9 +144,9 @@ class _AdminBrokersList extends StatelessWidget {
                 const SizedBox(width: DSSpacing.md),
                 Text(
                   '${broker.totalProperties} imoveis',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ],
             ),
@@ -158,10 +158,7 @@ class _AdminBrokersList extends StatelessWidget {
 }
 
 class _AdminBrokersErrorState extends StatelessWidget {
-  const _AdminBrokersErrorState({
-    required this.message,
-    required this.onRetry,
-  });
+  const _AdminBrokersErrorState({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -245,9 +242,9 @@ class _CreateBrokerDialogState extends State<_CreateBrokerDialog> {
             const SizedBox(height: DSSpacing.sm),
             Text(
               'A senha temporaria sera gerada pelo sistema e enviada por e-mail.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: DSColors.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: DSColors.onSurfaceVariant),
             ),
           ],
         ),
@@ -257,10 +254,7 @@ class _CreateBrokerDialogState extends State<_CreateBrokerDialog> {
           onPressed: () => Navigator.of(context).pop(false),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
-          onPressed: _submit,
-          child: const Text('Criar corretor'),
-        ),
+        FilledButton(onPressed: _submit, child: const Text('Criar corretor')),
       ],
     );
   }

@@ -8,7 +8,7 @@ import 'package:imobiliaria/app/presentation/main/pages/property_segments/proper
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/brand/property_brand_cards_section.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/featured_properties/featured_properties_section.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/navigation/property_segments_top_navigation.dart';
-import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/search/property_search_panel.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/search/property_search_panel.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/widgets/video/property_video_section.dart';
 import 'package:legend_core/legend_core.dart';
 

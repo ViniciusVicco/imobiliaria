@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/broker_properties_controller.dart';
-import 'package:imobiliaria/app/presentation/main/pages/broker/widgets/property_management_widgets.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/property/property_management_widgets.dart';
 import 'package:legend_core/legend_core.dart';
 
 class BrokerPropertiesPage extends StatefulWidget {

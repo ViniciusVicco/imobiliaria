@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/session_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/session_controller.dart';
 import 'package:legend_core/legend_core.dart';
 
 class SessionAction extends StatefulWidget {

@@ -1,220 +1,78 @@
-# Arquitetura e Entrega Incremental (Spec-Driven Development)
+# Arquitetura e entrega incremental
 
-## 1) Objetivo do produto
-Plataforma responsiva para vitrine de imoveis, com quatro entradas iniciais:
+## Refer?ncias e estado
 
-- Residencial
-- Comercial
-- Investimentos
-- Anunciar imovel
+Revisado em 2026-09-19. O [ai_contract.md](../ai_contract.md) define as regras obrigat?rias de legibilidade, reutiliza??o, organiza??o de widgets e layouts mobile/web. Consulte o [?ndice de specs](specs/README.md) para contratos de produto e a [spec de refatora??o](specs/presentation/01-presentation-refactoring.md) para entregas e pend?ncias.
 
-Escopo de negocio: imoveis de diferentes tipos, como apartamentos, casas, salas comerciais, lojas e oportunidades de investimento.
+A base atual ? Flutter com backend Node/Fastify, Prisma e PostgreSQL. Auth usa JWT; armazenamento de m?dia usa R2 por interm?dio do backend. Firebase n?o faz parte do fluxo vigente.
 
-## 2) Pilares obrigatorios
-1. Responsividade real: mesma base de codigo com comportamento consistente em celular e desktop.
-2. Fluxo arquitetural obrigatorio: `widget -> controller -> useCase -> repository -> datasource`.
+## Camadas e responsabilidades
 
-Regra de ouro:
-- Widget nunca chama API direto.
-- `try/catch`, mapeamento de erro e tratamento ficam em `repository`.
+Fluxo de opera??es com dados: `p?gina/callback -> controller -> use case -> repository -> datasource -> RestClient`. Widgets visuais n?o fazem HTTP.
 
-## 3) Decisoes arquiteturais concluidas
-- O app usa `ModuleApp` + `MainModule` como shell principal de navegacao.
-- O design/layout responsivo foi centralizado no `packages/design_system`.
-- O core modular (`packages/core`) continua como base de DI, modulo e ciclo de vida.
-- O fluxo de dominio foi padronizado em `data/domain/presentation` dentro de `lib/app`.
-- Rotas principais em ingles, alinhadas com a estrategia web do modulo.
-- A persistencia de produto passa a evoluir para backend Node + PostgreSQL local/dev/prod.
-- Autenticacao e autorizacao devem ser proprias do backend Node + PostgreSQL; Firebase nao faz parte do fluxo vigente de usuarios.
-- Guia operacional de auth: `docs/guides/AUTH_JWT_POSTGRES_GUIDE.md`.
-- O acesso HTTP no Flutter deve passar por `RestClient` no `packages/core` e ser injetado nos datasources.
+| Camada | Responsabilidade |
+| --- | --- |
+| Module | Declarar rotas, rota inicial e injector; compor p?ginas e guards. |
+| Injector | Registrar depend?ncias e seus escopos. |
+| P?gina | Conectar controller/store, observar estado, tratar argumentos e compor widgets. |
+| Widget extra?do | Renderizar dados recebidos e disparar callbacks; manter estado visual local quando necess?rio. |
+| Controller | Coordenar a??es, use cases, store e navega??o. |
+| Store | Representar estado observ?vel da funcionalidade. |
+| Use case | Encapsular a a??o; chamar repository quando exige dados. Regras puras, como resolu??o de acesso, n?o precisam de repository. |
+| Repository | Adaptar respostas e mapear exce??es para `Failure`/`DualResponse`. |
+| Datasource | Acessar HTTP/storage e adaptar payloads; endpoints centralizados em `lib/app/data/api/`. |
 
-## 4) Padrao oficial de pastas
-### 4.1) Packages
-- `packages/core`: fundacao arquitetural (Module, ModuleInjector, AppNavigator, contracts).
-- `packages/design_system`: layout responsivo, breakpoints, tokens de UI e componentes de layout.
+Esse ? o padr?o de destino; componentes legados ainda recebem controllers completos ou acessam `Module.get`. A refatora??o est? parcial, n?o conclu?da globalmente.
 
-### 4.2) App (`lib/app`)
-- `data/`
-- `domain/`
-- `presentation/`
+## Organiza??o atual
 
-Detalhamento:
-- `lib/app/data/<feature>/datasources/`
-- `lib/app/data/<feature>/repositories/`
-- `lib/app/data/<feature>/models/`
-- `lib/app/data/<feature>/failures/`
-- `lib/app/domain/<feature>/entities/`
-- `lib/app/domain/<feature>/usecases/`
-- `lib/app/presentation/<module>/pages/`
-- `lib/app/presentation/<module>/<module>_module.dart`
-- `lib/app/presentation/<module>/<module>_injector.dart`
-- `lib/app/presentation/<module>/<module>_routes.dart`
+- `packages/core`: m?dulos, inje??o, navega??o, estado e cliente HTTP. Ciclo de vida fora do escopo da refatora??o atual.
+- `packages/design_system`: tokens, layout, grids e componentes gen?ricos sem depend?ncias do dom?nio do app.
+- `lib/app/data/<feature>/`: datasources, repositories, models e failures.
+- `lib/app/domain/<feature>/`: entidades e use cases.
+- `lib/app/presentation/<module>/`: m?dulo, injector, rotas e p?ginas.
+- `pages/<pagina>/widgets/`: componentes exclusivos da p?gina.
+- `pages/widgets/`: componentes compartilhados entre p?ginas do m?dulo.
 
-## 5) Contratos por camada
-### Widget/Page
-- Renderiza estado.
-- Dispara acao para `controller`.
-- Nao conhece `dio/http`.
+Em `main/pages/widgets/` existem os grupos `admin`, `auth`, `property` e `search`. Busca tem seus pr?prios componentes em `main/pages/search/widgets/`; login em `authentication/pages/login/widgets/`.
 
-### Controller
-- Coordena interacao de tela.
-- Chama `usecase`.
-- Atualiza `store` com loading/sucesso/erro.
-- Pode disparar navegacao via `AppNavigator` injetado.
+O formul?rio de im?veis ainda fica em `main/pages/broker/`. Mov?-lo para `main/pages/property_form/` ? parte da etapa 5, n?o uma mudan?a j? realizada. Classes de widgets ainda presentes em p?ginas de corretor e administra??o ser?o extra?das nas etapas correspondentes.
 
-### UseCase
-- Encapsula regra de negocio da acao.
-- Chama apenas `repository`.
+## Rotas e inje??o
 
-### Repository
-- Ponto unico de tratamento tecnico:
-  - `try/catch`
-  - mapeamento de excecoes
-  - transformacao para `Failure`/`DualResponse`
-- Nao renderiza UI.
+`ModuleApp` registra `MainModule` e `AuthenticationModule`. `MainModule` usa `MainInjector`; autentica??o usa `AuthenticationInjector`. Preservar o getter do injector, pois sua constru??o consulta o m?dulo registrado:
 
-### DataSource
-- Apenas acesso externo, cache, storage ou adaptacao de payload.
-- Sem regra de negocio de tela.
-- Pode chamar API HTTP via `RestClient` ou fallback local de desenvolvimento.
-- Endpoints de feature devem ficar isolados em `lib/app/data/api/`, evitando paths hardcoded espalhados.
-
-## 6) Roteamento e modulos (estado atual)
-- Rotas principais do modulo: `/home`, `/commercial`, `/residential`, `/investments`, `/announce-property`.
-- Segmentos oficiais de imoveis: `residential` e `commercial`; `/investments` permanece apenas como rota temporaria/compatibilidade para oportunidades com `tag=na-planta`.
-- Home renderiza grid com 4 cards de entrada e navega pelos segmentos.
-- Navegacao segue fluxo de negocio: botao -> controller -> usecase -> repository -> datasource -> rota.
-- A pagina de detalhe de segmento ainda e placeholder, ate as specs de catalogo e anuncio evoluirem.
-
-Regra para novos modulos:
-- Declarar rotas em `<module>_routes.dart`.
-- Declarar mapa de rotas em `<module>_module.dart`.
-- Nunca navegar direto de widget para datasource/API.
-
-## 7) Injecao e ciclo de vida (GetIt)
-Regra critica confirmada:
-- Nao instanciar injector em campo `final` com acesso precoce a `Module.get<T>()`.
-- O injector deve ser resolvido sob demanda no getter `injector` do modulo.
-
-Exemplo correto:
 ```dart
 @override
 ModuleInjector<MainModule> get injector => MainInjector();
 ```
 
-Motivo:
-- Evita erro de modulo ainda nao registrado no `GetIt` global durante bootstrap.
+| Rotas | Implementa??o |
+| --- | --- |
+| `/home` | Vitrine, busca compartilhada, destacados, v?deo e conte?do institucional. |
+| `/estoque`, `/search` | Mesma `PropertySearchPage`; novas buscas navegam para `/estoque`. |
+| `/login` | `LoginPage` e `LoginForm`; retomada de sess?o e redirect no controller. |
+| `/broker`, `/broker/properties` | `BrokerPage`, com abas de im?veis e perfil. |
+| `/broker/properties/new`, `/broker/properties/:id/edit` | `PropertyFormPage` em modo broker. |
+| `/admin`, `/admin/users`, `/admin/properties`, `/admin/review` | Home, corretores, im?veis e revis?o administrativa. |
+| `/admin/properties/new`, `/admin/properties/:id/edit` | Mesmo formul?rio em modo admin. |
+| `/commercial`, `/residential`, `/investments`, `/announce-property` | `SegmentDetailsPage`, ainda placeholder. |
 
-## 8) Responsividade (design_system)
-Padrao de uso:
-- `MaterialApp(builder: DSResponsiveAppBuilder.build, ...)`
-- `DSPageLayoutContainer` para largura maxima e padding consistente.
-- `context.isDesktopLayout`/`context.isMobileLayout` estao disponiveis para decisao de grid/coluna.
-- Tokens de espacamento e radius via `DSSpacing` e `DSRadius`.
+Guard Flutter melhora a experi?ncia; o backend deve autorizar cada opera??o. A diverg?ncia de publica??o pelo endpoint de status do broker est? registrada no ?ndice de specs.
 
-## 9) Organizacao de widgets e componentes
-Regra de decisao:
-- Alta repeticao, pouca logica e nenhuma dependencia de dominio: mover para `packages/design_system`.
-- Logica de tela, entidades da feature, copy de negocio ou callbacks do controller: manter em `lib/app/presentation/<module>/pages/<feature>/widgets/`.
-- Logica pura de transformacao/filtro fica como helper local da feature; se virar regra de negocio compartilhada, mover para domain/usecase.
+## Responsividade e estado visual
 
-### 9.1) Design system
-- Nao depende de entities, controllers, usecases, rotas, injectors ou assets do app.
-- Recebe dados por parametros primitivos, callbacks e widgets filhos.
-- Pode conter infraestrutura visual reutilizavel, como cards base, grids responsivos, wrappers de media/embed e componentes de layout.
-- Componentes publicos devem usar prefixo `DS` e ser exportados por `packages/design_system/lib/design_system.dart`.
+Usar `DSPageLayoutContainer`, tokens e componentes existentes. N?o alterar breakpoints durante uma extra??o estrutural: a busca usa sidebar a partir de 980 px dispon?veis; seus resultados usam 600/900 px para colunas. O layout admin usa 820 px para alternar sidebar e abas.
 
-### 9.2) Widgets de feature
-- Podem conhecer entities, textos de negocio e decisoes especificas da tela.
-- Devem ser agrupados por contexto de uso, por exemplo `widgets/search`, `widgets/video`, `widgets/navigation` e `widgets/featured_properties`.
-- A page principal deve ficar como orquestradora: le estado, chama controller e compoe secoes.
-- Widgets continuam respeitando o fluxo `widget -> controller -> useCase -> repository -> datasource`.
+Widgets de apresenta??o recebem dados/callbacks. `LoginForm` possui seus controllers de texto; a p?gina de busca conserva os controllers usados em sidebar/modal. Cada propriet?rio deve descartar seus recursos. Componentes gen?ricos sem regras de produto podem ir para o design system; componentes com entidades, textos e a??es de produto permanecem no app.
 
-## 10) Dependencias por responsabilidade
-### 10.1) App principal
-- `legend_core`
-- `design_system`
-- `dio`, quando o app usar `RestClient` diretamente por injecao.
-- Dependencias de produto devem ficar no app apenas quando houver uso real na feature.
+## Entrega orientada por specs
 
-### 10.2) Design system
-- Dependencias de layout/design: `responsive_framework`, `flutter_svg`, `cached_network_image`, `cupertino_icons`.
-- Dependencias de media/embed so entram aqui quando forem wrappers visuais reutilizaveis e nao carregarem regra de negocio do app.
+Cada spec deve distinguir:
 
-### 10.3) Core
-- Dependencias estruturais do core ficam em `packages/core`, como `dio` para requests cancelaveis e `logger` para mixins de log.
+1. Estado implementado, data e arquivos/s?mbolos que o comprovam.
+2. Requisitos e diverg?ncias ainda abertas.
+3. Crit?rios de aceite e testes necess?rios.
+4. Valida??es realmente executadas e seus limites.
 
-## 11) Backlog spec-driven (proximas fases)
-- Spec 1: Home showcase com dados reais via API local.
-- Spec 2: Backend Node + PostgreSQL, Auth/Profile e Admin Users.
-- Spec 3: Catalogo residencial.
-- Spec 4: Catalogo comercial.
-- Spec 5: Investimentos na planta.
-- Spec 6: Fluxo Anunciar imovel.
-- Spec 7: Observabilidade, performance web e testes.
-
-## 11.1) Estado atual de infraestrutura local
-- Backend Node/Fastify criado em `backend/`.
-- PostgreSQL local usa bancos `seletta_local` e `seletta_shadow`.
-- Prisma controla migrations e seed.
-- Endpoints MVP ja previstos:
-  - `GET /api/v1/health`
-  - `POST /api/v1/auth/login`
-  - `GET /api/v1/me`
-  - `GET /api/v1/home/brand-content`
-  - `GET /api/v1/home/featured-properties`
-  - `GET /api/v1/properties/search`
-  - `GET /api/v1/properties/:id`
-- VS Code possui tasks/launch:
-  - `front-end-local`
-  - `back-end-local`
-  - compound `local-full-stack`
-
-## 12) Template de spec
-```md
-# Spec X.Y - <titulo>
-
-## Contexto
-<problema de negocio e objetivo>
-
-## Escopo
-- Em escopo:
-- Fora de escopo:
-
-## Contratos de arquitetura
-- Widget chama apenas Controller? [ ]
-- Controller chama apenas UseCase? [ ]
-- UseCase chama apenas Repository? [ ]
-- Repository concentra try/catch e Failure? [ ]
-
-## Requisitos funcionais
-1. ...
-2. ...
-
-## Requisitos nao funcionais
-1. Responsividade mobile/desktop
-2. Acessibilidade minima
-3. Performance alvo
-
-## Criterios de aceite (Given/When/Then)
-1. Dado ... Quando ... Entao ...
-
-## Plano tecnico
-- Camadas afetadas:
-- Rotas afetadas:
-- Riscos:
-
-## Testes obrigatorios
-- Unitario:
-- Widget:
-- Integracao:
-```
-
-## 13) Definition of Done por spec
-- Fluxo arquitetural respeitado (`widget -> controller -> useCase -> repository -> datasource`).
-- Nenhum acesso HTTP direto em widget/controller.
-- Funciona em viewport mobile e desktop.
-- Rotas nomeadas funcionando e alinhadas com a estrategia web do modulo.
-- Erros mapeados em `Failure`.
-- Criterios de aceite cobertos por testes.
+Mudan?as documentais n?o comprovam funcionamento operacional. Na etapa 2 passaram 15 testes Flutter e a compila??o web; a an?lise manteve 26 apontamentos anteriores. Integra??o com backend, R2/SMTP e navega??o completa permanecem pendentes. N?o tratar checklist de testes desejados como cobertura existente.

@@ -1,4 +1,12 @@
-# Spec 1.2 - Auth propria PostgreSQL e CRUD de Admins/Corretores
+# Spec 2 ? Auth PostgreSQL/JWT e gest?o de usu?rios
+
+## Estado verificado em 2026-09-19
+
+- Flutter mant?m `AuthenticationModule`/`AuthenticationInjector`; guard e sess?o compartilhados ficam em `main/pages/widgets/auth/`.
+- `LoginPage` orquestra sess?o/redirect/feedback. `LoginForm`, em `authentication/pages/login/widgets/`, recebe loading e callback, possui os campos de texto e n?o acessa injector.
+- `test/login_form_test.dart` verifica envio, loading, preserva??o de campos e layout. Login JWT real e navega??o por perfil n?o s?o cobertos por esses testes.
+- Backend implementa CRUD gen?rico de usu?rios; a UI `/admin/users` implementa listagem e convite de corretores, n?o todas as opera??es desse CRUD.
+- `ResolveProtectedRouteAccessUseCase` permite admin ativo nas rotas broker; o middleware `requireActiveBroker` tamb?m aceita admin. Endpoints broker continuam limitados ao usu?rio autenticado; gest?o global usa endpoints admin.
 
 ## Versionamento
 - Supersedes: `docs/specs/_archive/Users/01-firebase-auth-accesses.md` para autenticacao/autorizacao.
@@ -43,7 +51,7 @@ Fora de escopo:
 
 ## Perfis e permissoes
 ### Publico
-- Acessa `/home`, `/search` e detalhes publicos sem login.
+- Acessa `/home`, `/estoque` e o alias `/search` sem login. Detalhe p?blico existe na API; a p?gina Flutter completa de detalhe ainda n?o est? implementada.
 - Nao recebe role.
 - Nao acessa rotas administrativas ou de corretor.
 

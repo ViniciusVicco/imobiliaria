@@ -2,7 +2,7 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/assets/custom_assets.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/session_action.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/session_action.dart';
 
 class PropertySegmentsTopNavigation extends StatelessWidget {
   const PropertySegmentsTopNavigation({

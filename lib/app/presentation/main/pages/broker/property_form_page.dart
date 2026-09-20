@@ -8,10 +8,10 @@ import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.da
 import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
-import 'package:imobiliaria/app/presentation/main/pages/admin/admin_layout.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/admin/admin_layout.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/helpers/property_image_picker.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/property_form_controller.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/session_action.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/session_action.dart';
 import 'package:imobiliaria/app/presentation/main/pages/broker/property_form_validator.dart';
 import 'package:legend_core/legend_core.dart';
 

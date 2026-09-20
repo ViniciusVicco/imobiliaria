@@ -1,4 +1,10 @@
-# Spec 1.2 - Home Showcase, Search Entry and Brand Sections
+# Spec 1 ? Home Showcase, Search Entry and Brand Sections
+
+## Current status ? 2026-09-19
+
+Home sections and HTTP integration exist in code. `PropertySearchPanel` now lives in `lib/app/presentation/main/pages/widgets/search/property_search_panel.dart`; shared property images/tags live in `main/pages/widgets/property/`. Home still owns its navigation, featured, brand and video sections.
+
+The datasource has no mock fallback. The test plan below remains acceptance work, not a claim that Home integration tests exist. Search/login widget coverage and refactoring progress are recorded in [presentation/01](../presentation/01-presentation-refactoring.md).
 
 ## Versioning
 - Supersedes: `docs/specs/_archive/Home/01-home-showcase-initial-filters.md` for Home layout and search behavior.
@@ -62,7 +68,7 @@ GET /home/brand-content
 GET /home/featured-properties
 ```
 
-Search endpoints planned/available in backend:
+Search endpoints implemented in backend:
 ```txt
 GET /properties/search
 GET /properties/:id
@@ -313,14 +319,13 @@ These cards are the target of top navigation scroll actions.
   - Home brand content and featured properties are served by Node/PostgreSQL.
   - Search endpoint is integrated into `/estoque` and its `/search` alias.
 
-## File Targets (Planned)
+## Implementation references (reviewed 2026-09-19)
 - `lib/app/domain/property_segments/entities/property_search_filters_entity.dart`
 - `lib/app/domain/property_segments/entities/featured_property_entity.dart`
 - `lib/app/domain/property_segments/entities/home_brand_content_entity.dart`
 - `lib/app/domain/property_segments/usecases/build_property_search_query_use_case.dart`
 - `lib/app/domain/property_segments/usecases/get_featured_properties_use_case.dart`
 - `lib/app/domain/property_segments/usecases/get_home_brand_content_use_case.dart`
-- `lib/app/data/property_segments/models/property_search_filters_model.dart`
 - `lib/app/data/property_segments/models/featured_property_model.dart`
 - `lib/app/data/property_segments/models/home_brand_content_model.dart`
 - `lib/app/data/property_segments/datasources/property_segments_datasource.dart`
@@ -378,7 +383,7 @@ These cards are the target of top navigation scroll actions.
 6. Integrate `/estoque` page with `GET /api/v1/properties/search`. [done]
 7. Validate mobile/desktop layout and accessibility basics.
 
-## Definition of Done (Spec 1.2)
+## Definition of Done
 - Home structure matches the sketch: nav, mission/message, search, highlights, video, brand cards.
 - Search submits to `/estoque` with stable query params.
 - `Novidades na planta` preselects `tag=na-planta`.

@@ -1,4 +1,14 @@
-# Spec 2.0 - Backend Node + PostgreSQL
+# Spec 1 ? Backend Node + PostgreSQL
+
+## Revis?o de implementa??o ? 2026-09-19
+
+As rotas est?o em `backend/src/modules/` e o schema atual em `backend/prisma/schema.prisma`. Exemplos de payload/modelo abaixo descrevem a base inicial; propriedades, revis?o e m?dia s?o detalhadas nas specs vigentes de [formul?rio](../properties/02-unified-property-form.md) e [m?dia](../media/01-r2-media-upload.md).
+
+- Existe upload tempor?rio antes da cria??o do im?vel, al?m dos endpoints legados de draft.
+- Existem revis?o, aprova??o/rejei??o e notifica??es administrativas.
+- Status/role de usu?rio s?o alterados por `PATCH /admin/users/:id`; n?o existem handlers separados `/:id/status` e `/:id/role`.
+- N?o h? script de testes em `backend/package.json`; esta revis?o n?o executou backend, banco ou servi?os externos. Registros anteriores de seed/migrations s?o hist?ricos, n?o confirma??o do ambiente atual.
+- A regra de publica??o exclusiva por admin apresenta a diverg?ncia documentada no [?ndice](../README.md).
 
 ## Visao De Produto
 A plataforma Seletta precisa sair de mocks e dependencias externas de identidade/dominio para uma base relacional com backend proprio, mantendo velocidade de desenvolvimento local e reduzindo custo/complexidade inicial.
@@ -40,7 +50,7 @@ A autenticacao passa a ser propria do backend. O PostgreSQL guarda usuarios, sen
   - `front-end-local`
   - `back-end-local`
   - compound `local-full-stack`
-- Flutter Home foi ligado aos endpoints HTTP via `RestClient`, com fallback para mocks.
+- Flutter Home usa HTTP via `RestClient`, sem fallback para mocks no datasource atual.
 - `RestClient`, `RestClientAbstract` e `RestEnv` foram adicionados/exportados no `packages/core`.
 - Endpoints da feature Home foram centralizados em `PropertySegmentsEndpoints`.
 - CRUD protegido de propriedades, ciclo de vida de midia R2 e perfil do corretor foram adicionados desde a versao inicial desta spec.
@@ -379,25 +389,9 @@ Regras:
 - bloquear auto-desativacao do proprio admin.
 - bloquear desativacao/rebaixamento do ultimo admin ativo.
 
-### `PATCH /api/v1/admin/users/:id/status`
-Ativa ou desativa usuario.
+### Altera??o de status e role
 
-Body:
-```json
-{
-  "isActive": false
-}
-```
-
-### `PATCH /api/v1/admin/users/:id/role`
-Altera role.
-
-Body:
-```json
-{
-  "role": "admin"
-}
-```
+Usar `PATCH /api/v1/admin/users/:id` com `isActive` e/ou `role`. Os endpoints dedicados `/:id/status` e `/:id/role` do desenho inicial n?o foram implementados.
 
 ### `GET /api/v1/admin/reports/brokers-property-summary`
 Admin ativo.

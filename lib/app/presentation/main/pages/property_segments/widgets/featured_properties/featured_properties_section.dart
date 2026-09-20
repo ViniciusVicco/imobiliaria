@@ -2,7 +2,7 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/property_card_image.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/property/property_card_image.dart';
 
 class FeaturedPropertiesSection extends StatefulWidget {
   const FeaturedPropertiesSection({
@@ -59,8 +59,7 @@ class _FeaturedPropertiesSectionState extends State<FeaturedPropertiesSection> {
                   final property = visibleProperties[index];
                   return _FeaturedPropertyCard(
                     property: property,
-                    onMoreInfoPressed: () =>
-                        widget.onMoreInfoPressed(property),
+                    onMoreInfoPressed: () => widget.onMoreInfoPressed(property),
                   );
                 },
               );
@@ -103,10 +102,7 @@ class _FeaturedPropertyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            PropertyCardImage(
-              coverUrl: property.coverUrl,
-              tags: property.tags,
-            ),
+            PropertyCardImage(coverUrl: property.coverUrl, tags: property.tags),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(DSSpacing.md),

@@ -318,7 +318,7 @@ Implementacao v1:
 - Entidades e models ficam em `lib/app/domain/broker` e `lib/app/data/broker`.
 - Broker e admin reutilizam entidades/modelos.
 - Broker e admin usam use cases separados para manter endpoints e autorizacao distintos.
-- Componentes visuais compartilhados ficam em `lib/app/presentation/main/pages/broker/widgets/property_management_widgets.dart`.
+- Componentes visuais compartilhados ficam em `lib/app/presentation/main/pages/widgets/property/property_management_widgets.dart`.
 
 ## Riscos e edge cases
 - URL de imagem quebrada: UI mostra placeholder e permite edicao.

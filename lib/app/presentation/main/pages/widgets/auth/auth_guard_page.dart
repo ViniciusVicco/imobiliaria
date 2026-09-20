@@ -2,7 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/auth_guard_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/auth_guard_controller.dart';
 import 'package:legend_core/legend_core.dart';
 
 class AuthGuardPage extends StatefulWidget {
@@ -49,9 +49,7 @@ class _AuthGuardPageState
           );
         }
 
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
     );
   }

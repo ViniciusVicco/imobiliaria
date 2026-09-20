@@ -158,7 +158,7 @@ Camadas previstas:
 - `lib/app/presentation/authentication/`
 - `lib/app/presentation/main/pages/admin/`
 - `lib/app/presentation/main/pages/broker/`
-- `lib/app/presentation/main/widgets/auth/` para guards usados pelas areas restritas.
+- `lib/app/presentation/main/pages/widgets/auth/` para guards usados pelas areas restritas.
 
 ## Plano tecnico
 1. Configurar Firebase no Flutter Web com `firebase_core` e `firebase_auth`.

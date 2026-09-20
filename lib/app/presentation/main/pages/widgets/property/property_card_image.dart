@@ -1,6 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/property_tag_chips.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/property/property_tag_chips.dart';
 
 class PropertyCardImage extends StatelessWidget {
   const PropertyCardImage({
@@ -55,10 +55,7 @@ class _ImageBottomScrim extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: <Color>[
-            Color(0x00000000),
-            Color(0x52000000),
-          ],
+          colors: <Color>[Color(0x00000000), Color(0x52000000)],
         ),
       ),
     );

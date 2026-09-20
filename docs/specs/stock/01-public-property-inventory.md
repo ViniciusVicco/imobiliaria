@@ -86,6 +86,15 @@ nao houver valores, `min` e `max` retornam `null`.
 - O repository concentra mapeamento de falhas.
 - Widgets nao acessam API diretamente.
 
+## Implementa??o e cobertura em 2026-09-19
+
+- `PropertySearchPage` conecta controller/store e abre sidebar/modal; componentes visuais ficam em `main/pages/search/widgets/`.
+- `StockResults` recebe dados e callbacks, sem controller de neg?cio. `StockFilterPanel` adapta os dados para o painel compartilhado em `main/pages/widgets/search/`.
+- Sidebar usa largura dispon?vel de 980 px; o grid usa limites de 600/900 px. A extra??o preservou esses valores.
+- Testes existentes: `test/property_search_filters_entity_test.dart`, `test/property_search_store_test.dart` e `test/property_search_widgets_test.dart`.
+- Cobertura: filtros, append sem duplica??o, callbacks de aplicar/limpar/retry, loading de pagina??o e resultados em 390/800/1440 px.
+- N?o cobre ainda navega??o Home -> Estoque com API real, autoriza??o p?blica no backend nem o modal mobile integrado. Esses crit?rios continuam pendentes de valida??o.
+
 ## Criterios de aceite
 1. Home filtrada abre `/estoque` com parametros deterministicos.
 2. `/estoque` sem filtros lista todos os publicados de Palmas.

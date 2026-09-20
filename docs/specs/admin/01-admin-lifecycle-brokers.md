@@ -1,4 +1,4 @@
-# Spec 3.0 - Admin Lifecycle e Gerenciamento de Corretores
+# Spec 1 ? Administra??o e gest?o de corretores
 
 ## Contexto
 Com a autenticacao propria via JWT e PostgreSQL funcionando, o proximo passo e dar vida ao ecossistema admin.

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
-import 'package:imobiliaria/app/presentation/main/pages/admin/admin_layout.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/admin/admin_layout.dart';
 import 'package:imobiliaria/app/presentation/main/pages/admin/admin_properties_controller.dart';
-import 'package:imobiliaria/app/presentation/main/pages/broker/widgets/property_management_widgets.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/property/property_management_widgets.dart';
 import 'package:legend_core/legend_core.dart';
 
 class AdminPropertiesPage extends StatefulWidget {

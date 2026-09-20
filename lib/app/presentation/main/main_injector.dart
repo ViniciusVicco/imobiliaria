@@ -64,13 +64,13 @@ import 'package:imobiliaria/app/presentation/main/pages/property_segments/proper
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_store.dart';
 import 'package:imobiliaria/app/presentation/main/pages/search/property_search_controller.dart';
 import 'package:imobiliaria/app/presentation/main/pages/search/property_search_store.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/auth_guard_controller.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/auth_guard_store.dart';
-import 'package:imobiliaria/app/presentation/main/widgets/auth/session_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/auth_guard_controller.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/auth_guard_store.dart';
+import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/session_controller.dart';
 import 'package:imobiliaria/env/rest_base_enviroment.dart';
 import 'package:legend_core/legend_core.dart';
 
-class PropertySegmentsModuleInjector extends ModuleInjector<MainModule> {
+class MainInjector extends ModuleInjector<MainModule> {
   @override
   void controllers() {
     registerFactory(
