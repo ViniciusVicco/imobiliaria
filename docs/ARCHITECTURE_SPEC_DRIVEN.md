@@ -51,6 +51,7 @@ ModuleInjector<MainModule> get injector => MainInjector();
 | --- | --- |
 | `/home` | Vitrine, busca compartilhada, destacados, v?deo e conte?do institucional. |
 | `/estoque`, `/search` | Mesma `PropertySearchPage`; novas buscas navegam para `/estoque`. |
+| `/imovel/:id` | `PropertyResumePage`, galeria responsiva, dados técnicos e contato público. |
 | `/login` | `LoginPage` e `LoginForm`; retomada de sess?o e redirect no controller. |
 | `/broker`, `/broker/properties` | `BrokerPage`, com abas de im?veis e perfil. |
 | `/broker/properties/new`, `/broker/properties/:id/edit` | `PropertyFormPage` em modo broker. |

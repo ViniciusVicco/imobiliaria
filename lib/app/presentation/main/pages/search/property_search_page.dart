@@ -5,6 +5,7 @@ import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:imobiliaria/app/presentation/main/pages/search/property_search_controller.dart';
 import 'package:legend_core/legend_core.dart';
 
+import '../../main_routes.dart';
 import 'widgets/stock_error_state.dart';
 import 'widgets/stock_filter_panel.dart';
 import 'widgets/stock_loading_state.dart';
@@ -87,6 +88,9 @@ class _PropertySearchPageState
                     canLoadMore: controller.store.canLoadMore,
                     isLoadingMore: isLoadingMore,
                     onLoadMore: controller.loadMore,
+                    onPropertyPressed: (id) => Module.get<MainModule>()
+                        .navigator
+                        .pushNamed(MainRoutes.propertyPath(id)),
                     onOpenFilters: isDesktop ? null : _openMobileFilters,
                   ),
                 );

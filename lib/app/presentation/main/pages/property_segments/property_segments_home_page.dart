@@ -1,4 +1,5 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
+import '../../main_routes.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/featured_property_entity.dart';
@@ -128,6 +129,10 @@ class _PropertySegmentsHomePageState
                           const SizedBox(height: DSSpacing.xl),
                           FeaturedPropertiesSection(
                             properties: filteredFeaturedProperties,
+                            onPropertyPressed: (property) =>
+                                Module.get<MainModule>().navigator.pushNamed(
+                                  MainRoutes.propertyPath(property.id),
+                                ),
                             onMoreInfoPressed: (property) =>
                                 controller.onPropertyWhatsappPressed(property),
                           ),

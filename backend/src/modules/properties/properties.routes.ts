@@ -128,8 +128,17 @@ export async function propertiesRoutes(app: FastifyInstance) {
       });
     }
 
+    const imageMedia = property.media.filter((media) => media.type === 'image');
+    const cover = imageMedia.find((media) =>
+      media.publicUrl === property.coverUrl || media.url === property.coverUrl,
+    ) ?? imageMedia[0];
+    const mediaUrl = (media: typeof property.media[number]) => media.type === 'image' && media.storageKey
+      ? `${publicRequestOrigin(request)}/api/v1/properties/${property.id}/media/${media.id}`
+      : media.publicUrl ?? media.url;
+
     return {
       id: property.id,
+      coverUrl: cover ? mediaUrl(cover) : property.coverUrl,
       title: property.title,
       description: property.description ?? '',
       segment: property.segment,
@@ -139,7 +148,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
       subNeighborhood: property.subNeighborhood ?? '',
       media: property.media.map((media) => ({
         id: media.id,
-        url: media.publicUrl ?? media.url,
+        url: mediaUrl(media),
         type: media.type,
         sortOrder: media.sortOrder,
       })),
@@ -159,6 +168,18 @@ export async function propertiesRoutes(app: FastifyInstance) {
         await prisma.brandContent.findUnique({ where: { id: 'home' } }),
       ),
     };
+  });
+
+  app.get('/properties/:id/media/:mediaId', async (request, reply) => {
+    const { id, mediaId } = z.object({ id: z.string().min(1), mediaId: z.string().min(1) }).parse(request.params);
+    const media = await prisma.propertyMedia.findFirst({
+      where: { id: mediaId, propertyId: id, type: 'image', status: 'active', deletedAt: null,
+        property: { status: 'published' } },
+    });
+    if (!media?.storageKey) return reply.code(404).send();
+    const file = await getR2Object(media.storageKey);
+    return reply.header('Content-Type', media.mimeType ?? file.contentType ?? 'application/octet-stream')
+      .header('Cache-Control', 'no-store').send(file.body);
   });
 
   app.get('/properties/:id/cover', async (request, reply) => {
@@ -298,7 +319,7 @@ function normalizePropertyType(propertyType?: string) {
 }
 
 function mapBrokerContact(
-  broker: { name: string; phone: string | null } | null,
+  broker: { name: string; phone: string | null; avatarUrl?: string | null } | null,
   brandContent: { contactWhatsapp: string; contactPhone: string } | null,
 ) {
   const brokerPhone = broker?.phone?.trim();
@@ -308,7 +329,16 @@ function mapBrokerContact(
     name: brokerPhone ? broker?.name ?? '' : 'Seletta',
     phone: brokerPhone || fallbackPhone,
     whatsapp: brokerPhone || fallbackPhone,
+    avatarUrl: brokerPhone ? broker?.avatarUrl ?? null : null,
   };
+}
+
+function publicRequestOrigin(request: FastifyRequest) {
+  const forwardedProto = request.headers['x-forwarded-proto'];
+  const forwardedHost = request.headers['x-forwarded-host'];
+  const protocol = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)?.split(',')[0]?.trim() || request.protocol;
+  const host = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)?.split(',')[0]?.trim() || request.headers.host || request.hostname;
+  return `${protocol}://${host}`;
 }
 
 function publicCoverUrl({

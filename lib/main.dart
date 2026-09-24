@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/presentation/authentication/authentication_module.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
 import 'package:legend_core/legend_core.dart';
+import 'app/platform/url_strategy.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  configureUrlStrategy();
 
   runApp(
     ModuleApp(
@@ -13,9 +15,8 @@ Future<void> main() async {
       childModuleBuilders: <Module Function()>[AuthenticationModule.new],
       app: (home) => MaterialApp(
         debugShowCheckedModeBanner: false,
-        builder: DSResponsiveAppBuilder.build,
+        builder: (context, _) => DSResponsiveAppBuilder.build(context, home),
         theme: DSTheme.dark,
-        home: home,
       ),
     ),
   );

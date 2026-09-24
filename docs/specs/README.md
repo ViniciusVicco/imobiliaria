@@ -24,6 +24,8 @@ Revis?o documental: **2026-09-19**, baseada no c?digo local, incluindo as etapas
 | Propriedades | [2 ? Formul?rio centralizado](properties/02-unified-property-form.md) | Cria??o local com m?dia tempor?ria, edi??o e revis?o implementadas; extra??o e valida??o completa pendentes. |
 | M?dia | [1 ? Upload R2](media/01-r2-media-upload.md) | Upload tempor?rio e por im?vel, capa, remo??o/restaura??o e cleanup manual implementados; opera??o externa e limpeza autom?tica pendentes. |
 
+Página individual: [3 — Property Resume](properties/03-property-resume.md), implementada com rota pública, galeria responsiva e contatos.
+
 ## Decis?es consolidadas
 
 1. Autentica??o vigente usa backend Node/Fastify, PostgreSQL e JWT. As specs Firebase s?o hist?ricas.

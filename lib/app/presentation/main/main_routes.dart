@@ -1,4 +1,6 @@
 abstract final class MainRoutes {
+  static const String propertyResume = '/imovel/:id';
+  static String propertyPath(String id) => '/imovel/${Uri.encodeComponent(id)}';
   static const String home = '/home';
   static const String commercial = '/commercial';
   static const String residential = '/residential';

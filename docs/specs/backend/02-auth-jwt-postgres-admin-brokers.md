@@ -51,7 +51,7 @@ Fora de escopo:
 
 ## Perfis e permissoes
 ### Publico
-- Acessa `/home`, `/estoque` e o alias `/search` sem login. Detalhe p?blico existe na API; a p?gina Flutter completa de detalhe ainda n?o est? implementada.
+- Acessa `/home`, `/estoque`, `/search` e `/imovel/:id` sem login. Detalhe público implementado na API e no Flutter; ver [Property Resume](../properties/03-property-resume.md).
 - Nao recebe role.
 - Nao acessa rotas administrativas ou de corretor.
 

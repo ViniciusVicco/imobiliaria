@@ -9,10 +9,12 @@ class FeaturedPropertiesSection extends StatefulWidget {
     super.key,
     required this.properties,
     required this.onMoreInfoPressed,
+    this.onPropertyPressed,
   });
 
   final List<FeaturedPropertyEntity> properties;
   final ValueChanged<FeaturedPropertyEntity> onMoreInfoPressed;
+  final ValueChanged<FeaturedPropertyEntity>? onPropertyPressed;
 
   @override
   State<FeaturedPropertiesSection> createState() =>
@@ -59,6 +61,9 @@ class _FeaturedPropertiesSectionState extends State<FeaturedPropertiesSection> {
                   final property = visibleProperties[index];
                   return _FeaturedPropertyCard(
                     property: property,
+                    onPropertyPressed: widget.onPropertyPressed == null
+                        ? null
+                        : () => widget.onPropertyPressed!(property),
                     onMoreInfoPressed: () => widget.onMoreInfoPressed(property),
                   );
                 },
@@ -84,10 +89,12 @@ class _FeaturedPropertyCard extends StatelessWidget {
   const _FeaturedPropertyCard({
     required this.property,
     required this.onMoreInfoPressed,
+    this.onPropertyPressed,
   });
 
   final FeaturedPropertyEntity property;
   final VoidCallback onMoreInfoPressed;
+  final VoidCallback? onPropertyPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -99,50 +106,59 @@ class _FeaturedPropertyCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: DSRadius.md,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            PropertyCardImage(coverUrl: property.coverUrl, tags: property.tags),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(DSSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      property.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: DSSpacing.xs),
-                    _PropertyLocationText(property: property),
-                    const SizedBox(height: DSSpacing.md),
-                    _PropertyFacts(property: property),
-                    const Spacer(),
-                    Text(
-                      _formatPrice(property.price),
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: DSColors.primary,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: DSSpacing.sm),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: onMoreInfoPressed,
-                        icon: const Icon(BootstrapIcons.whatsapp),
-                        label: const Text('Quero mais informacoes'),
-                      ),
-                    ),
-                  ],
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPropertyPressed,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                PropertyCardImage(
+                  coverUrl: property.coverUrl,
+                  tags: property.tags,
                 ),
-              ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(DSSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          property.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: DSSpacing.xs),
+                        _PropertyLocationText(property: property),
+                        const SizedBox(height: DSSpacing.md),
+                        _PropertyFacts(property: property),
+                        const Spacer(),
+                        Text(
+                          _formatPrice(property.price),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: DSColors.primary,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
+                        const SizedBox(height: DSSpacing.sm),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: onMoreInfoPressed,
+                            icon: const Icon(BootstrapIcons.whatsapp),
+                            label: const Text('Quero mais informacoes'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

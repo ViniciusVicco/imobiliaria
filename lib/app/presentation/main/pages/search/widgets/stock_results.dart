@@ -16,6 +16,7 @@ class StockResults extends StatelessWidget {
     required this.onLoadMore,
     this.errorMessage,
     this.onOpenFilters,
+    this.onPropertyPressed,
   });
 
   final PropertySearchResultEntity? result;
@@ -25,6 +26,7 @@ class StockResults extends StatelessWidget {
   final VoidCallback onLoadMore;
   final String? errorMessage;
   final VoidCallback? onOpenFilters;
+  final ValueChanged<String>? onPropertyPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +95,12 @@ class StockResults extends StatelessWidget {
 
               return SliverGrid(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => StockPropertyCard(property: items[index]),
+                  (context, index) => StockPropertyCard(
+                    property: items[index],
+                    onPressed: onPropertyPressed == null
+                        ? null
+                        : () => onPropertyPressed!(items[index].id),
+                  ),
                   childCount: items.length,
                 ),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

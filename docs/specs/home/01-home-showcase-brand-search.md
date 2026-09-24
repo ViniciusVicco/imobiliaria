@@ -396,3 +396,7 @@ These cards are the target of top navigation scroll actions.
 - Architecture flow is respected end to end.
 - Errors are mapped in repository as `Failure`.
 - Mobile and desktop layouts are validated.
+
+## Página individual — atualização de 2026-09-23
+
+O detalhe público foi entregue separadamente na [spec Property Resume](../properties/03-property-resume.md), em `/imovel/:id`. Cards abrem o imóvel; na Home, o botão WhatsApp mantém sua ação independente. As exclusões de escopo acima descrevem a entrega original.

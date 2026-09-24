@@ -120,3 +120,7 @@ nao houver valores, `min` e `max` retornam `null`.
 - Todos os publicados aparecem por padrao.
 - Aplicar, limpar, retry e carregar mais funcionam.
 - Backend compila, testes focados passam e Flutter nao possui erro novo.
+
+## Página individual — atualização de 2026-09-23
+
+O detalhe público foi entregue separadamente na [spec Property Resume](../properties/03-property-resume.md), em `/imovel/:id`. Cards abrem o imóvel; na Home, o botão WhatsApp mantém sua ação independente. As exclusões de escopo acima descrevem a entrega original.

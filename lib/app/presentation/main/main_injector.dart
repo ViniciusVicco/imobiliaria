@@ -1,4 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:imobiliaria/app/data/property_segments/repositories/property_detail_repository.dart';
+import 'package:imobiliaria/app/domain/property_segments/usecases/get_property_detail_use_case.dart';
+import 'pages/property_resume/property_resume_controller.dart';
+import 'pages/property_resume/property_resume_store.dart';
 import 'package:imobiliaria/app/data/admin/datasources/admin_brokers_datasource.dart';
 import 'package:imobiliaria/app/data/admin/datasources/admin_notifications_datasource.dart';
 import 'package:imobiliaria/app/data/admin/repositories/admin_brokers_repository.dart';
@@ -73,6 +77,12 @@ import 'package:legend_core/legend_core.dart';
 class MainInjector extends ModuleInjector<MainModule> {
   @override
   void controllers() {
+    registerFactory(
+      () => PropertyResumeController(
+        store: get<PropertyResumeStore>(),
+        getProperty: get<GetPropertyDetailUseCase>(),
+      ),
+    );
     registerFactory(
       () => SessionController(
         store: get<SessionStore>(),
@@ -193,6 +203,7 @@ class MainInjector extends ModuleInjector<MainModule> {
 
   @override
   void stores() {
+    registerFactory(() => PropertyResumeStore());
     registerSingleton(PropertySegmentsHomeStore());
     registerSingleton(SessionStore.instance);
     registerFactory(() => PropertySearchStore());
@@ -225,6 +236,7 @@ class MainInjector extends ModuleInjector<MainModule> {
 
   @override
   void repositories() {
+    registerFactory(() => PropertyDetailRepository(client: get<RestClient>()));
     registerFactory(
       () => PropertySegmentsRepository(
         datasource: get<PropertySegmentsDatasource>(),
@@ -252,6 +264,10 @@ class MainInjector extends ModuleInjector<MainModule> {
 
   @override
   void usecases() {
+    registerFactory(
+      () =>
+          GetPropertyDetailUseCase(repository: get<PropertyDetailRepository>()),
+    );
     registerFactory(
       () => ResolvePropertySegmentRouteUseCase(
         repository: get<PropertySegmentsRepository>(),

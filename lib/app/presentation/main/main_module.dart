@@ -1,5 +1,7 @@
 //Aqui fica o modulo principal
 import 'package:legend_core/legend_core.dart';
+import 'package:flutter/material.dart';
+import 'main_navigation.dart';
 import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.dart';
 
 import 'pages/admin/admin_brokers_page.dart';
@@ -12,10 +14,21 @@ import 'pages/search/property_search_page.dart';
 import 'pages/segment_details/segment_details_page.dart';
 import 'pages/widgets/auth/auth_guard_page.dart';
 import 'main_routes.dart';
+import 'pages/property_resume/property_resume_page.dart';
 import 'main_injector.dart';
 
 class MainModule extends Module {
   MainModule();
+
+  @override
+  Widget widget(
+    BuildContext context, {
+    RouteBuilder? Function(RouteSettings)? onRouteNotFound,
+  }) {
+    this.onRouteNotFound = onRouteNotFound;
+    if (!isStarted) start();
+    return MainNavigation(module: this);
+  }
 
   @override
   String get initialRoute => MainRoutes.home;
@@ -25,6 +38,9 @@ class MainModule extends Module {
 
   @override
   Map<String, RouteBuilder> get routes => <String, RouteBuilder>{
+    MainRoutes.propertyResume: (context, arguments) => PropertyResumePage(
+      routeData: arguments is ModuleRouteData ? arguments : null,
+    ),
     MainRoutes.home: (context, arguments) => PropertySegmentsHomePage(),
     MainRoutes.stock: (context, arguments) => PropertySearchPage(
       routeData: arguments is ModuleRouteData ? arguments : null,

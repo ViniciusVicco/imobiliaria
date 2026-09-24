@@ -37,13 +37,19 @@ void main() {
         'broker@example.com',
       );
       await tester.enterText(find.byType(TextField).last, 'secret');
-      await tester.tap(find.byType(FilledButton));
+      await tester.tap(
+        find.byWidgetPredicate((widget) => widget is FilledButton),
+      );
       expect(submissions, [('broker@example.com', 'secret')]);
 
       rebuild(() => isLoading = true);
       await tester.pump();
       expect(
-        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        tester
+            .widget<FilledButton>(
+              find.byWidgetPredicate((widget) => widget is FilledButton),
+            )
+            .onPressed,
         isNull,
       );
       expect(

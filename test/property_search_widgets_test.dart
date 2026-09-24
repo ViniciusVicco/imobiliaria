@@ -7,6 +7,26 @@ import 'package:imobiliaria/app/presentation/main/pages/search/widgets/stock_res
 import 'package:imobiliaria/app/presentation/main/pages/search/widgets/stock_error_state.dart';
 
 void main() {
+  testWidgets('stock cards open their property ID', (tester) async {
+    String? opened;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StockResults(
+            result: _result,
+            appliedFilters: const PropertySearchFiltersEntity(),
+            canLoadMore: false,
+            isLoadingMore: false,
+            onLoadMore: () {},
+            onPropertyPressed: (id) => opened = id,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(_result.items.first.title));
+    expect(opened, _result.items.first.id);
+  });
   testWidgets(
     'filter edits survive rebuild and apply and clear use callbacks',
     (tester) async {
@@ -96,7 +116,11 @@ void main() {
     await tester.pump();
     expect(find.text('Carregando...'), findsOneWidget);
     expect(
-      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      tester
+          .widget<FilledButton>(
+            find.byWidgetPredicate((widget) => widget is FilledButton),
+          )
+          .onPressed,
       isNull,
     );
     rebuild(() => loading = false);
