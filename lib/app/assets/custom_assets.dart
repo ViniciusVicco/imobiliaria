@@ -7,7 +7,8 @@ abstract final class CustomAssets {
 class Logos {
   const Logos();
 
-  String get logo => 'assets/logos/seleta_logo.png';
+  String get logoSeletta => 'assets/logos/seleta_logo.png';
+  String get logoSelettaClean => 'assets/logos/seleta-clean.png';
 }
 
 class IconAssets {

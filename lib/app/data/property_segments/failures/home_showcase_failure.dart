@@ -1,6 +1,10 @@
 import 'package:legend_core/legend_core.dart';
 
 class HomeShowcaseFailure extends Failure {
+  HomeShowcaseFailure([
+    this.message = 'Nao foi possivel carregar a vitrine inicial.',
+  ]);
+
   @override
-  String get message => 'Nao foi possivel carregar a vitrine inicial.';
+  final String message;
 }

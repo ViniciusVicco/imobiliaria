@@ -6,12 +6,14 @@ class FeaturedPropertyEntity {
     required this.propertyType,
     required this.city,
     required this.neighborhood,
+    required this.subNeighborhood,
     required this.coverUrl,
     required this.areaM2,
     required this.bathrooms,
     required this.garageSpaces,
     required this.propertyAgeYears,
     required this.price,
+    this.tags = const <String>[],
     this.bedrooms,
   });
 
@@ -21,6 +23,7 @@ class FeaturedPropertyEntity {
   final String propertyType;
   final String city;
   final String neighborhood;
+  final String subNeighborhood;
   final String coverUrl;
   final int areaM2;
   final int? bedrooms;
@@ -28,4 +31,5 @@ class FeaturedPropertyEntity {
   final int garageSpaces;
   final int propertyAgeYears;
   final int price;
+  final List<String> tags;
 }

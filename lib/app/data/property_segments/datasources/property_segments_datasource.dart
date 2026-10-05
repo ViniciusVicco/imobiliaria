@@ -1,10 +1,10 @@
-import 'dart:convert';
-
-import 'package:flutter/services.dart';
-import 'package:imobiliaria/app/assets/custom_assets.dart';
+import 'package:imobiliaria/app/data/api/property_segments_endpoints.dart';
 import 'package:legend_core/legend_core.dart';
 
-class PropertySegmentsDatasource {
+class PropertySegmentsDatasource with PropertySegmentsEndpoints {
+  final RestClient restClient;
+  PropertySegmentsDatasource({required this.restClient});
+
   Future<DataSourceResponse<Map<String, dynamic>>> resolveSegmentRoute({
     required String targetRoute,
   }) async {
@@ -16,29 +16,58 @@ class PropertySegmentsDatasource {
 
   Future<DataSourceResponse<List<Map<String, dynamic>>>>
   getFeaturedProperties() async {
-    final data = await _loadJsonList(CustomAssets.mocks.featuredProperties);
+    final response = await restClient.get<Map<String, dynamic>>(
+      featuredProperties,
+    );
+    final body = response.data;
+    if (response.statusCode == 200 && body != null) {
+      final items = body['items'] as List<dynamic>? ?? const <dynamic>[];
+      return DataSourceResponse<List<Map<String, dynamic>>>(
+        data: items.cast<Map<String, dynamic>>(),
+        hasSuccess: true,
+      );
+    }
+
     return DataSourceResponse<List<Map<String, dynamic>>>(
-      data: data,
-      hasSuccess: true,
+      data: const <Map<String, dynamic>>[],
+      hasSuccess: false,
     );
   }
 
   Future<DataSourceResponse<Map<String, dynamic>>> getHomeBrandContent() async {
-    final data = await _loadJsonMap(CustomAssets.mocks.homeBrandContent);
+    final response = await restClient.get<Map<String, dynamic>>(
+      brandContent,
+    );
+    final body = response.data;
+    if (response.statusCode == 200 && body != null) {
+      return DataSourceResponse<Map<String, dynamic>>(
+        data: body,
+        hasSuccess: true,
+      );
+    }
+
     return DataSourceResponse<Map<String, dynamic>>(
-      data: data,
-      hasSuccess: true,
+      data: const <String, dynamic>{},
+      hasSuccess: false,
     );
   }
 
-  Future<Map<String, dynamic>> _loadJsonMap(String path) async {
-    final source = await rootBundle.loadString(path);
-    return jsonDecode(source) as Map<String, dynamic>;
-  }
+  Future<DataSourceResponse<Map<String, dynamic>>> searchPublishedProperties({
+    required Map<String, String> queryParameters,
+  }) async {
+    final response = await restClient.get<Map<String, dynamic>>(
+      propertiesSearch,
+      queryParameters: <String, dynamic>{
+        'page': '1',
+        'pageSize': '24',
+        ...queryParameters,
+      },
+    );
+    final body = response.data;
 
-  Future<List<Map<String, dynamic>>> _loadJsonList(String path) async {
-    final source = await rootBundle.loadString(path);
-    final data = jsonDecode(source) as List<dynamic>;
-    return data.cast<Map<String, dynamic>>();
+    return DataSourceResponse<Map<String, dynamic>>(
+      data: body ?? const <String, dynamic>{},
+      hasSuccess: response.statusCode == 200 && body != null,
+    );
   }
 }
