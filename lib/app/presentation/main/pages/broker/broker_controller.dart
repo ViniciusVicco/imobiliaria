@@ -74,11 +74,19 @@ class BrokerController extends Controller {
   }
 
   void openNewProperty() {
-    navigator.pushNamed(MainRoutes.brokerPropertyNew);
+    navigator.pushNamed(
+      store.profile?.role == 'admin'
+          ? MainRoutes.adminPropertyNew
+          : MainRoutes.brokerPropertyNew,
+    );
   }
 
   void openEditProperty(String id) {
-    navigator.pushNamed(MainRoutes.brokerPropertyEditPath(id));
+    navigator.pushNamed(
+      store.profile?.role == 'admin'
+          ? MainRoutes.adminPropertyEditPath(id)
+          : MainRoutes.brokerPropertyEditPath(id),
+    );
   }
 
   Future<Uint8List?> loadMediaFile(String mediaId) async {
@@ -89,8 +97,17 @@ class BrokerController extends Controller {
   }
 
   Future<bool> saveProfile() async {
-    if (!store.hasProfileChanges || store.isSavingProfile) return false;
+    if (!store.hasProfileChanges ||
+        store.isSavingProfile ||
+        store.isUploadingAvatar) {
+      return false;
+    }
 
+    if (store.nameController.text.trim().length < 2 ||
+        store.phoneController.text.trim().isEmpty) {
+      store.setError('Informe nome completo e celular.');
+      return false;
+    }
     store.setProfileSaving(true);
     final result = await updateUserProfile.call(
       UserProfileUpdateEntity(
@@ -114,11 +131,24 @@ class BrokerController extends Controller {
     return saved;
   }
 
+  String? passwordError;
+  bool _isChangingPassword = false;
+
   Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
     required String newPasswordConfirmation,
   }) async {
+    if (_isChangingPassword) return false;
+    passwordError = null;
+    if (currentPassword.isEmpty ||
+        newPassword.length < 8 ||
+        newPassword != newPasswordConfirmation) {
+      passwordError =
+          'Informe a senha atual e confirme a nova senha com pelo menos 8 caracteres.';
+      return false;
+    }
+    _isChangingPassword = true;
     final result = await updateUserPassword.call(
       currentPassword: currentPassword,
       newPassword: newPassword,
@@ -128,31 +158,35 @@ class BrokerController extends Controller {
     var changed = false;
     result.getResult(
       onSuccess: (_) => changed = true,
-      onError: (error) => store.setError(error.message),
+      onError: (error) => passwordError = error.message,
     );
+    _isChangingPassword = false;
     return changed;
   }
 
-  Future<bool> pickAndUploadAvatar() async {
-    final image = await pickPropertyImage();
-    if (image == null) return false;
-
+  Future<bool> uploadAvatar(PickedPropertyImage image) async {
+    if (store.isUploadingAvatar || store.isSavingProfile) return false;
     store.setAvatarUploading(true);
-    final result = await uploadUserAvatar.call(
-      fileName: image.fileName,
-      mimeType: image.mimeType,
-      contentBase64: image.contentBase64,
-    );
-
-    var uploaded = false;
-    result.getResult(
-      onSuccess: (profile) {
-        store.setProfile(profile);
-        uploaded = true;
-      },
-      onError: (error) => store.setError(error.message),
-    );
-    store.setAvatarUploading(false);
-    return uploaded;
+    try {
+      final result = await uploadUserAvatar.call(
+        fileName: image.fileName,
+        mimeType: image.mimeType,
+        contentBase64: image.contentBase64,
+      );
+      var uploaded = false;
+      result.getResult(
+        onSuccess: (profile) {
+          store.setAvatar(profile.avatarUrl);
+          uploaded = true;
+        },
+        onError: (error) => store.setError(error.message),
+      );
+      return uploaded;
+    } catch (_) {
+      store.setError('Nao foi possivel ler a imagem. Tente novamente.');
+      return false;
+    } finally {
+      store.setAvatarUploading(false);
+    }
   }
 }

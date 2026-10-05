@@ -167,6 +167,29 @@
    - `flutter pub get`, `flutter analyze`, `flutter test`, `dart analyze`, `dart format` e ate `dart --version` travaram por timeout na sessao anterior.
    - Antes de novas features grandes no front, precisamos destravar a toolchain para validar build, formatacao e testes.
 
+## Perfil do corretor - implementado em 2026-10-02
+
+- Troca de senha no perfil exige senha atual, nova senha com minimo de 8 caracteres e confirmacao. Erros aparecem no dialogo e envio duplicado e bloqueado. Recuperacao por email fica fora desta entrega.
+- Corretor edita somente seus dados e foto; admin ativo pode editar dados profissionais e foto de qualquer corretor pela lista administrativa.
+- Nome e celular obrigatorios no formulario; WhatsApp, CRECI e apresentacao opcionais. Email e codigo somente leitura.
+- Foto usa chave unica `users/{userId}/avatar/current` no R2, com Content-Type atualizado, URL versionada e cache `no-store`. Nao acumula fotos por formato e nao tem retencao de 7 dias.
+- Upload nao descarta alteracoes pendentes de texto. Cancelar os textos preserva a foto ja salva.
+- Limpeza de arquivos legados ocorre apos confirmar referencia no banco. Falhas sao registradas e podem ser repetidas com `npm run avatars:migrate -- --apply` no backend. Sem `--apply`, apenas lista candidatos.
+- Migracao implementada e testada com substitutos; nao executada no banco/bucket real.
+- Validacao: build backend e Web passaram; 9 testes backend e 47 testes Flutter passaram, incluindo layouts de 390 e 1440 pixels. Analise Flutter ainda aponta avisos preexistentes. Navegador integrado indisponivel; sem validacao manual no R2 real.
+- `.agents/contract.md` continua vazio; nao havia instrucoes adicionais nesse arquivo.
+
+## Responsavel pelo anuncio - 2026-10-03
+
+- Admin tambem atua como corretor. Criacao administrativa e draft vinculam ao admin autenticado por padrao; outro responsavel exige selecao explicita.
+- Editar ou aprovar nao altera o responsavel. PATCH sem `brokerId` preserva o vinculo atual, inclusive quando e nulo; strings vazias sao rejeitadas.
+- Formulario so envia `brokerId` quando o usuario seleciona outro responsavel. Lista especifica `/admin/property-responsibles` inclui corretores e admins ativos, ordenados por nome e id, sem mudar a lista de gerenciamento de corretores.
+- Anuncios antigos sem responsavel continuam institucionais ate atribuicao explicita. Responsavel inativo continua identificado no formulario, mas nao pode ser selecionado para transferencia.
+- Foto e nome sao resolvidos pelo perfil atual do responsavel, independentemente do telefone. WhatsApp tem prioridade para contato pelo WhatsApp, seguido do celular e contato institucional. Avatar ausente usa o placeholder existente.
+- Troca de papel preserva os vinculos. Desativar responsavel move anuncios publicados para `pending_review` na mesma transacao e registra historico; vendidos, inativos e drafts mantem o status. Reativar nao republica automaticamente. Aprovacao/publicacao exige responsavel ativo quando houver vinculo.
+- Menu Minha conta oferece Meu perfil e anuncios para admin e corretor. No painel proprio, admin abre criacao/edicao administrativa.
+- Sem migracao de banco e sem atribuicao automatica de anuncios antigos a um admin.
+
 ## Foto de perfil - correcao em 2026-10-03
 
 - Causa do 401: AuthTokenInterceptor reconhecia apenas `/me` exato, sem enviar Authorization para `/me/avatar`, `/me/profile` e `/me/password`, mesmo com sessao salva.

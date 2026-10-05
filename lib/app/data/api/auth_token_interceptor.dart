@@ -12,6 +12,7 @@ class AuthTokenInterceptor extends Interceptor {
   static const Set<int> _sessionInvalidStatusCodes = <int>{401, 403, 404};
   static const Set<String> _protectedPaths = <String>{'/me', '/auth/logout'};
   static const Set<String> _protectedPathPrefixes = <String>{
+    '/me',
     '/admin',
     '/broker',
     '/media',

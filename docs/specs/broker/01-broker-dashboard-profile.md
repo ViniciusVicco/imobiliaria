@@ -1,8 +1,41 @@
 # Spec 1 - Painel Amigavel do Corretor
 
 ## Status
+- Atualizacao de 2026-10-02: troca de senha com validacao local e erros no dialogo; edicao administrativa de dados e foto; avatar unico e preservacao do formulario implementados.
+- Recuperacao de senha por email e foto durante cadastro continuam fora desta entrega.
+
+## Perfil e avatar: contrato implementado em 2026-10-02
+- Corretor ativo edita somente o proprio perfil por `/me/profile` e `/me/avatar`; o ID vem do JWT validado no backend. Campos desconhecidos sao rejeitados nessas rotas.
+- Admin ativo edita nome, celular, WhatsApp, CRECI e apresentacao por `PATCH /api/v1/admin/users/:id`. Email e codigo sao somente leitura no formulario.
+- `POST /api/v1/admin/users/:id/avatar` aceita o mesmo JSON do upload proprio e exige que o alvo seja corretor.
+- Nome deve ter pelo menos 2 caracteres; celular nao pode ficar vazio quando enviado. Os demais campos profissionais sao opcionais. PATCH permite atualizacao parcial.
+- Avatar usa `users/{userId}/avatar/current`, independente de nome/extensao; cada PUT substitui conteudo e Content-Type. URL recebe `?v={uuid}` e o objeto usa `Cache-Control: no-store`.
+- Uploads e migracao usam bloqueio de linha no Postgres para serializar alteracoes do mesmo usuario. O upload preserva a foto anterior quando a atualizacao do banco falha durante a transacao, mediante compensacao no R2.
+- Validacao inclui MIME permitido, assinatura basica JPEG/PNG/WebP, base64 e limite configurado em `R2_MAX_IMAGE_SIZE_MB`. O limite HTTP considera a expansao base64; excesso retorna 413.
+- Upload atualiza apenas a foto no Flutter. Cancelar o formulario restaura os textos e mantem a foto ja salva. O seletor permite uma imagem e trata cancelamento.
+- Apos confirmar a referencia no banco, arquivos antigos da mesma pasta sao removidos. Falha de limpeza e registrada no backend e pode ser repetida pelo comando abaixo; a foto nova continua valida.
+- Nao ha retencao de 7 dias para avatares. A politica de midia de imoveis nao muda.
+
+### Migracao e verificacao operacional
+Na pasta `backend`:
+```sh
+npm run avatars:migrate
+npm run avatars:migrate -- --apply
+```
+O primeiro comando apenas lista usuarios candidatos. O segundo copia o avatar legado para a chave fixa, atualiza a referencia e limpa os antigos. Pode ser repetido para concluir limpezas interrompidas. URLs externas ou fora da pasta do usuario sao recusadas. Disponibilizar as novas rotas antes de executar a migracao; manter o cache do CDN respeitando `no-store`.
+
+Banco e R2 sao sistemas separados: falha no commit ou na compensacao pode exigir repetir a operacao e conferir os logs. Os testes usam substitutos de banco/R2; nao comprovam conectividade ou permissoes do bucket real. A migracao nao foi executada sobre dados reais nesta entrega.
+
+### Validacao desta entrega
+- `npm run build`: passou.
+- `npm test`: 9 testes passaram, incluindo autorizacao, login apos troca de senha, formato/tamanho, substituicao concorrente simulada, compensacao e migracao repetivel.
+- `flutter test --no-pub`: 47 testes passaram; inclui perfil/admin nas larguras 390 e 1440 e preservacao dos textos.
+- `flutter build web --no-pub`: passou.
+- Analise direcionada dos arquivos de perfil/admin: sem problemas. A analise Flutter global tem avisos preexistentes, incluindo o uso de `dart:html` no seletor Web.
+- Navegador integrado indisponivel nesta sessao; layout e interacoes verificados por testes de widgets, sem teste manual com R2 real.
+
 - Painel `/broker`, tabs de imoveis/perfil, perfil via `/me/*` e upload de avatar ja estao implementados no Flutter/backend.
-- Pendente: notificacao de venda por e-mail para admins ativos e cobertura de testes.
+- Pendente nesta spec: notificacao de venda por e-mail para admins ativos e testes desse fluxo. Perfil, senha e avatar possuem cobertura.
 
 ## Contexto
 O corretor precisa de uma experiencia mais direta apos o login, focada nas duas acoes que ele mais usa:
@@ -24,7 +57,7 @@ Em escopo:
 - Manter arquitetura Flutter `Widget -> Controller -> UseCase -> Repository -> Datasource`.
 
 Fora de escopo:
-- Painel admin.
+- Reformulacao geral do painel admin; a edicao de perfil/foto na lista de corretores esta incluida nesta entrega.
 - CRUD completo de usuarios admin.
 - Recuperacao de senha por email.
 - Edicao de email pelo corretor.
@@ -198,7 +231,7 @@ Resposta:
   "phone": "(63) 99999-0000",
   "whatsapp": "(63) 99999-1111",
   "creci": "TO-00000",
-  "avatarUrl": "https://cdn.seletta.../avatars/user_id/avatar.webp",
+  "avatarUrl": "https://cdn.seletta.../users/user_id/avatar/current?v=version",
   "role": "broker",
   "isActive": true
 }
@@ -232,7 +265,7 @@ Resposta atual (perfil atualizado, sem senha/hash):
   "phone": "(63) 99999-0000",
   "whatsapp": "(63) 99999-1111",
   "creci": "TO-00000",
-  "avatarUrl": "https://cdn.seletta.../avatars/user_id/avatar.webp",
+  "avatarUrl": "https://cdn.seletta.../users/user_id/avatar/current?v=version",
   "role": "broker",
   "isActive": true
 }
@@ -254,14 +287,14 @@ Regras:
 - Reaproveitar configuracao R2 do backend.
 - Aceitar apenas MIME types de imagem permitidos.
 - Validar tamanho maximo.
-- Gerar storage key em `media/users/{userId}/avatar/...`.
+- Usar storage key fixa `users/{userId}/avatar/current`; substituir a foto anterior.
 - Atualizar `users.avatar_url`.
 - Retornar perfil atualizado ou ao menos `avatarUrl`.
 
 Resposta minima:
 ```json
 {
-  "avatarUrl": "https://cdn.seletta.../media/users/user_id/avatar.webp"
+  "avatarUrl": "https://cdn.seletta.../users/user_id/avatar/current?v=version"
 }
 ```
 
@@ -413,3 +446,16 @@ Atualizar rota de status de imovel:
 - Avatar faz upload real via backend/R2 e atualiza imediatamente.
 - Troca de senha exige senha atual.
 - Venda sinalizada notifica admins por e-mail.
+
+## Responsavel pelo anuncio - 2026-10-03
+
+- Admin tambem atua como corretor. Criacao administrativa e draft vinculam ao admin autenticado por padrao; outro responsavel exige selecao explicita.
+- Editar ou aprovar nao altera o responsavel. PATCH sem `brokerId` preserva o vinculo atual, inclusive quando e nulo; strings vazias sao rejeitadas.
+- Formulario so envia `brokerId` quando o usuario seleciona outro responsavel. Lista especifica `/admin/property-responsibles` inclui corretores e admins ativos, ordenados por nome e id, sem mudar a lista de gerenciamento de corretores.
+- Anuncios antigos sem responsavel continuam institucionais ate atribuicao explicita. Responsavel inativo continua identificado no formulario, mas nao pode ser selecionado para transferencia.
+- Foto e nome sao resolvidos pelo perfil atual do responsavel, independentemente do telefone. WhatsApp tem prioridade para contato pelo WhatsApp, seguido do celular e contato institucional. Avatar ausente usa o placeholder existente.
+- Troca de papel preserva os vinculos. Desativar responsavel move anuncios publicados para `pending_review` na mesma transacao e registra historico; vendidos, inativos e drafts mantem o status. Reativar nao republica automaticamente. Aprovacao/publicacao exige responsavel ativo quando houver vinculo.
+- Menu Minha conta oferece Meu perfil e anuncios para admin e corretor. No painel proprio, admin abre criacao/edicao administrativa.
+- Sem migracao de banco e sem atribuicao automatica de anuncios antigos a um admin.
+
+Validacao desta atualizacao: 15 testes backend e 50 testes Flutter passaram; builds backend e Web passaram. Flutter usado: `C:/Users/vinic/Documents/flutter/bin/flutter.bat` (3.35.3), correspondente ao package_config do projeto. A analise das alteracoes nao aponta erros; permanecem avisos informativos anteriores no formulario de imoveis. Testes backend usam substitutos de banco e R2, sem alterar dados reais.

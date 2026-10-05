@@ -150,8 +150,8 @@ class _NavigationLinks extends StatelessWidget {
         label: 'Novidades na planta',
       ),
       _NavigationLinkButton(onPressed: onContactPressed, label: 'Contatos'),
-      _NavigationLinkButton(onPressed: onAboutPressed, label: 'Sobre nos'),
-      _NavigationLinkButton(onPressed: onMissionPressed, label: 'Missao'),
+      _NavigationLinkButton(onPressed: onAboutPressed, label: 'Sobre nós'),
+      _NavigationLinkButton(onPressed: onMissionPressed, label: 'Missão'),
     ];
 
     if (isCompact) {

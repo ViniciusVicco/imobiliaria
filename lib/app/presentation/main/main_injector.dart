@@ -1,3 +1,5 @@
+import 'package:imobiliaria/app/domain/admin/usecases/get_property_responsibles_use_case.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/edit_admin_broker_use_case.dart';
 import 'package:dio/dio.dart';
 import 'package:imobiliaria/app/data/property_segments/repositories/property_detail_repository.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_property_detail_use_case.dart';
@@ -122,6 +124,8 @@ class MainInjector extends ModuleInjector<MainModule> {
         store: get<AdminBrokersStore>(),
         getAdminBrokers: get<GetAdminBrokersUseCase>(),
         createAdminBroker: get<CreateAdminBrokerUseCase>(),
+        updateAdminBroker: get<UpdateAdminBrokerUseCase>(),
+        uploadAdminBrokerAvatar: get<UploadAdminBrokerAvatarUseCase>(),
       ),
     );
     registerFactory(
@@ -151,7 +155,7 @@ class MainInjector extends ModuleInjector<MainModule> {
         store: get<PropertyFormStore>(),
         getBrokerProperty: get<GetBrokerPropertyUseCase>(),
         getAdminProperty: get<GetAdminPropertyUseCase>(),
-        getAdminBrokers: get<GetAdminBrokersUseCase>(),
+        getPropertyResponsibles: get<GetPropertyResponsiblesUseCase>(),
         saveBrokerProperty: get<SaveBrokerPropertyUseCase>(),
         saveAdminProperty: get<SaveAdminPropertyUseCase>(),
         updateBrokerPropertyStatus: get<UpdateBrokerPropertyStatusUseCase>(),
@@ -264,6 +268,19 @@ class MainInjector extends ModuleInjector<MainModule> {
 
   @override
   void usecases() {
+    registerFactory(
+      () => GetPropertyResponsiblesUseCase(
+        repository: get<AdminBrokersRepository>(),
+      ),
+    );
+    registerFactory(
+      () => UpdateAdminBrokerUseCase(repository: get<AdminBrokersRepository>()),
+    );
+    registerFactory(
+      () => UploadAdminBrokerAvatarUseCase(
+        repository: get<AdminBrokersRepository>(),
+      ),
+    );
     registerFactory(
       () =>
           GetPropertyDetailUseCase(repository: get<PropertyDetailRepository>()),

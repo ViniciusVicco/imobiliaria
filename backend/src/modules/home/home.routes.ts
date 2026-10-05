@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import { prisma } from '../../shared/database/prisma.js';
+import { brandContent } from '../../shared/brand-content.js';
 
 const featuredQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(24).default(6),
@@ -23,8 +24,8 @@ export async function homeRoutes(app: FastifyInstance) {
     }
 
     return {
-      mission: content.mission,
-      about: content.about,
+      ...brandContent,
+      about: brandContent.vision,
       contact: {
         phone: content.contactPhone,
         email: content.contactEmail,

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:legend_core/legend_core.dart';
 
 class UserProfileDatasource {
@@ -53,6 +54,10 @@ class UserProfileDatasource {
   }) async {
     final response = await _restClient.post<Map<String, dynamic>>(
       '/me/avatar',
+      options: Options(
+        sendTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 90),
+      ),
       data: <String, dynamic>{
         'fileName': fileName,
         'mimeType': mimeType,

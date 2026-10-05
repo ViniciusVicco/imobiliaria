@@ -10,7 +10,7 @@ const { propertiesRoutes } = await import('../src/modules/properties/properties.
 
 test('public detail contract, publication filter, media authorization and contact fallback', async () => {
   let available = true;
-  let broker: { name: string; phone: string | null; avatarUrl: string } | null = {
+  let broker: { name: string; phone: string | null; avatarUrl: string; whatsapp?: string; isActive?: boolean } | null = {
     name: 'Corretor', phone: '5563999999999', avatarUrl: 'https://example.com/avatar.jpg',
   };
   const originalProperty = prisma.property.findFirst;
@@ -46,9 +46,20 @@ test('public detail contract, publication filter, media authorization and contac
     assert.equal(json.facts.totalAreaM2, 252);
     broker = { name: 'Sem telefone', phone: null, avatarUrl: 'private-avatar' };
     const fallback = (await app.inject('/api/v1/properties/property')).json().brokerContact;
-    assert.equal(fallback.name, 'Seletta');
+    assert.equal(fallback.name, 'Sem telefone');
     assert.equal(fallback.whatsapp, '5563888888888');
-    assert.equal(fallback.avatarUrl, null);
+    assert.equal(fallback.avatarUrl, 'private-avatar');
+    broker.whatsapp = '5563777777777';
+    assert.equal((await app.inject('/api/v1/properties/property')).json().brokerContact.whatsapp, broker.whatsapp);
+    broker.phone = '5563666666666';
+    assert.equal((await app.inject('/api/v1/properties/property')).json().brokerContact.whatsapp, broker.whatsapp);
+    broker.avatarUrl = 'updated-avatar';
+    assert.equal((await app.inject('/api/v1/properties/property')).json().brokerContact.avatarUrl, 'updated-avatar');
+    broker.isActive = false;
+    const inactive = (await app.inject('/api/v1/properties/property')).json().brokerContact;
+    assert.equal(inactive.name, 'Seletta');
+    assert.equal(inactive.avatarUrl, null);
+    assert.equal(inactive.whatsapp, '5563888888888');
     broker = null;
     assert.equal((await app.inject('/api/v1/properties/property')).json().brokerContact.name, 'Seletta');
     available = false;

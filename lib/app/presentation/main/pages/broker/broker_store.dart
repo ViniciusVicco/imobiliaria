@@ -72,11 +72,20 @@ class BrokerStore extends Store {
 
   void setProfileSaving(bool value) {
     isSavingProfile = value;
+    if (value) errorMessage = null;
+    state.updateState(newState: AppStateEnum.hasSuccess);
+  }
+
+  void setAvatar(String avatarUrl) {
+    profile = profile?.copyWith(avatarUrl: avatarUrl);
+    originalProfile = originalProfile?.copyWith(avatarUrl: avatarUrl);
+    errorMessage = null;
     state.updateState(newState: AppStateEnum.hasSuccess);
   }
 
   void setAvatarUploading(bool value) {
     isUploadingAvatar = value;
+    if (value) errorMessage = null;
     state.updateState(newState: AppStateEnum.hasSuccess);
   }
 

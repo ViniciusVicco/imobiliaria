@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:imobiliaria/app/data/api/admin_endpoints.dart';
 import 'package:legend_core/legend_core.dart';
 
@@ -7,12 +8,26 @@ class AdminBrokersDatasource with AdminEndpoints {
 
   final RestClient _restClient;
 
+  Future<DataSourceResponse<List<Map<String, dynamic>>>>
+  getPropertyResponsibles() async {
+    final response = await _restClient.get<Map<String, dynamic>>(
+      '/admin/property-responsibles',
+    );
+    final items =
+        response.data?['items'] as List<dynamic>? ?? const <dynamic>[];
+    return DataSourceResponse(
+      data: items.cast<Map<String, dynamic>>(),
+      hasSuccess: response.statusCode == 200 && response.data != null,
+    );
+  }
+
   Future<DataSourceResponse<List<Map<String, dynamic>>>> getBrokers() async {
     final response = await _restClient.get<Map<String, dynamic>>(
       adminUsers,
       queryParameters: <String, dynamic>{'role': 'broker'},
     );
-    final items = response.data?['items'] as List<dynamic>? ?? const <dynamic>[];
+    final items =
+        response.data?['items'] as List<dynamic>? ?? const <dynamic>[];
 
     return DataSourceResponse<List<Map<String, dynamic>>>(
       data: items.cast<Map<String, dynamic>>(),
@@ -25,7 +40,8 @@ class AdminBrokersDatasource with AdminEndpoints {
     final response = await _restClient.get<Map<String, dynamic>>(
       brokersPropertySummary,
     );
-    final items = response.data?['items'] as List<dynamic>? ?? const <dynamic>[];
+    final items =
+        response.data?['items'] as List<dynamic>? ?? const <dynamic>[];
 
     return DataSourceResponse<List<Map<String, dynamic>>>(
       data: items.cast<Map<String, dynamic>>(),
@@ -42,6 +58,38 @@ class AdminBrokersDatasource with AdminEndpoints {
     );
 
     return DataSourceResponse<Map<String, dynamic>>(
+      data: response.data ?? const <String, dynamic>{},
+      hasSuccess: response.statusCode == 200 && response.data != null,
+    );
+  }
+
+  Future<DataSourceResponse<Map<String, dynamic>>> updateBroker(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _restClient.patch<Map<String, dynamic>>(
+      '$adminUsers/$id',
+      data: data,
+    );
+    return DataSourceResponse(
+      data: response.data ?? const <String, dynamic>{},
+      hasSuccess: response.statusCode == 200 && response.data != null,
+    );
+  }
+
+  Future<DataSourceResponse<Map<String, dynamic>>> uploadAvatar(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _restClient.post<Map<String, dynamic>>(
+      '$adminUsers/$id/avatar',
+      options: Options(
+        sendTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 90),
+      ),
+      data: data,
+    );
+    return DataSourceResponse(
       data: response.data ?? const <String, dynamic>{},
       hasSuccess: response.statusCode == 200 && response.data != null,
     );

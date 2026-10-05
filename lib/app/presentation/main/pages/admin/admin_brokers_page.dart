@@ -1,3 +1,4 @@
+import 'admin_broker_edit_dialog.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/admin/entities/admin_broker_entity.dart';
@@ -67,6 +68,7 @@ class _AdminBrokersPageState
                     ),
                     AppStateEnum.hasSuccess => _AdminBrokersList(
                       brokers: controller.store.brokers,
+                      onEdit: (broker) => _editBroker(context, broker),
                     ),
                     _ => const SizedBox.shrink(),
                   },
@@ -79,13 +81,26 @@ class _AdminBrokersPageState
     );
   }
 
+  Future<void> _editBroker(
+    BuildContext context,
+    AdminBrokerEntity broker,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          AdminBrokerEditDialog(controller: controller, broker: broker),
+    );
+    if (mounted) await controller.loadBrokers();
+  }
+
   Future<void> _openCreateBrokerDialog(BuildContext context) async {
     final wasCreated = await showDialog<bool>(
       context: context,
       builder: (context) => _CreateBrokerDialog(controller: controller),
     );
 
-    if (wasCreated == true && mounted) {
+    if (wasCreated == true && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Corretor criado e convite enviado.')),
       );
@@ -94,9 +109,10 @@ class _AdminBrokersPageState
 }
 
 class _AdminBrokersList extends StatelessWidget {
-  const _AdminBrokersList({required this.brokers});
+  const _AdminBrokersList({required this.brokers, required this.onEdit});
 
   final List<AdminBrokerEntity> brokers;
+  final ValueChanged<AdminBrokerEntity> onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +156,11 @@ class _AdminBrokersList extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  tooltip: 'Editar corretor',
+                  onPressed: () => onEdit(broker),
+                  icon: const Icon(Icons.edit_outlined),
                 ),
                 const SizedBox(width: DSSpacing.md),
                 Text(

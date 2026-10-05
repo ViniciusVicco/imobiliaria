@@ -319,17 +319,19 @@ function normalizePropertyType(propertyType?: string) {
 }
 
 function mapBrokerContact(
-  broker: { name: string; phone: string | null; avatarUrl?: string | null } | null,
+  broker: { name: string; phone: string | null; whatsapp?: string | null; avatarUrl?: string | null; isActive?: boolean } | null,
   brandContent: { contactWhatsapp: string; contactPhone: string } | null,
 ) {
-  const brokerPhone = broker?.phone?.trim();
-  const fallbackPhone = brandContent?.contactWhatsapp || brandContent?.contactPhone || '';
-
+  const responsible = broker?.isActive === false ? null : broker;
+  const phone = responsible?.phone?.trim() || '';
+  const whatsapp = responsible?.whatsapp?.trim() || '';
+  const fallbackPhone = brandContent?.contactPhone?.trim() || brandContent?.contactWhatsapp?.trim() || '';
+  const fallbackWhatsapp = brandContent?.contactWhatsapp?.trim() || fallbackPhone;
   return {
-    name: brokerPhone ? broker?.name ?? '' : 'Seletta',
-    phone: brokerPhone || fallbackPhone,
-    whatsapp: brokerPhone || fallbackPhone,
-    avatarUrl: brokerPhone ? broker?.avatarUrl ?? null : null,
+    name: responsible?.name || 'Seletta',
+    phone: phone || whatsapp || fallbackPhone,
+    whatsapp: whatsapp || phone || fallbackWhatsapp,
+    avatarUrl: responsible?.avatarUrl || null,
   };
 }
 

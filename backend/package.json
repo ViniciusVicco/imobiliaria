@@ -9,7 +9,9 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "avatars:migrate": "tsx src/scripts/migrate-avatars.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",

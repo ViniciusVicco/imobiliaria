@@ -1,3 +1,5 @@
+import { AvatarError } from './shared/users/avatar.js';
+import { R2ConfigurationError } from './shared/storage/r2-client.js';
 import cors from '@fastify/cors';
 import { Prisma } from '@prisma/client';
 import Fastify from 'fastify';
@@ -36,6 +38,15 @@ export async function buildApp() {
   app.setErrorHandler((error, request, reply) => {
     request.log.error({ err: error }, 'request failed');
 
+    if (error instanceof AvatarError) {
+      return sendApiError({ reply, statusCode: error.statusCode, code: error.code, message: error.message });
+    }
+    if (error instanceof R2ConfigurationError) {
+      return sendApiError({ reply, statusCode: 502, code: 'R2_NOT_CONFIGURED', message: error.message });
+    }
+    if (error instanceof Error && 'code' in error && error.code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
+      return sendApiError({ reply, statusCode: 413, code: 'PAYLOAD_TOO_LARGE', message: 'Arquivo acima do tamanho permitido.' });
+    }
     if (error instanceof ZodError) {
       return sendApiError({
         reply,

@@ -1,5 +1,6 @@
 import {
   CopyObjectCommand,
+  ListObjectsV2Command,
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
@@ -35,10 +36,12 @@ export async function uploadR2Object({
   storageKey,
   body,
   contentType,
+  cacheControl,
 }: {
   storageKey: string;
   body: Buffer;
   contentType: string;
+  cacheControl?: string;
 }) {
   await getR2Client().send(
     new PutObjectCommand({
@@ -46,6 +49,7 @@ export async function uploadR2Object({
       Key: storageKey,
       Body: body,
       ContentType: contentType,
+      CacheControl: cacheControl,
     }),
   );
 }
@@ -133,4 +137,19 @@ function encodeR2CopySourceKey(storageKey: string) {
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/');
+}
+
+export async function listR2Objects(prefix: string) {
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const page = await getR2Client().send(new ListObjectsV2Command({
+      Bucket: env.R2_BUCKET_NAME, Prefix: prefix, ContinuationToken: continuationToken,
+    }));
+    for (const object of page.Contents ?? []) {
+      if (object.Key?.startsWith(prefix)) keys.push(object.Key);
+    }
+    continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (continuationToken);
+  return keys;
 }

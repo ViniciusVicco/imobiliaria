@@ -1,3 +1,5 @@
+import { profileFields } from '../../shared/users/profile-schema.js';
+import { avatarBodyLimit, uploadAvatarBodySchema, replaceAvatar, cleanupLegacyAvatars } from '../../shared/users/avatar.js';
 import type { Prisma, UserRole } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -26,8 +28,11 @@ const createUserBodySchema = z.object({
 });
 
 const updateUserBodySchema = z.object({
-  name: z.string().trim().min(2).optional(),
-  phone: z.string().trim().nullable().optional(),
+  name: profileFields.name.optional(),
+  phone: profileFields.phone.optional(),
+  whatsapp: profileFields.whatsapp.optional(),
+  creci: profileFields.creci.optional(),
+  about: profileFields.about.optional(),
   role: userRoleSchema.optional(),
   isActive: z.boolean().optional(),
 });
@@ -41,6 +46,14 @@ const paramsSchema = z.object({
 });
 
 export async function adminUsersRoutes(app: FastifyInstance) {
+  app.get('/admin/property-responsibles', { preHandler: requireActiveAdmin }, async () => {
+    const users = await prisma.user.findMany({
+      where: { isActive: true, role: { in: ['broker', 'admin'] } },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    });
+    return { items: users.map(toAdminUserResponse) };
+  });
+
   app.get('/admin/users', { preHandler: requireActiveAdmin }, async (request) => {
     const query = listUsersQuerySchema.parse(request.query);
     const where = buildUserWhere(query);
@@ -130,20 +143,47 @@ export async function adminUsersRoutes(app: FastifyInstance) {
       });
       if (guardResult) return sendApiError({ reply, ...guardResult });
 
-      const user = await prisma.user.update({
-        where: { id: params.id },
-        data: {
+      const data = {
           ...(body.name ? { name: body.name } : {}),
           ...(body.phone !== undefined ? { phone: body.phone?.trim() || null } : {}),
+          ...(body.whatsapp !== undefined ? { whatsapp: body.whatsapp || null } : {}),
+          ...(body.creci !== undefined ? { creci: body.creci || null } : {}),
+          ...(body.about !== undefined ? { about: body.about || null } : {}),
           ...(body.role ? { role: body.role } : {}),
           ...(body.isActive !== undefined ? { isActive: body.isActive } : {}),
           updatedBy: currentUser.id,
-        },
-      });
+
+      };
+      const user = body.isActive === false
+        ? await prisma.$transaction(async (tx) => {
+            const updated = await tx.user.update({ where: { id: params.id }, data });
+            const properties = await tx.property.findMany({
+              where: { brokerId: params.id, status: 'published' }, select: { id: true },
+            });
+            await tx.property.updateMany({
+              where: { brokerId: params.id, status: 'published' }, data: { status: 'pending_review' },
+            });
+            if (properties.length) await tx.propertyStatusHistory.createMany({
+              data: properties.map(({ id }) => ({ propertyId: id, actorId: currentUser.id,
+                fromStatus: 'published' as const, toStatus: 'pending_review' as const, source: 'responsible_deactivated' })),
+            });
+            return updated;
+          })
+        : await prisma.user.update({ where: { id: params.id }, data });
 
       return toAdminUserResponse(user);
     },
   );
+
+  app.post('/admin/users/:id/avatar',
+    { preHandler: requireActiveAdmin, bodyLimit: avatarBodyLimit() }, async (request) => {
+      const { id } = paramsSchema.parse(request.params);
+      const user = await replaceAvatar(id, request.authenticatedUser!.id,
+        uploadAvatarBodySchema.parse(request.body), true);
+      try { await cleanupLegacyAvatars(id); }
+      catch (err) { request.log.error({ err, userId: id }, 'Avatar cleanup pending; retry maintenance command'); }
+      return toAdminUserResponse(user);
+    });
 
   app.patch(
     '/admin/users/:id/password',
@@ -252,6 +292,11 @@ function toAdminUserResponse(user: {
   name: string;
   email: string;
   phone: string | null;
+  whatsapp?: string | null;
+  creci?: string | null;
+  about?: string | null;
+  avatarUrl?: string | null;
+  brokerCode?: string | null;
   role: UserRole;
   isActive: boolean;
   createdAt: Date;
@@ -263,6 +308,11 @@ function toAdminUserResponse(user: {
     name: user.name,
     email: user.email,
     phone: user.phone ?? '',
+    whatsapp: user.whatsapp ?? '',
+    creci: user.creci ?? '',
+    about: user.about ?? '',
+    avatarUrl: user.avatarUrl ?? '',
+    brokerCode: user.brokerCode ?? '',
     role: user.role,
     isActive: user.isActive,
     createdAt: user.createdAt.toISOString(),

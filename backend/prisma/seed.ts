@@ -1,3 +1,4 @@
+import { brandContent } from '../src/shared/brand-content.js';
 import { PrismaClient } from '@prisma/client';
 
 import { env } from '../src/config/env.js';
@@ -251,10 +252,8 @@ async function main() {
   await prisma.brandContent.upsert({
     where: { id: 'home' },
     update: {
-      mission:
-        'Conectar pessoas a imoveis em Palmas com clareza, criterio e acompanhamento humano.',
-      about:
-        'A Seletta atua na curadoria de oportunidades residenciais, comerciais e de investimento em Palmas e regiao.',
+      mission: brandContent.mission,
+      about: brandContent.vision,
       contactPhone: '(63) 3000-0000',
       contactEmail: 'contato@seletta.com.br',
       contactWhatsapp: '(63) 99997-3336',
@@ -265,10 +264,8 @@ async function main() {
     },
     create: {
       id: 'home',
-      mission:
-        'Conectar pessoas a imoveis em Palmas com clareza, criterio e acompanhamento humano.',
-      about:
-        'A Seletta atua na curadoria de oportunidades residenciais, comerciais e de investimento em Palmas e regiao.',
+      mission: brandContent.mission,
+      about: brandContent.vision,
       contactPhone: '(63) 3000-0000',
       contactEmail: 'contato@seletta.com.br',
       contactWhatsapp: '(63) 99997-3336',

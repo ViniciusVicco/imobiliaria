@@ -70,11 +70,21 @@ class _SessionActionState
           Module.get<MainModule>().navigator.pushNamed(
             user.isAdmin ? MainRoutes.admin : MainRoutes.broker,
           );
+        } else if (value == 'profile') {
+          Module.get<MainModule>().navigator.pushNamed(MainRoutes.broker);
         } else if (value == 'logout') {
           _confirmLogout();
         }
       },
       itemBuilder: (context) => <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(
+          value: 'profile',
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.person_outline),
+            title: Text('Meu perfil e anuncios'),
+          ),
+        ),
         const PopupMenuItem<String>(
           value: 'dashboard',
           child: ListTile(

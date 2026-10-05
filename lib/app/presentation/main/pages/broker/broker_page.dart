@@ -1,3 +1,5 @@
+import '../widgets/profile/profile_photo_editor.dart';
+import 'helpers/property_image_picker_types.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
@@ -65,10 +67,13 @@ class _BrokerPageState
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: _TopTabs(
-                              selectedIndex: _tabIndex,
-                              onChanged: (index) =>
-                                  setState(() => _tabIndex = index),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: _TopTabs(
+                                selectedIndex: _tabIndex,
+                                onChanged: (index) =>
+                                    setState(() => _tabIndex = index),
+                              ),
                             ),
                           ),
                           const SizedBox(width: DSSpacing.md),
@@ -79,7 +84,7 @@ class _BrokerPageState
                       if (_tabIndex == 0)
                         _PropertiesTab(controller: controller)
                       else
-                        _ProfileTab(controller: controller),
+                        BrokerProfileTab(controller: controller),
                     ],
                   ),
                 ),
@@ -579,8 +584,8 @@ class _CardMetric extends StatelessWidget {
   }
 }
 
-class _ProfileTab extends StatelessWidget {
-  const _ProfileTab({required this.controller});
+class BrokerProfileTab extends StatelessWidget {
+  const BrokerProfileTab({super.key, required this.controller});
 
   final BrokerController controller;
 
@@ -600,7 +605,8 @@ class _ProfileTab extends StatelessWidget {
               _ProfileSummaryCard(
                 profile: profile,
                 isUploading: store.isUploadingAvatar,
-                onAvatarTap: () => _uploadAvatar(context),
+                enabled: !store.isSavingProfile,
+                onUpload: (image) => _uploadAvatar(context, image),
               ),
               const SizedBox(height: 24),
               _SecurityCard(onPasswordTap: () => _changePassword(context)),
@@ -629,18 +635,23 @@ class _ProfileTab extends StatelessWidget {
     );
   }
 
-  Future<void> _uploadAvatar(BuildContext context) async {
-    final uploaded = await controller.pickAndUploadAvatar();
-    if (!context.mounted || !uploaded) return;
+  Future<bool> _uploadAvatar(
+    BuildContext context,
+    PickedPropertyImage image,
+  ) async {
+    final uploaded = await controller.uploadAvatar(image);
+    if (!context.mounted || !uploaded) return uploaded;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Avatar atualizado.')));
+    ).showSnackBar(const SnackBar(content: Text('Foto de perfil atualizada.')));
+    return true;
   }
 
   Future<void> _changePassword(BuildContext context) async {
     final changed = await showDialog<bool>(
       context: context,
-      builder: (_) => _PasswordDialog(controller: controller),
+      barrierDismissible: false,
+      builder: (_) => BrokerPasswordDialog(controller: controller),
     );
     if (!context.mounted || changed != true) return;
     ScaffoldMessenger.of(
@@ -653,36 +664,26 @@ class _ProfileSummaryCard extends StatelessWidget {
   const _ProfileSummaryCard({
     required this.profile,
     required this.isUploading,
-    required this.onAvatarTap,
+    required this.onUpload,
+    required this.enabled,
   });
 
   final UserProfileEntity profile;
   final bool isUploading;
-  final VoidCallback onAvatarTap;
+  final Future<bool> Function(PickedPropertyImage) onUpload;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return _Panel(
       child: Column(
         children: <Widget>[
-          InkWell(
-            onTap: isUploading ? null : onAvatarTap,
-            child: Stack(
-              alignment: Alignment.center,
-              children: <Widget>[
-                SizedBox(
-                  width: 190,
-                  height: 190,
-                  child: profile.avatarUrl.isEmpty
-                      ? const _AvatarFallback()
-                      : CachedNetworkImage(
-                          imageUrl: profile.avatarUrl,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                if (isUploading) const CircularProgressIndicator(),
-              ],
-            ),
+          ProfilePhotoEditor(
+            key: ValueKey(profile.id),
+            imageUrl: profile.avatarUrl,
+            isUploading: isUploading,
+            enabled: enabled,
+            onUpload: onUpload,
           ),
           const SizedBox(height: 24),
           Text(
@@ -831,26 +832,31 @@ class _ProfileForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
+        if (store.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              store.errorMessage!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
         _Panel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               _PanelTitle('Informacoes Profissionais'),
               const SizedBox(height: 42),
-              Row(
+              _ProfileFieldPair(
                 children: <Widget>[
-                  Expanded(
-                    child: _ProfileField(
-                      label: 'NOME COMPLETO',
-                      controller: store.nameController,
-                    ),
+                  _ProfileField(
+                    label: 'NOME COMPLETO',
+                    controller: store.nameController,
+                    readOnly: store.isSavingProfile,
                   ),
-                  const SizedBox(width: 48),
-                  Expanded(
-                    child: _ProfileField(
-                      label: 'CRECI (LICENCA PROFISSIONAL)',
-                      controller: store.creciController,
-                    ),
+                  _ProfileField(
+                    label: 'CRECI (LICENCA PROFISSIONAL)',
+                    controller: store.creciController,
+                    readOnly: store.isSavingProfile,
                   ),
                 ],
               ),
@@ -858,6 +864,7 @@ class _ProfileForm extends StatelessWidget {
               _ProfileField(
                 label: 'SOBRE',
                 controller: store.aboutController,
+                readOnly: store.isSavingProfile,
                 maxLines: 4,
               ),
             ],
@@ -870,23 +877,19 @@ class _ProfileForm extends StatelessWidget {
             children: <Widget>[
               _PanelTitle('Contatos Profissionais'),
               const SizedBox(height: 42),
-              Row(
+              _ProfileFieldPair(
                 children: <Widget>[
-                  Expanded(
-                    child: _ProfileField(
-                      label: 'WHATSAPP / MOBILE',
-                      controller: store.whatsappController,
-                      icon: Icons.phone_outlined,
-                    ),
+                  _ProfileField(
+                    label: 'WHATSAPP / MOBILE',
+                    controller: store.whatsappController,
+                    readOnly: store.isSavingProfile,
+                    icon: Icons.phone_outlined,
                   ),
-                  const SizedBox(width: 48),
-                  Expanded(
-                    child: _ProfileField(
-                      label: 'E-MAIL CORPORATIVO',
-                      initialValue: profile.email,
-                      readOnly: true,
-                      icon: Icons.mail_outline,
-                    ),
+                  _ProfileField(
+                    label: 'E-MAIL CORPORATIVO',
+                    initialValue: profile.email,
+                    readOnly: true,
+                    icon: Icons.mail_outline,
                   ),
                 ],
               ),
@@ -894,24 +897,30 @@ class _ProfileForm extends StatelessWidget {
               _ProfileField(
                 label: 'CELULAR',
                 controller: store.phoneController,
+                readOnly: store.isSavingProfile,
                 icon: Icons.smartphone_outlined,
               ),
             ],
           ),
         ),
         const SizedBox(height: 56),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 16,
+          runSpacing: 16,
           children: <Widget>[
             TextButton(
-              onPressed: store.hasProfileChanges
+              onPressed: store.hasProfileChanges && !store.isSavingProfile
                   ? controller.store.resetProfileForm
                   : null,
               child: const Text('CANCELAR'),
             ),
-            const SizedBox(width: 48),
+
             FilledButton.icon(
-              onPressed: store.hasProfileChanges && !store.isSavingProfile
+              onPressed:
+                  store.hasProfileChanges &&
+                      !store.isSavingProfile &&
+                      !store.isUploadingAvatar
                   ? () => _save(context)
                   : null,
               icon: const Icon(Icons.save_outlined, size: 15),
@@ -919,7 +928,7 @@ class _ProfileForm extends StatelessWidget {
                 store.isSavingProfile ? 'SALVANDO...' : 'SALVAR ALTERACOES',
               ),
               style: FilledButton.styleFrom(
-                fixedSize: const Size(300, 64),
+                minimumSize: const Size(200, 56),
                 textStyle: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
@@ -1015,74 +1024,101 @@ class _ProfileField extends StatelessWidget {
   }
 }
 
-class _PasswordDialog extends StatefulWidget {
-  const _PasswordDialog({required this.controller});
+class BrokerPasswordDialog extends StatefulWidget {
+  const BrokerPasswordDialog({super.key, required this.controller});
 
   final BrokerController controller;
 
   @override
-  State<_PasswordDialog> createState() => _PasswordDialogState();
+  State<BrokerPasswordDialog> createState() => _BrokerPasswordDialogState();
 }
 
-class _PasswordDialogState extends State<_PasswordDialog> {
+class _BrokerPasswordDialogState extends State<BrokerPasswordDialog> {
   final _currentController = TextEditingController();
   final _newController = TextEditingController();
   final _confirmationController = TextEditingController();
   bool _isSaving = false;
+  String? _error;
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Alterar senha'),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(
-              controller: _currentController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Senha atual'),
+    return PopScope(
+      canPop: !_isSaving,
+      child: AlertDialog(
+        title: const Text('Alterar senha'),
+        content: SingleChildScrollView(
+          child: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                if (_error != null) ...[
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                TextField(
+                  enabled: !_isSaving,
+                  controller: _currentController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Senha atual'),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  enabled: !_isSaving,
+                  controller: _newController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Nova senha'),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  enabled: !_isSaving,
+                  controller: _confirmationController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirmar nova senha',
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _newController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Nova senha'),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _confirmationController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirmar nova senha',
-              ),
-            ),
-          ],
+          ),
         ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: _isSaving
+                ? null
+                : () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: _isSaving ? null : _save,
+            child: Text(_isSaving ? 'Salvando...' : 'Salvar'),
+          ),
+        ],
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: _isSaving ? null : _save,
-          child: Text(_isSaving ? 'Salvando...' : 'Salvar'),
-        ),
-      ],
     );
   }
 
   Future<void> _save() async {
-    setState(() => _isSaving = true);
+    if (_isSaving) return;
+    setState(() {
+      _isSaving = true;
+      _error = null;
+    });
     final changed = await widget.controller.changePassword(
       currentPassword: _currentController.text,
       newPassword: _newController.text,
       newPasswordConfirmation: _confirmationController.text,
     );
     if (!mounted) return;
-    setState(() => _isSaving = false);
+    setState(() {
+      _isSaving = false;
+      _error = widget.controller.passwordError;
+    });
     if (changed) Navigator.of(context).pop(true);
   }
 
@@ -1123,22 +1159,6 @@ class _ImagePlaceholder extends StatelessWidget {
         Icons.image_outlined,
         color: DSColors.secondary,
         size: 40,
-      ),
-    );
-  }
-}
-
-class _AvatarFallback extends StatelessWidget {
-  const _AvatarFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: DSColors.surfaceContainerHigh,
-      child: const Icon(
-        Icons.person_outline,
-        color: DSColors.secondary,
-        size: 60,
       ),
     );
   }
@@ -1187,4 +1207,27 @@ class _ErrorState extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ProfileFieldPair extends StatelessWidget {
+  const _ProfileFieldPair({required this.children});
+  final List<Widget> children;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      if (constraints.maxWidth < 500) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [children.first, const SizedBox(height: 24), children.last],
+        );
+      }
+      return Row(
+        children: [
+          Expanded(child: children.first),
+          const SizedBox(width: 32),
+          Expanded(child: children.last),
+        ],
+      );
+    },
+  );
 }

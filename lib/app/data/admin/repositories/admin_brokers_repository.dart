@@ -1,3 +1,4 @@
+import 'package:imobiliaria/app/domain/users/entities/user_profile_entity.dart';
 import 'package:dio/dio.dart';
 import 'package:imobiliaria/app/data/api/api_failure_mapper.dart';
 import 'package:imobiliaria/app/data/admin/datasources/admin_brokers_datasource.dart';
@@ -10,6 +11,30 @@ class AdminBrokersRepository {
   AdminBrokersRepository({required this.datasource});
 
   final AdminBrokersDatasource datasource;
+
+  Future<DualResponse<Failure, List<AdminBrokerEntity>>>
+  getPropertyResponsibles() async {
+    try {
+      final response = await datasource.getPropertyResponsibles();
+      if (!response.hasSuccess) return ErrorResponse(AdminBrokersFailure());
+      return SuccessResponse(
+        response.data
+            .map(
+              (json) =>
+                  AdminBrokerModel.fromJson(userJson: json, summaryJson: null),
+            )
+            .toList(),
+      );
+    } on DioException catch (error) {
+      return ErrorResponse(
+        AdminBrokersFailure(ApiFailureMapper.fromDioException(error)),
+      );
+    } catch (_) {
+      return ErrorResponse(
+        AdminBrokersFailure(ApiFailureMapper.unexpectedResponse()),
+      );
+    }
+  }
 
   Future<DualResponse<Failure, List<AdminBrokerEntity>>> getBrokers() async {
     try {
@@ -72,6 +97,44 @@ class AdminBrokersRepository {
       );
     } catch (_) {
       return ErrorResponse<Failure, AdminBrokerEntity>(
+        AdminBrokersFailure(ApiFailureMapper.unexpectedResponse()),
+      );
+    }
+  }
+
+  Future<DualResponse<Failure, AdminBrokerEntity>> updateBroker(
+    String id,
+    UserProfileUpdateEntity profile,
+  ) => _edit(() => datasource.updateBroker(id, profile.toJson()));
+
+  Future<DualResponse<Failure, AdminBrokerEntity>> uploadAvatar(
+    String id, {
+    required String fileName,
+    required String mimeType,
+    required String contentBase64,
+  }) => _edit(
+    () => datasource.uploadAvatar(id, {
+      'fileName': fileName,
+      'mimeType': mimeType,
+      'contentBase64': contentBase64,
+    }),
+  );
+
+  Future<DualResponse<Failure, AdminBrokerEntity>> _edit(
+    Future<DataSourceResponse<Map<String, dynamic>>> Function() request,
+  ) async {
+    try {
+      final response = await request();
+      if (!response.hasSuccess) return ErrorResponse(AdminBrokersFailure());
+      return SuccessResponse(
+        AdminBrokerModel.fromJson(userJson: response.data, summaryJson: null),
+      );
+    } on DioException catch (error) {
+      return ErrorResponse(
+        AdminBrokersFailure(ApiFailureMapper.fromDioException(error)),
+      );
+    } catch (_) {
+      return ErrorResponse(
         AdminBrokersFailure(ApiFailureMapper.unexpectedResponse()),
       );
     }

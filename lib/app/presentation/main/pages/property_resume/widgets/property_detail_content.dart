@@ -1,3 +1,4 @@
+import '../../widgets/profile/profile_avatar.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -269,23 +270,7 @@ class PropertyBrokerCard extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: _gold),
-          ),
-          child: property.avatarUrl.isEmpty
-              ? const Icon(Icons.person_outline)
-              : Image.network(
-                  property.avatarUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, error, stack) =>
-                      const Icon(Icons.person_outline),
-                ),
-        ),
+        ProfileAvatar(imageUrl: property.avatarUrl, borderColor: _gold),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

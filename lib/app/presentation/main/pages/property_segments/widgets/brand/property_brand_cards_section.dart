@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:imobiliaria/app/domain/property_segments/entities/brand_institutional_content.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/home_brand_content_entity.dart';
 
 class PropertyBrandCardsSection extends StatelessWidget {
@@ -19,40 +20,65 @@ class PropertyBrandCardsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final contact = content?.contact;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 860 ? 3 : 1;
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: columns,
-          mainAxisSpacing: DSSpacing.md,
-          crossAxisSpacing: DSSpacing.md,
-          childAspectRatio: columns == 1 ? 2.4 : 1.18,
-          children: <Widget>[
-            DSInfoCard(
-              key: contactKey,
-              title: 'Contatos',
-              body:
-                  '${contact?.phone ?? ''}\n${contact?.whatsapp ?? ''}\n${contact?.email ?? ''}',
-            ),
-            DSInfoCard(
-              key: aboutKey,
-              title: 'Sobre nos',
-              body:
-                  content?.about ??
-                  'Curadoria imobiliaria para clientes que valorizam contexto, criterio e clareza.',
-            ),
-            DSInfoCard(
-              key: missionKey,
-              title: 'Missao',
-              body:
-                  content?.mission ??
-                  'Conectar pessoas a imoveis com uma experiencia humana e objetiva.',
-            ),
-          ],
-        );
-      },
+    final values = content?.values ?? BrandInstitutionalContent.values;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Sobre nós',
+          key: aboutKey,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: DSSpacing.md),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cards = <Widget>[
+              DSInfoCard(
+                key: missionKey,
+                title: 'Missão',
+                body: content?.mission ?? BrandInstitutionalContent.mission,
+              ),
+              DSInfoCard(
+                title: 'Visão',
+                body: content?.vision ?? BrandInstitutionalContent.vision,
+              ),
+            ];
+            if (constraints.maxWidth < 860) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  cards.first,
+                  const SizedBox(height: DSSpacing.md),
+                  cards.last,
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: cards.first),
+                const SizedBox(width: DSSpacing.md),
+                Expanded(child: cards.last),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: DSSpacing.md),
+        DSInfoCard(
+          title: 'Valores',
+          body: [
+            for (var index = 0; index < values.length; index++)
+              '${index + 1}. ${values[index]}',
+          ].join('\n\n'),
+        ),
+        const SizedBox(height: DSSpacing.md),
+        DSInfoCard(
+          key: contactKey,
+          title: 'Contatos',
+          body:
+              '${contact?.phone ?? ''}\n${contact?.whatsapp ?? ''}\n${contact?.email ?? ''}',
+        ),
+      ],
     );
   }
 }

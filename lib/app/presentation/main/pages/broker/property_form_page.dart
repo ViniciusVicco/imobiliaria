@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:imobiliaria/app/domain/admin/entities/admin_broker_entity.dart';
+import 'widgets/property_responsible_dropdown.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
 import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
@@ -142,6 +142,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
   late final TextEditingController _tagsController;
   late String _segment;
   late String? _brokerId;
+  bool _responsibleChanged = false;
   late double _bedrooms;
   late double _bathrooms;
   late double _garageSpaces;
@@ -410,11 +411,16 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
         ),
         if (widget.isAdmin)
           _Section(
-            title: 'Corretor responsavel',
-            child: _BrokerDropdown(
+            title: 'Responsavel pelo anuncio',
+            child: PropertyResponsibleDropdown(
               brokers: widget.controller.store.brokers,
               value: _brokerId,
-              onChanged: (value) => _updateFormState(() => _brokerId = value),
+              currentName: widget.property.broker?.name,
+              isNew: widget.property.id.isEmpty,
+              onChanged: (value) => _updateFormState(() {
+                _brokerId = value;
+                _responsibleChanged = true;
+              }),
             ),
           ),
         _Section(
@@ -713,7 +719,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       tagSlugs: tags,
       isFeatured: _isFeatured,
       isNewDevelopment: _isNewDevelopment,
-      brokerId: widget.isAdmin ? _brokerId : null,
+      brokerId: widget.isAdmin && _responsibleChanged ? _brokerId : null,
       mediaIds: _isNew
           ? widget.property.media
                 .where((media) => media.isImage && media.status == 'active')
@@ -940,40 +946,6 @@ class _StatusChip extends StatelessWidget {
       'sold' => Icons.sell_outlined,
       _ => Icons.info_outline,
     };
-  }
-}
-
-class _BrokerDropdown extends StatelessWidget {
-  const _BrokerDropdown({
-    required this.brokers,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final List<AdminBrokerEntity> brokers;
-  final String? value;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasSelectedBroker = brokers.any((broker) => broker.id == value);
-    return DropdownButtonFormField<String?>(
-      value: hasSelectedBroker ? value : null,
-      decoration: const InputDecoration(labelText: 'Corretor responsavel'),
-      items: <DropdownMenuItem<String?>>[
-        const DropdownMenuItem<String?>(
-          value: null,
-          child: Text('Sem corretor responsavel'),
-        ),
-        ...brokers.map(
-          (broker) => DropdownMenuItem<String?>(
-            value: broker.id,
-            child: Text(broker.name),
-          ),
-        ),
-      ],
-      onChanged: onChanged,
-    );
   }
 }
 

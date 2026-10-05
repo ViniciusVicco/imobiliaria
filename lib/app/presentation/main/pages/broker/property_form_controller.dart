@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
-import 'package:imobiliaria/app/domain/admin/usecases/get_admin_brokers_use_case.dart';
+import 'package:imobiliaria/app/domain/admin/usecases/get_property_responsibles_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_admin_property_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/get_broker_property_use_case.dart';
 import 'package:imobiliaria/app/domain/broker/usecases/save_admin_property_use_case.dart';
@@ -23,7 +23,7 @@ class PropertyFormController extends Controller {
     required this.store,
     required this.getBrokerProperty,
     required this.getAdminProperty,
-    required this.getAdminBrokers,
+    required this.getPropertyResponsibles,
     required this.saveBrokerProperty,
     required this.saveAdminProperty,
     required this.updateBrokerPropertyStatus,
@@ -39,7 +39,7 @@ class PropertyFormController extends Controller {
   final PropertyFormStore store;
   final GetBrokerPropertyUseCase getBrokerProperty;
   final GetAdminPropertyUseCase getAdminProperty;
-  final GetAdminBrokersUseCase getAdminBrokers;
+  final GetPropertyResponsiblesUseCase getPropertyResponsibles;
   final SaveBrokerPropertyUseCase saveBrokerProperty;
   final SaveAdminPropertyUseCase saveAdminProperty;
   final UpdateBrokerPropertyStatusUseCase updateBrokerPropertyStatus;
@@ -100,7 +100,7 @@ class PropertyFormController extends Controller {
   }
 
   Future<void> loadBrokers() async {
-    final result = await getAdminBrokers.call();
+    final result = await getPropertyResponsibles.call();
     result.getResult(onSuccess: store.setBrokers, onError: (_) {});
   }
 

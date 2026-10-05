@@ -61,7 +61,7 @@ const propertyPayloadSchema = z.object({
   tagSlugs: z.array(z.string().trim().min(1)).default([]),
   isFeatured: z.boolean().default(false),
   isNewDevelopment: z.boolean().default(false),
-  brokerId: z.string().trim().optional(),
+  brokerId: z.string().trim().min(1).optional(),
   mediaIds: z.array(z.string().trim().min(1)).max(12).default([]),
   coverMediaId: z.string().trim().optional(),
   uploadSessionId: z.string().trim().optional(),
@@ -120,11 +120,11 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
   app.post(
     '/admin/properties/draft',
     { preHandler: requireActiveAdmin },
-    async () => {
+    async (request) => {
       const property = await prisma.property.create({
         data: {
           id: randomUUID(),
-          brokerId: null,
+          brokerId: request.authenticatedUser!.id,
           title: 'Novo imovel',
           description: '',
           segment: 'residential',
@@ -195,7 +195,7 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const property = await createPropertyWithTemporaryMedia({
         payload,
         brokerId,
-        status: 'pending_review',
+        status: request.authenticatedUser!.role === 'admin' ? 'published' : 'pending_review',
         uploadedBy: brokerId,
         reply,
       });
@@ -409,6 +409,8 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const adminId = request.authenticatedUser?.id ?? '';
       const property = await prisma.property.findUnique({ where: { id } });
       if (!property) return sendPropertyNotFound(reply);
+      const ownerError = await validateBrokerId(property.brokerId ?? undefined);
+      if (ownerError) return sendApiError({ reply, ...ownerError });
       const revision = await prisma.propertyRevision.findFirst({
         where: { propertyId: id, status: 'pending' },
         orderBy: { submittedAt: 'desc' },
@@ -522,7 +524,7 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const adminId = request.authenticatedUser?.id ?? '';
       const property = await createPropertyWithTemporaryMedia({
         payload,
-        brokerId: payload.brokerId ?? null,
+        brokerId: payload.brokerId ?? adminId,
         status: 'published',
         uploadedBy: adminId,
         reply,
@@ -556,7 +558,7 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       const property = await upsertPropertyWithMedia({
         id: params.id,
         payload,
-        brokerId: payload.brokerId ?? null,
+        brokerId: payload.brokerId,
       });
 
       return mapPropertyDetail(property);
@@ -574,6 +576,11 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
       });
 
       if (!existing) return sendPropertyNotFound(reply);
+
+      if (payload.status === 'published') {
+        const ownerError = await validateBrokerId(existing.brokerId ?? undefined);
+        if (ownerError) return sendApiError({ reply, ...ownerError });
+      }
 
       if (payload.status === 'pending_review' || payload.status === 'published') {
         const finalizationError = await validatePropertyReadyForPublication(
@@ -908,7 +915,7 @@ async function upsertPropertyWithMedia({
 }: {
   id?: string;
   payload: z.infer<typeof propertyPayloadSchema>;
-  brokerId: string | null;
+  brokerId: string | null | undefined;
   status?: PropertyStatus;
 }) {
   const propertyId = id ?? randomUUID();
@@ -922,7 +929,7 @@ async function upsertPropertyWithMedia({
       where: { id: propertyId },
       create: {
         id: propertyId,
-        brokerId,
+        brokerId: brokerId ?? null,
         title: payload.title,
         description: payload.description,
         segment: payload.segment,
@@ -1268,7 +1275,7 @@ async function validateBrokerId(brokerId?: string) {
   const broker = await prisma.user.findFirst({
     where: {
       id: brokerId,
-      role: 'broker',
+      role: { in: ['broker', 'admin'] },
       isActive: true,
     },
   });
@@ -1278,7 +1285,7 @@ async function validateBrokerId(brokerId?: string) {
   return {
     statusCode: 400,
     code: 'INVALID_BROKER',
-    message: 'Informe um corretor ativo para este imovel.',
+    message: 'Selecione um responsavel ativo (corretor ou admin) para este imovel.',
   };
 }
 
