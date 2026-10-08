@@ -41,7 +41,7 @@ class StockFilterPanel extends StatelessWidget {
       title: 'Filtrar imóveis a venda',
       submitLabel: 'Aplicar filtros',
       allowAll: true,
-      vertical: true,
+      threeColumnLayout: true,
       autoSubmitShortcuts: false,
       priceRangeMin: result?.priceRange.min,
       priceRangeMax: result?.priceRange.max,

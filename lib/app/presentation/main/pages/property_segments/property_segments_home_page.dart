@@ -173,7 +173,9 @@ class _PropertySegmentsHomePageState
     if (targetContext == null) return;
     Scrollable.ensureVisible(
       targetContext,
-      duration: const Duration(milliseconds: 450),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 450),
       curve: Curves.easeOutCubic,
     );
   }

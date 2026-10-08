@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/property_search_filters_entity.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/search_property_entity.dart';
@@ -169,6 +170,81 @@ void main() {
   });
 
   for (final width in [390.0, 800.0, 1440.0]) {
+    testWidgets('top filters use responsive columns at $width', (tester) async {
+      await tester.binding.setSurfaceSize(Size(width, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final query = TextEditingController();
+      final neighborhood = TextEditingController();
+      addTearDown(query.dispose);
+      addTearDown(neighborhood.dispose);
+      final filters = PropertySearchFiltersEntity.fromQueryParameters(
+        Uri.parse('/estoque?city=Palmas').queryParameters,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StockResults(
+              filters: StockFilterPanel(
+                filters: filters,
+                result: _result,
+                queryController: query,
+                blockOrNeighborhoodController: neighborhood,
+                onFiltersChanged: (_) {},
+                onSegmentChanged: (_) {},
+                onSubmit: () {},
+                onClear: () {},
+              ),
+              result: _result,
+              appliedFilters: filters,
+              canLoadMore: true,
+              isLoadingMore: false,
+              onLoadMore: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final expectedColumns = width >= 1000
+          ? 3
+          : width >= 700
+          ? 2
+          : 1;
+      expect(
+        tester
+            .widget<DSResponsiveFieldGrid>(find.byType(DSResponsiveFieldGrid))
+            .columns,
+        expectedColumns,
+      );
+      expect(
+        tester.getRect(find.byType(StockFilterPanel)).bottom,
+        lessThan(tester.getTopLeft(find.text('Nossos imóveis a venda')).dy),
+      );
+      await tester.ensureVisible(find.text('Mais filtros'));
+      await tester.tap(find.text('Mais filtros'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widgetList<DSResponsiveFieldGrid>(
+              find.byType(DSResponsiveFieldGrid),
+            )
+            .map((grid) => grid.columns),
+        everyElement(expectedColumns),
+      );
+      await tester.scrollUntilVisible(
+        find.text('Carregar mais'),
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Carregar mais').hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('results fit width $width', (tester) async {
       await tester.binding.setSurfaceSize(Size(width, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));

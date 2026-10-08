@@ -17,6 +17,7 @@ class StockResults extends StatelessWidget {
     this.errorMessage,
     this.onOpenFilters,
     this.onPropertyPressed,
+    this.filters,
   });
 
   final PropertySearchResultEntity? result;
@@ -27,6 +28,7 @@ class StockResults extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onOpenFilters;
   final ValueChanged<String>? onPropertyPressed;
+  final Widget? filters;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,13 @@ class StockResults extends StatelessWidget {
 
     return CustomScrollView(
       slivers: <Widget>[
+        if (filters != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: DSSpacing.lg),
+              child: filters,
+            ),
+          ),
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -76,92 +76,31 @@ class _PropertySearchPageState
 
           return DSPageLayoutContainer(
             padding: const EdgeInsets.all(DSSpacing.md),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = constraints.maxWidth >= 980;
-                final content = ValueListenableBuilder<bool>(
-                  valueListenable: controller.store.loadingMore,
-                  builder: (context, isLoadingMore, child) => StockResults(
-                    result: controller.store.result,
-                    appliedFilters: controller.store.appliedFilters,
-                    errorMessage: controller.store.errorMessage,
-                    canLoadMore: controller.store.canLoadMore,
-                    isLoadingMore: isLoadingMore,
-                    onLoadMore: controller.loadMore,
-                    onPropertyPressed: (id) => Module.get<MainModule>()
-                        .navigator
-                        .pushNamed(MainRoutes.propertyPath(id)),
-                    onOpenFilters: isDesktop ? null : _openMobileFilters,
-                  ),
-                );
-
-                if (!isDesktop) return content;
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(
-                      width: 340,
-                      height:
-                          MediaQuery.sizeOf(context).height -
-                          kToolbarHeight -
-                          (DSSpacing.md * 2),
-                      child: SingleChildScrollView(
-                        child: StockFilterPanel(
-                          filters: controller.store.draftFilters,
-                          result: controller.store.result,
-                          queryController: _queryController,
-                          blockOrNeighborhoodController:
-                              _blockOrNeighborhoodController,
-                          onFiltersChanged: controller.updateDraftFilters,
-                          onSegmentChanged: controller.updateDraftSegment,
-                          onSubmit: controller.applyFilters,
-                          onClear: controller.clearFilters,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: DSSpacing.lg),
-                    Expanded(child: content),
-                  ],
-                );
-              },
+            child: ValueListenableBuilder<bool>(
+              valueListenable: controller.store.loadingMore,
+              builder: (context, isLoadingMore, child) => StockResults(
+                filters: StockFilterPanel(
+                  filters: controller.store.draftFilters,
+                  result: controller.store.result,
+                  queryController: _queryController,
+                  blockOrNeighborhoodController: _blockOrNeighborhoodController,
+                  onFiltersChanged: controller.updateDraftFilters,
+                  onSegmentChanged: controller.updateDraftSegment,
+                  onSubmit: controller.applyFilters,
+                  onClear: controller.clearFilters,
+                ),
+                result: controller.store.result,
+                appliedFilters: controller.store.appliedFilters,
+                errorMessage: controller.store.errorMessage,
+                canLoadMore: controller.store.canLoadMore,
+                isLoadingMore: isLoadingMore,
+                onLoadMore: controller.loadMore,
+                onPropertyPressed: (id) => Module.get<MainModule>().navigator
+                    .pushNamed(MainRoutes.propertyPath(id)),
+              ),
             ),
           );
         },
-      ),
-    );
-  }
-
-  Future<void> _openMobileFilters() {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.92,
-        minChildSize: 0.55,
-        maxChildSize: 0.96,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(DSSpacing.md),
-          child: StockFilterPanel(
-            filters: controller.store.draftFilters,
-            result: controller.store.result,
-            queryController: _queryController,
-            blockOrNeighborhoodController: _blockOrNeighborhoodController,
-            onFiltersChanged: controller.updateDraftFilters,
-            onSegmentChanged: controller.updateDraftSegment,
-            onSubmit: () {
-              Navigator.of(context).pop();
-              controller.applyFilters();
-            },
-            onClear: () {
-              Navigator.of(context).pop();
-              controller.clearFilters();
-            },
-          ),
-        ),
       ),
     );
   }

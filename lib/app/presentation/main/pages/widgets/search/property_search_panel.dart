@@ -16,6 +16,7 @@ class PropertySearchPanel extends StatefulWidget {
     this.title = 'Busca em Palmas',
     this.allowAll = false,
     this.vertical = false,
+    this.threeColumnLayout = false,
     this.autoSubmitShortcuts = true,
     this.onClear,
     this.priceRangeMin,
@@ -33,6 +34,7 @@ class PropertySearchPanel extends StatefulWidget {
   final String title;
   final bool allowAll;
   final bool vertical;
+  final bool threeColumnLayout;
   final bool autoSubmitShortcuts;
   final VoidCallback? onClear;
   final int? priceRangeMin;
@@ -153,6 +155,28 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                   ),
                 ];
 
+                if (widget.threeColumnLayout) {
+                  final columns = constraints.maxWidth >= 900
+                      ? 3
+                      : constraints.maxWidth >= 600
+                      ? 2
+                      : 1;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DSResponsiveFieldGrid(
+                        columns: columns,
+                        children: mainFields.take(3).toList(),
+                      ),
+                      const SizedBox(height: DSSpacing.sm),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: mainFields.last,
+                      ),
+                    ],
+                  );
+                }
+
                 if (isWide) {
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +251,13 @@ class _PropertySearchPanelState extends State<PropertySearchPanel> {
                 padding: const EdgeInsets.only(top: DSSpacing.sm),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final columns = constraints.maxWidth >= 980
+                    final columns = widget.threeColumnLayout
+                        ? (constraints.maxWidth >= 900
+                              ? 3
+                              : constraints.maxWidth >= 600
+                              ? 2
+                              : 1)
+                        : constraints.maxWidth >= 980
                         ? 4
                         : constraints.maxWidth >= 680
                         ? 2
@@ -368,6 +398,7 @@ class _NeighborhoodDropdown extends StatelessWidget {
         : null;
 
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       initialValue: selectedValue,
       decoration: const InputDecoration(
         labelText: 'Bairro, quadra ou condominio',
@@ -500,6 +531,7 @@ class _SegmentDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<PropertySegment>(
+      isExpanded: true,
       initialValue: value,
       decoration: const InputDecoration(
         labelText: 'Segmento',
@@ -538,6 +570,7 @@ class _PropertyTypeDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedValue = options.contains(value) ? value : options.first;
     return DropdownButtonFormField<PropertyFilterOption>(
+      isExpanded: true,
       initialValue: selectedValue,
       decoration: const InputDecoration(
         labelText: 'Tipo do imovel',
