@@ -10,7 +10,8 @@
         "-d",
         "chrome",
         "--web-port",
-        "8080"
+        "8080",
+        "--dart-define=API_BASE_URL=http://localhost:3333/api/v1"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -45,6 +46,163 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "seletta-go-live: backend",
+      "type": "shell",
+      "command": "npm.cmd",
+      "args": [
+        "run",
+        "dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "PORT": "3333",
+          "CORS_ORIGIN": "https://another-absently-blunt.ngrok-free.dev"
+        }
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "problemMatcher": [
+        {
+          "owner": "seletta-go-live: backend",
+          "pattern": {
+            "regexp": "^(?!)()()$",
+            "file": 1,
+            "message": 2
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^(?!)$",
+            "endsPattern": "Server listening at"
+          }
+        }
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "seletta-go-live: ngrok",
+      "type": "shell",
+      "command": "ngrok",
+      "args": [
+        "http",
+        "http://127.0.0.1:8090",
+        "--url=https://another-absently-blunt.ngrok-free.dev",
+        "--log=stdout",
+        "--log-format=json"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "problemMatcher": [
+        {
+          "owner": "seletta-go-live: ngrok",
+          "pattern": {
+            "regexp": "^(?!)()()$",
+            "file": 1,
+            "message": 2
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^(?!)$",
+            "endsPattern": "\"msg\"\\s*:\\s*\"started tunnel\""
+          }
+        }
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "seletta-go-live: services",
+      "dependsOn": [
+        "seletta-go-live: backend",
+        "seletta-go-live: proxy",
+        "seletta-go-live: ngrok"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "seletta-go-live: build",
+      "type": "shell",
+      "command": "flutter",
+      "args": [
+        "build",
+        "web",
+        "--release",
+        "--dart-define=API_BASE_URL=https://another-absently-blunt.ngrok-free.dev/api/v1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "seletta-go-live: proxy",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/scripts/go-live-proxy.mjs"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "problemMatcher": [
+        {
+          "owner": "seletta-proxy",
+          "pattern": {
+            "regexp": "^(?!)()()$",
+            "file": 1,
+            "message": 2
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^(?!)$",
+            "endsPattern": "^SELETTA_PROXY_READY "
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "seletta-go-live: start",
+      "dependsOn": [
+        "seletta-go-live: build",
+        "seletta-go-live: services"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
     }
   ]
 }

@@ -33,6 +33,7 @@ class AuthenticationInjector extends ModuleInjector<AuthenticationModule> {
       () => RestClient(
         options: BaseOptions(
           baseUrl: RestBaseEnviroment.baseEnv.baseUrl,
+          headers: RestBaseEnviroment.headers,
           connectTimeout: const Duration(seconds: 2),
           receiveTimeout: const Duration(seconds: 5),
         ),

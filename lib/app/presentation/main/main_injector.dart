@@ -193,6 +193,7 @@ class MainInjector extends ModuleInjector<MainModule> {
       () => RestClient(
         options: BaseOptions(
           baseUrl: RestBaseEnviroment.baseEnv.baseUrl,
+          headers: RestBaseEnviroment.headers,
           connectTimeout: const Duration(seconds: 2),
           receiveTimeout: const Duration(seconds: 5),
         ),

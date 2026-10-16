@@ -7,9 +7,10 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
-      "args": [
+      "toolArgs": [
         "--web-port",
-        "8080"
+        "8080",
+        "--dart-define=API_BASE_URL=http://localhost:3333/api/v1"
       ]
     },
     {
@@ -26,6 +27,14 @@
       "skipFiles": [
         "<node_internals>/**"
       ]
+    },
+    {
+      "name": "seletta-go-live",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "https://another-absently-blunt.ngrok-free.dev",
+      "webRoot": "${workspaceFolder}/build/web",
+      "preLaunchTask": "seletta-go-live: start"
     }
   ],
   "compounds": [
