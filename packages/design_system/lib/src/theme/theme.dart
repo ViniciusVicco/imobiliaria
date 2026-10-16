@@ -9,6 +9,7 @@ abstract final class DSColors {
   static const Color surfaceContainer = Color(0xFF111C31);
   static const Color surfaceContainerHigh = Color(0xFF17233A);
   static const Color surfaceContainerHighest = Color(0xFF1F2B43);
+  static const Color brandLogoBackground = Color(0xFF031020);
   static const Color onSurface = Color(0xFFFFFFFF);
   static const Color onSurfaceVariant = Color(0xFFE2E2E2);
   static const Color outline = Color(0xFF2D3748);

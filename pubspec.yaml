@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   legend_core:
     path: packages/core
   design_system:
@@ -20,6 +22,9 @@ dependencies:
   intl: ^0.20.2
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.3
+  bootstrap_icons: ^1.13.1+1
+  share_plus: 11.1.0
+  dio: 5.9.2
 
 
 dev_dependencies:
@@ -28,6 +33,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.5.4
   json_serializable: ^6.11.1
+
 
 flutter:
   uses-material-design: true

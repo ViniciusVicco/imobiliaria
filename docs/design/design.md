@@ -9,6 +9,7 @@ colors:
   surfaceContainer: '#1e2020'
   surfaceContainerHigh: '#282a2b'
   surfaceContainerHighest: '#333535'
+  brandLogoBackground: '#031020'
   onSurface: '#e2e2e2'
   onSurfaceVariant: '#d0c5af'
   inverseSurface: '#e2e2e2'
@@ -112,6 +113,7 @@ The emotional response is one of absolute confidence and understated prestige. B
 This design system operates on a primary dark mode foundation to evoke exclusivity. The palette is intentionally restrictive to maintain a high-end corporate feel.
 
 - **Primary Background (#030E22):** A deep, saturated Navy Blue that provides a "vault-like" foundation for the interface.
+- **Logo Background (#031020):** Brand-specific navigation background sampled from `assets/logos/seleta_logo.png`, used when the logo must sit on a seamless dark field.
 - **Primary Accent (#D4AF37):** A premium Gold used for high-level branding, primary typography, and critical interactive call-to-actions.
 - **Secondary Surface (#111C31):** Used for card backgrounds and navigation bars to create subtle tonal separation without relying on shadows.
 - **Typography & Details (#FFFFFF):** Pure white is reserved for high-readability body text and iconography.

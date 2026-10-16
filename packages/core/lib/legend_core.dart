@@ -19,3 +19,6 @@ export 'src/module/module/module_injector.dart';
 export 'src/module/module/module_window_widget.dart';
 export 'src/module/module/quick_actions.dart';
 export 'src/state/app_state.dart';
+export 'src/env/rest_env.dart';
+export 'src/api/rest_client.dart';
+export 'src/api/rest_client_abstract.dart';

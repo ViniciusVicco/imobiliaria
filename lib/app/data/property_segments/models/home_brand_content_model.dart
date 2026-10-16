@@ -1,9 +1,12 @@
+import 'package:imobiliaria/app/domain/property_segments/entities/brand_institutional_content.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/home_brand_content_entity.dart';
 
 class HomeBrandContentModel extends HomeBrandContentEntity {
   const HomeBrandContentModel({
     required super.mission,
     required super.about,
+    super.vision,
+    super.values,
     required super.contact,
     required super.videoProvider,
     required super.videoTitle,
@@ -16,6 +19,10 @@ class HomeBrandContentModel extends HomeBrandContentEntity {
     return HomeBrandContentModel(
       mission: json['mission'] as String,
       about: json['about'] as String,
+      vision: json['vision'] as String? ?? BrandInstitutionalContent.vision,
+      values:
+          (json['values'] as List<dynamic>?)?.cast<String>() ??
+          BrandInstitutionalContent.values,
       contact: HomeContactModel.fromJson(contact),
       videoProvider: json['videoProvider'] as String? ?? 'youtube',
       videoTitle: json['videoTitle'] as String? ?? 'Video da Seletta',
