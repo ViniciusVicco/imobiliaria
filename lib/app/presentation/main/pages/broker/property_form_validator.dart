@@ -134,6 +134,10 @@ class PropertyFormValidator {
       'videoUrl',
       _normalized(form.videoUrl) != _normalized(original.videoUrl),
     );
+    countIf(
+      'instagramUrl',
+      _normalized(form.instagramUrl) != _normalized(original.instagramUrl),
+    );
     countIf('areaM2', form.areaM2 != original.areaM2);
     countIf('privateAreaM2', form.privateAreaM2 != original.privateAreaM2);
     countIf('totalAreaM2', form.totalAreaM2 != original.totalAreaM2);
@@ -197,6 +201,7 @@ class PropertyFormValidator {
     if (activeImageUrls.isNotEmpty) fields.add('images');
     if (_normalized(form.coverUrl).isNotEmpty) fields.add('coverUrl');
     if (_normalized(form.videoUrl).isNotEmpty) fields.add('videoUrl');
+    if (_normalized(form.instagramUrl).isNotEmpty) fields.add('instagramUrl');
     if (form.tagSlugs.isNotEmpty) fields.add('tagSlugs');
     if (form.isFeatured) fields.add('isFeatured');
     if (_normalized(form.brokerId ?? '').isNotEmpty) fields.add('brokerId');

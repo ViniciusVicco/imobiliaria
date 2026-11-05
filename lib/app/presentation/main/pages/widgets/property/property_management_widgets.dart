@@ -573,6 +573,7 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
   late final TextEditingController _subNeighborhoodController;
   late final TextEditingController _coverUrlController;
   late final TextEditingController _videoUrlController;
+  late final TextEditingController _instagramUrlController;
   late final TextEditingController _areaController;
   late final TextEditingController _privateAreaController;
   late final TextEditingController _totalAreaController;
@@ -603,6 +604,7 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
     );
     _coverUrlController = TextEditingController(text: initial.coverUrl);
     _videoUrlController = TextEditingController(text: initial.videoUrl);
+    _instagramUrlController = TextEditingController(text: initial.instagramUrl);
     _areaController = TextEditingController(text: initial.areaM2.toString());
     _privateAreaController = TextEditingController(
       text: initial.privateAreaM2.toString(),
@@ -638,6 +640,7 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
     _subNeighborhoodController.dispose();
     _coverUrlController.dispose();
     _videoUrlController.dispose();
+    _instagramUrlController.dispose();
     _areaController.dispose();
     _privateAreaController.dispose();
     _totalAreaController.dispose();
@@ -722,6 +725,7 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
                 ),
               ),
               _field(_videoUrlController, 'Video URL opcional'),
+              _field(_instagramUrlController, 'Link do Instagram opcional'),
               Row(
                 children: <Widget>[
                   Expanded(
@@ -908,6 +912,7 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
           .map((controller) => controller.text)
           .toList(),
       videoUrl: _videoUrlController.text,
+      instagramUrl: _instagramUrlController.text,
       areaM2: int.tryParse(_areaController.text.trim()) ?? 0,
       privateAreaM2: int.tryParse(_privateAreaController.text.trim()) ?? 0,
       totalAreaM2: int.tryParse(_totalAreaController.text.trim()) ?? 0,

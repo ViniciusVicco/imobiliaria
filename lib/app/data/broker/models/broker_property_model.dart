@@ -14,6 +14,7 @@ class BrokerPropertyModel extends BrokerPropertyEntity {
     required super.coverUrl,
     required super.imageUrls,
     required super.videoUrl,
+    super.instagramUrl,
     required super.tags,
     required super.areaM2,
     required super.privateAreaM2,
@@ -64,6 +65,7 @@ class BrokerPropertyModel extends BrokerPropertyEntity {
           .map((url) => url.toString())
           .toList(),
       videoUrl: json['videoUrl'] as String? ?? '',
+      instagramUrl: json['instagramUrl'] as String? ?? '',
       tags: (json['tags'] as List<dynamic>? ?? const <dynamic>[])
           .map((tag) => tag.toString())
           .toList(),

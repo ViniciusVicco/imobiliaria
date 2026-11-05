@@ -13,6 +13,7 @@ class BrokerPropertyEntity {
     required this.coverUrl,
     required this.imageUrls,
     required this.videoUrl,
+    this.instagramUrl = '',
     required this.tags,
     required this.areaM2,
     required this.privateAreaM2,
@@ -40,6 +41,7 @@ class BrokerPropertyEntity {
   final String coverUrl;
   final List<String> imageUrls;
   final String videoUrl;
+  final String instagramUrl;
   final List<String> tags;
   final int areaM2;
   final int privateAreaM2;
@@ -67,6 +69,7 @@ class BrokerPropertyEntity {
     String? coverUrl,
     List<String>? imageUrls,
     String? videoUrl,
+    String? instagramUrl,
     List<String>? tags,
     int? areaM2,
     int? privateAreaM2,
@@ -94,6 +97,7 @@ class BrokerPropertyEntity {
       coverUrl: coverUrl ?? this.coverUrl,
       imageUrls: imageUrls ?? this.imageUrls,
       videoUrl: videoUrl ?? this.videoUrl,
+      instagramUrl: instagramUrl ?? this.instagramUrl,
       tags: tags ?? this.tags,
       areaM2: areaM2 ?? this.areaM2,
       privateAreaM2: privateAreaM2 ?? this.privateAreaM2,
@@ -123,6 +127,7 @@ class BrokerPropertyEntity {
       coverUrl: coverUrl,
       imageUrls: imageUrls,
       videoUrl: videoUrl,
+      instagramUrl: instagramUrl,
       areaM2: areaM2,
       privateAreaM2: privateAreaM2,
       totalAreaM2: totalAreaM2,
@@ -189,6 +194,7 @@ class BrokerPropertyFormEntity {
     required this.coverUrl,
     required this.imageUrls,
     required this.videoUrl,
+    this.instagramUrl = '',
     required this.areaM2,
     required this.privateAreaM2,
     required this.totalAreaM2,
@@ -243,6 +249,7 @@ class BrokerPropertyFormEntity {
   final String coverUrl;
   final List<String> imageUrls;
   final String videoUrl;
+  final String instagramUrl;
   final int areaM2;
   final int privateAreaM2;
   final int totalAreaM2;
@@ -274,6 +281,7 @@ class BrokerPropertyFormEntity {
           .where((url) => url.isNotEmpty)
           .toList(),
       'videoUrl': videoUrl.trim(),
+      'instagramUrl': instagramUrl.trim(),
       'areaM2': areaM2,
       'privateAreaM2': privateAreaM2,
       'totalAreaM2': totalAreaM2,

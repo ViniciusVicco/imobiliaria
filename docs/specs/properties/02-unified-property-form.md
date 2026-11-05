@@ -40,7 +40,8 @@ Se??es existentes:
 - Caracter?sticas: ?reas, quartos, banheiros, vagas e idade.
 - Pre?o, status, tags, destaque e desenvolvimento novo.
 - Sele??o de corretor no modo admin.
-- Fotos, capa, remo??o/restaura??o de m?dia e v?deo por URL YouTube.
+- Fotos, capa, remo??o/restaura??o de m?dia, v?deo por URL YouTube e link opcional do Instagram.
+- O campo `instagramUrl` ? persistido na cria??o/edi??o e preservado no fluxo de revis?o administrativa; n?o cria um embed do Instagram.
 - Pr?via do an?ncio e mensagens de valida??o.
 
 Componentes ainda locais incluem campos, sliders, pr?via, se??o de m?dia e banners. A refatora??o futura deve preservar os valores editados, callbacks, chaves de estado, foco e m?dia selecionada. O `PropertyFormDialog` legado continua no arquivo compartilhado `main/pages/widgets/property/property_management_widgets.dart`.
@@ -84,3 +85,11 @@ H? testes Flutter execut?veis no projeto, mas os 15 testes atuais cobrem busca e
 Valida??o manual com R2 e SMTP reais permanece pendente. N?o foram executadas migrations nem valida??es de servi?os externos nesta revis?o documental.
 
 Fora deste escopo: upload de v?deo, CRUD de localidades, mapas e workflow independente de solicita??o de destaque. Salvamento incremental por draft ? mecanismo legado e n?o deve ser apresentado como requisito j? atendido pelo fluxo `new` atual.
+
+## Atualização de 2026-10-23 — Instagram
+
+Campo opcional abaixo do YouTube, disponível para admin e corretor. A API aceita uma URL ou string vazia para remoção; clientes que omitem `instagramUrl` preservam o valor existente na edição. Revisões antigas sem o campo também preservam o link na aprovação.
+
+A migração `20261023120000_add_property_instagram_url` adiciona `properties.instagram_url` com padrão vazio e deve ser aplicada antes de executar o backend atualizado. A migração não foi aplicada a um banco nesta alteração.
+
+Validação: 86 testes Flutter e 16 backend aprovados, incluindo criação, edição, remoção, URL inválida e aprovação de revisão com Instagram. Builds web e backend aprovados. Análise dos quatro arquivos Dart principais alterados apresentou somente quatro apontamentos informativos preexistentes.

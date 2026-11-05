@@ -139,6 +139,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
   late final TextEditingController _totalAreaController;
   late final TextEditingController _priceController;
   late final TextEditingController _videoController;
+  late final TextEditingController _instagramController;
   late final TextEditingController _tagsController;
   late String _segment;
   late String? _brokerId;
@@ -182,6 +183,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     );
     _priceController = TextEditingController(text: property.price.toString());
     _videoController = TextEditingController(text: property.videoUrl);
+    _instagramController = TextEditingController(text: property.instagramUrl);
     _tagsController = TextEditingController(text: property.tags.join(', '));
     _segment = property.segment;
     _brokerId = property.broker?.id;
@@ -206,6 +208,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     _totalAreaController.dispose();
     _priceController.dispose();
     _videoController.dispose();
+    _instagramController.dispose();
     _tagsController.dispose();
     super.dispose();
   }
@@ -440,6 +443,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
           child: Column(
             children: <Widget>[
               _field(_videoController, 'Video YouTube opcional'),
+              _field(_instagramController, 'Link do Instagram opcional'),
               _field(_tagsController, 'Tags separadas por virgula'),
               CheckboxListTile(
                 value: _isFeatured,
@@ -708,6 +712,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       coverUrl: widget.property.coverUrl,
       imageUrls: const <String>[],
       videoUrl: _videoController.text,
+      instagramUrl: _instagramController.text,
       areaM2: int.tryParse(_areaController.text.trim()) ?? 0,
       privateAreaM2: int.tryParse(_privateAreaController.text.trim()) ?? 0,
       totalAreaM2: int.tryParse(_totalAreaController.text.trim()) ?? 0,

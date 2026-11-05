@@ -18,6 +18,7 @@ const broker = '22222222-2222-4222-8222-222222222222';
 const otherAdmin = '33333333-3333-4333-8333-333333333333';
 const payload = { title: 'Casa', segment: 'residential', propertyType: 'Casa', city: 'Palmas', neighborhood: 'Centro',
   areaM2: 120, privateAreaM2: 120, totalAreaM2: 200, bathrooms: 2, garageSpaces: 1, price: 500000,
+  instagramUrl: 'https://www.instagram.com/p/imovel/',
   mediaIds: ['a', 'b', 'c', 'd'], coverMediaId: 'a', uploadSessionId: 'session' };
 
 test('property responsibility across creation, edits, review, transfer and deactivation', async (t) => {
@@ -85,6 +86,8 @@ test('property responsibility across creation, edits, review, transfer and deact
       assert.equal(created.statusCode, 200, created.body);
       assert.equal(created.json().broker.id, admin);
       assert.equal(created.json().status, 'published');
+      assert.equal(created.json().instagramUrl, payload.instagramUrl);
+      assert.equal(properties.get(created.json().id).instagramUrl, payload.instagramUrl);
       const draft = await request(admin, 'POST', '/admin/properties/draft');
       assert.equal(draft.json().broker.id, admin);
       const explicit = await request(admin, 'POST', '/admin/properties', { ...payload, brokerId: broker });
@@ -95,6 +98,7 @@ test('property responsibility across creation, edits, review, transfer and deact
       const ownBroker = await request(broker, 'POST', '/broker/properties', { ...payload, brokerId: admin });
       assert.equal(ownBroker.statusCode, 200); assert.equal(ownBroker.json().broker.id, broker);
       assert.equal(ownBroker.json().status, 'pending_review');
+      assert.equal(ownBroker.json().instagramUrl, payload.instagramUrl);
 
     });
     await t.test('edits preserve association and orphans; transfer accepts active admins', async () => {
@@ -112,11 +116,29 @@ test('property responsibility across creation, edits, review, transfer and deact
       assert.equal((await request(admin, 'PATCH', '/admin/properties/orphan', { ...payload, brokerId: otherAdmin })).statusCode, 400);
       users.get(otherAdmin)!.isActive = true;
     });
+    await t.test('Instagram link can be updated, preserved by older clients, and removed', async () => {
+      const url = 'https://www.instagram.com/reel/novo/';
+      let response = await request(admin, 'PATCH', '/admin/properties/owned', { ...payload, instagramUrl: ` ${url} ` });
+      assert.equal(response.statusCode, 200, response.body);
+      assert.equal(response.json().instagramUrl, url);
+      assert.equal(properties.get('owned').instagramUrl, url);
+      const { instagramUrl, ...legacyPayload } = payload;
+      response = await request(admin, 'PATCH', '/admin/properties/owned', legacyPayload);
+      assert.equal(response.statusCode, 200, response.body);
+      assert.equal(response.json().instagramUrl, url);
+      response = await request(admin, 'PATCH', '/admin/properties/owned', { ...payload, instagramUrl: 'invalid' });
+      assert.equal(response.statusCode, 400);
+      assert.equal(properties.get('owned').instagramUrl, url);
+      response = await request(admin, 'PATCH', '/admin/properties/owned', { ...payload, instagramUrl: '' });
+      assert.equal(response.statusCode, 200, response.body);
+      assert.equal(response.json().instagramUrl, '');
+    });
     await t.test('approval preserves responsible even when revision snapshot contains another ID', async () => {
       properties.set('review', { ...payload, id: 'review', brokerId: broker, status: 'pending_review' });
       revision = { id: 'revision', snapshot: { ...payload, brokerId: admin } };
       const response = await request(admin, 'POST', '/admin/properties/review/approve');
       assert.equal(response.statusCode, 200, response.body); assert.equal(response.json().broker.id, broker);
+      assert.equal(response.json().instagramUrl, payload.instagramUrl);
       revision = null;
       assert.equal((await request(otherAdmin, 'POST', '/admin/properties/review/approve')).json().broker.id, broker);
     });

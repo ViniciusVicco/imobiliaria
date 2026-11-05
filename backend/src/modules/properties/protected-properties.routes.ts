@@ -50,6 +50,7 @@ const propertyPayloadSchema = z.object({
   coverUrl: z.string().trim().url().or(z.literal('')).default(''),
   imageUrls: z.array(z.string().trim().url()).max(12).default([]),
   videoUrl: z.string().trim().url().optional().or(z.literal('')),
+  instagramUrl: z.string().trim().url().optional().or(z.literal('')),
   areaM2: z.coerce.number().int().min(0),
   privateAreaM2: z.coerce.number().int().min(0).default(0),
   totalAreaM2: z.coerce.number().int().min(0).default(0),
@@ -844,6 +845,7 @@ async function createPropertyWithTemporaryMedia({
           brokerId,
           title: payload.title,
           description: payload.description,
+          instagramUrl: payload.instagramUrl,
           segment: payload.segment,
           propertyType: payload.propertyType,
           tagSlugs,
@@ -932,6 +934,7 @@ async function upsertPropertyWithMedia({
         brokerId: brokerId ?? null,
         title: payload.title,
         description: payload.description,
+        instagramUrl: payload.instagramUrl,
         segment: payload.segment,
         propertyType: payload.propertyType,
         tagSlugs,
@@ -954,6 +957,7 @@ async function upsertPropertyWithMedia({
         brokerId,
         title: payload.title,
         description: payload.description,
+        instagramUrl: payload.instagramUrl,
         segment: payload.segment,
         propertyType: payload.propertyType,
         tagSlugs,
@@ -1343,6 +1347,7 @@ function mapPropertyDetail(
   return {
     ...mapPropertyListItem(property),
     description: property.description ?? '',
+    instagramUrl: property.instagramUrl ?? '',
     imageUrls: property.media
       .filter((media) => media.type === 'image' && media.status === 'active')
       .map((media) => media.publicUrl ?? media.url),
