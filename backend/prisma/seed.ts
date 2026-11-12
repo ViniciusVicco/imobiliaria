@@ -9,6 +9,7 @@ const prisma = new PrismaClient();
 const now = new Date();
 
 const propertyTags = [
+  { slug: 'abaixo-do-preco', label: 'Abaixo do preco', description: 'Imoveis abaixo do preco de mercado.', sortOrder: 35 },
   {
     slug: 'na-planta',
     label: 'Na planta',

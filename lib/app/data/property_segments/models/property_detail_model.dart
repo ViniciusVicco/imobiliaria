@@ -24,6 +24,7 @@ abstract final class PropertyDetailModel {
       id: json['id'] as String,
       title: json['title'] as String,
       description: json['description'] as String? ?? '',
+      instagramUrl: json['instagramUrl'] as String? ?? '',
       location: ['subNeighborhood', 'neighborhood', 'city']
           .map((key) => (json[key] as String? ?? '').trim())
           .where((s) => s.isNotEmpty)

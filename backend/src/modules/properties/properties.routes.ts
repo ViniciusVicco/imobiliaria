@@ -141,6 +141,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
       coverUrl: cover ? mediaUrl(cover) : property.coverUrl,
       title: property.title,
       description: property.description ?? '',
+      instagramUrl: property.instagramUrl ?? '',
       segment: property.segment,
       propertyType: property.propertyType,
       city: property.city,

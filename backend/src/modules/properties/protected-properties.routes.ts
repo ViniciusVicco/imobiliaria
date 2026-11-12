@@ -235,7 +235,7 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
 
       if (!existing) return sendPropertyNotFound(reply);
 
-      const validationError = await validateActiveTags(normalizeTagSlugs(payload));
+      const validationError = await validateActiveTags(normalizeTagSlugs(payload), existing.tagSlugs);
       if (validationError) return sendApiError({ reply, ...validationError });
 
       if (existing.status === 'published') {
@@ -548,7 +548,7 @@ export async function protectedPropertiesRoutes(app: FastifyInstance) {
 
       if (!existing) return sendPropertyNotFound(reply);
 
-      const validationError = await validateActiveTags(normalizeTagSlugs(payload));
+      const validationError = await validateActiveTags(normalizeTagSlugs(payload), existing.tagSlugs);
       if (validationError) return sendApiError({ reply, ...validationError });
 
       const brokerValidationError = await validateBrokerId(payload.brokerId);
@@ -1048,7 +1048,7 @@ function normalizeTagSlugs(payload: z.infer<typeof propertyPayloadSchema>) {
   return [...tagSlugs];
 }
 
-async function validateActiveTags(tagSlugs: string[]) {
+async function validateActiveTags(tagSlugs: string[], existingTags: string[] = []) {
   if (tagSlugs.length === 0) return null;
 
   const activeTags = await prisma.propertyTag.findMany({
@@ -1061,7 +1061,7 @@ async function validateActiveTags(tagSlugs: string[]) {
 
   const activeTagSlugs = new Set(activeTags.map((tag) => tag.slug));
   const hasInactiveOrUnknownTag = tagSlugs.some(
-    (tagSlug) => !activeTagSlugs.has(tagSlug),
+    (tagSlug) => !activeTagSlugs.has(tagSlug) && !existingTags.includes(tagSlug),
   );
 
   if (!hasInactiveOrUnknownTag) return null;

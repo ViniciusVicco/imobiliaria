@@ -10,6 +10,7 @@ class PropertyDetailEntity {
     required this.brokerName,
     required this.whatsapp,
     required this.avatarUrl,
+    this.instagramUrl = '',
   });
   final String id,
       title,
@@ -17,7 +18,8 @@ class PropertyDetailEntity {
       location,
       brokerName,
       whatsapp,
-      avatarUrl;
+      avatarUrl,
+      instagramUrl;
   final List<String> images;
   final int price;
   final Map<String, num?> facts;

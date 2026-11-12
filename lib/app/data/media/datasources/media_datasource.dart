@@ -16,6 +16,10 @@ class MediaDatasource with MediaEndpoints {
     final response = await _restClient.post<Map<String, dynamic>>(
       propertyImages(propertyId),
       data: data,
+      options: Options(
+        sendTimeout: const Duration(minutes: 2),
+        receiveTimeout: const Duration(minutes: 2),
+      ),
     );
 
     return DataSourceResponse<Map<String, dynamic>>(
@@ -29,6 +33,10 @@ class MediaDatasource with MediaEndpoints {
     final response = await _restClient.post<Map<String, dynamic>>(
       temporaryPropertyImages,
       data: data,
+      options: Options(
+        sendTimeout: const Duration(minutes: 2),
+        receiveTimeout: const Duration(minutes: 2),
+      ),
     );
 
     return DataSourceResponse<Map<String, dynamic>>(

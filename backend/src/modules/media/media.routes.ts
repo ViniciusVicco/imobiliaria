@@ -43,7 +43,7 @@ const mediaParamsSchema = z.object({
 export async function mediaRoutes(app: FastifyInstance) {
   app.post(
     '/media/property-images/temp',
-    { preHandler: requireAuthenticatedUser },
+    { preHandler: requireAuthenticatedUser, bodyLimit: Math.ceil(getMaxImageSizeBytes() * 4 / 3) + 65536 },
     async (request, reply) => {
       const payload = tempUploadImageSchema.parse(request.body);
       const user = request.authenticatedUser;
@@ -114,7 +114,7 @@ export async function mediaRoutes(app: FastifyInstance) {
 
   app.post(
     '/media/properties/:propertyId/images',
-    { preHandler: requireAuthenticatedUser },
+    { preHandler: requireAuthenticatedUser, bodyLimit: Math.ceil(getMaxImageSizeBytes() * 4 / 3) + 65536 },
     async (request, reply) => {
       const params = propertyParamsSchema.parse(request.params);
       const payload = uploadImageSchema.parse(request.body);

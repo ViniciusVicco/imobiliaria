@@ -74,6 +74,6 @@ String _propertyTagLabel(String tag) {
     'entrada-reduzida' => 'Entrada reduzida',
     'exclusivo' => 'Exclusivo',
     'pronto-para-morar' => 'Pronto para morar',
-    _ => tag,
+    _ => tag.replaceAll('-', ' '),
   };
 }

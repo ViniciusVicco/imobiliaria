@@ -51,3 +51,7 @@ Página individual: [3 — Property Resume](properties/03-property-resume.md), i
 - [Firebase Auth](_archive/Users/01-firebase-auth-accesses.md)
 - [CRUD Firebase](_archive/Users/02-firebase-admin-users-crud.md)
 - [CRUD inicial de im?veis](_archive/Properties/01-broker-admin-properties-crud.md)
+
+## Ajustes transversais
+
+- [Imoveis, navegacao e midia](adjustments/01-property-navigation-media.md).

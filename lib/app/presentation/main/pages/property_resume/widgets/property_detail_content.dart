@@ -2,6 +2,7 @@ import '../../widgets/profile/profile_avatar.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:imobiliaria/app/domain/property_segments/entities/property_detail_entity.dart';
 import 'property_gallery.dart';
 
@@ -204,6 +205,31 @@ class PropertySpecsCard extends StatelessWidget {
                         ? (property.facts[fact.$1] == 1 ? ' ano' : ' anos')
                         : ''}',
             ),
+          if (property.instagramUrl.trim().isNotEmpty) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              icon: const Icon(BootstrapIcons.instagram),
+              label: const Text('Ver publicacao no Instagram'),
+              onPressed: () async {
+                final uri = Uri.tryParse(property.instagramUrl);
+                try {
+                  if (uri != null &&
+                      ['http', 'https'].contains(uri.scheme) &&
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      ))
+                    return;
+                } catch (_) {}
+                if (context.mounted)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Nao foi possivel abrir o Instagram.'),
+                    ),
+                  );
+              },
+            ),
+          ],
           const SizedBox(height: 24),
           FilledButton(
             onPressed: onVisit,

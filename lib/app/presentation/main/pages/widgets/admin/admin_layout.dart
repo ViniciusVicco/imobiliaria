@@ -12,19 +12,34 @@ class AdminLayout extends StatelessWidget {
     required this.currentRoute,
     required this.child,
     this.notificationCount = 0,
+    this.beforeHome,
   });
 
   final String title;
   final String currentRoute;
   final Widget child;
   final int notificationCount;
+  final Future<bool> Function()? beforeHome;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        actions: const <Widget>[SessionAction(compact: true)],
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'Ir para o inicio',
+            icon: const Icon(Icons.home_outlined),
+            onPressed: () async {
+              if (beforeHome != null && !await beforeHome!()) return;
+              Module.get<MainModule>().navigator.pushNamedAndRemoveUntil(
+                MainRoutes.home,
+                (route) => false,
+              );
+            },
+          ),
+          const SessionAction(compact: true),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -37,6 +52,7 @@ class AdminLayout extends StatelessWidget {
                   child: _AdminSidebar(
                     currentRoute: currentRoute,
                     notificationCount: notificationCount,
+                    beforeNavigate: beforeHome,
                   ),
                 ),
                 const VerticalDivider(width: 1),
@@ -50,6 +66,7 @@ class AdminLayout extends StatelessWidget {
               _AdminTopTabs(
                 currentRoute: currentRoute,
                 notificationCount: notificationCount,
+                beforeNavigate: beforeHome,
               ),
               const Divider(height: 1),
               Expanded(child: child),
@@ -65,10 +82,12 @@ class _AdminSidebar extends StatelessWidget {
   const _AdminSidebar({
     required this.currentRoute,
     required this.notificationCount,
+    this.beforeNavigate,
   });
 
   final String currentRoute;
   final int notificationCount;
+  final Future<bool> Function()? beforeNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +111,7 @@ class _AdminSidebar extends StatelessWidget {
                 icon: Icons.groups_outlined,
                 route: MainRoutes.adminUsers,
                 currentRoute: currentRoute,
+                beforeNavigate: beforeNavigate,
               ),
               const SizedBox(height: DSSpacing.sm),
               _AdminNavButton(
@@ -101,6 +121,7 @@ class _AdminSidebar extends StatelessWidget {
                 icon: Icons.notifications_active_outlined,
                 route: MainRoutes.adminReview,
                 currentRoute: currentRoute,
+                beforeNavigate: beforeNavigate,
               ),
               const SizedBox(height: DSSpacing.sm),
               _AdminNavButton(
@@ -108,6 +129,7 @@ class _AdminSidebar extends StatelessWidget {
                 icon: Icons.home_work_outlined,
                 route: MainRoutes.adminProperties,
                 currentRoute: currentRoute,
+                beforeNavigate: beforeNavigate,
               ),
             ],
           ),
@@ -121,10 +143,12 @@ class _AdminTopTabs extends StatelessWidget {
   const _AdminTopTabs({
     required this.currentRoute,
     required this.notificationCount,
+    this.beforeNavigate,
   });
 
   final String currentRoute;
   final int notificationCount;
+  final Future<bool> Function()? beforeNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +162,7 @@ class _AdminTopTabs extends StatelessWidget {
             icon: Icons.groups_outlined,
             route: MainRoutes.adminUsers,
             currentRoute: currentRoute,
+            beforeNavigate: beforeNavigate,
           ),
           const SizedBox(width: DSSpacing.sm),
           _AdminNavButton(
@@ -147,12 +172,14 @@ class _AdminTopTabs extends StatelessWidget {
             icon: Icons.notifications_active_outlined,
             route: MainRoutes.adminReview,
             currentRoute: currentRoute,
+            beforeNavigate: beforeNavigate,
           ),
           _AdminNavButton(
             label: 'Gerenciar imoveis',
             icon: Icons.home_work_outlined,
             route: MainRoutes.adminProperties,
             currentRoute: currentRoute,
+            beforeNavigate: beforeNavigate,
           ),
         ],
       ),
@@ -166,12 +193,14 @@ class _AdminNavButton extends StatelessWidget {
     required this.icon,
     required this.route,
     required this.currentRoute,
+    this.beforeNavigate,
   });
 
   final String label;
   final IconData icon;
   final String route;
   final String currentRoute;
+  final Future<bool> Function()? beforeNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +208,10 @@ class _AdminNavButton extends StatelessWidget {
     return FilledButton.tonalIcon(
       onPressed: isSelected
           ? null
-          : () => Module.get<MainModule>().navigator.pushNamed(route),
+          : () async {
+              if (beforeNavigate != null && !await beforeNavigate!()) return;
+              Module.get<MainModule>().navigator.pushNamed(route);
+            },
       icon: Icon(icon),
       label: Text(label),
     );

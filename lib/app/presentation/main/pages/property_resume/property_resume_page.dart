@@ -77,7 +77,6 @@ class _PropertyResumePageState
                   _navigate('/estoque?city=Palmas&tag=na-planta'),
               onContactPressed: () => _contact(false),
               onAboutPressed: () => _navigate(MainRoutes.home),
-              onMissionPressed: () => _navigate(MainRoutes.home),
               onWhatsappPressed: () => _contact(false),
             ),
             Center(

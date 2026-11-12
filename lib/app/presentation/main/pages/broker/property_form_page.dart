@@ -1,9 +1,12 @@
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'widgets/property_responsible_dropdown.dart';
+import 'widgets/property_tag_selector.dart';
+import 'property_tag_catalog.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
 import 'package:imobiliaria/app/domain/media/entities/property_media_entity.dart';
 import 'package:imobiliaria/app/presentation/main/main_module.dart';
@@ -34,6 +37,37 @@ class PropertyFormPage extends StatefulWidget {
 class _PropertyFormPageState
     extends
         StateController<MainModule, PropertyFormPage, PropertyFormController> {
+  final _formKey = GlobalKey<_PropertyFormContentState>();
+  Future<bool> _confirmHome() async {
+    if (!(_formKey.currentState?.hasChanges ?? false)) return true;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Descartar alteracoes?'),
+            content: const Text('As alteracoes nao salvas serao perdidas.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Continuar editando'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Sair'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _goHome() async {
+    if (await _confirmHome() && mounted)
+      Module.get<MainModule>().navigator.pushNamedAndRemoveUntil(
+        MainRoutes.home,
+        (route) => false,
+      );
+  }
+
   String get _propertyId => widget.routeData?.pathParameters['id'] ?? '';
   bool get _isAdmin => widget.mode == PropertyFormMode.admin;
   late final String _uploadSessionId =
@@ -56,9 +90,20 @@ class _PropertyFormPageState
     final page = Scaffold(
       appBar: AppBar(
         title: Text(_isAdmin ? 'Editar imovel' : 'Meu imovel'),
-        actions: const <Widget>[SessionAction(compact: true)],
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'Ir para o inicio',
+            icon: const Icon(Icons.home_outlined),
+            onPressed: _goHome,
+          ),
+          const SessionAction(compact: true),
+        ],
         leading: IconButton(
-          onPressed: () => Module.get<MainModule>().navigator.pop(),
+          onPressed: () => Module.get<MainModule>()
+              .navigator
+              .navigatorKey
+              .currentState
+              ?.maybePop(),
           icon: const Icon(Icons.arrow_back),
         ),
       ),
@@ -85,7 +130,7 @@ class _PropertyFormPageState
           return DSPageLayoutContainer(
             padding: const EdgeInsets.all(DSSpacing.md),
             child: _PropertyFormContent(
-              key: ValueKey('${property.id}-${property.updatedAt}'),
+              key: _formKey,
               property: property,
               controller: controller,
               isBusy: state == AppStateEnum.isLoading,
@@ -97,12 +142,30 @@ class _PropertyFormPageState
       ),
     );
 
-    if (!_isAdmin) return page;
-
-    return AdminLayout(
-      title: 'Editar imovel',
-      currentRoute: MainRoutes.adminProperties,
-      child: page.body ?? const SizedBox.shrink(),
+    final content = !_isAdmin
+        ? page
+        : AdminLayout(
+            title: 'Editar imovel',
+            beforeHome: _confirmHome,
+            currentRoute: MainRoutes.adminProperties,
+            child: page.body ?? const SizedBox.shrink(),
+          );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop && await _confirmHome() && mounted) {
+          final navigator = Module.get<MainModule>().navigator;
+          if (navigator.canPop()) {
+            navigator.pop();
+          } else {
+            navigator.pushNamedAndRemoveUntil(
+              _isAdmin ? MainRoutes.adminProperties : MainRoutes.broker,
+              (route) => false,
+            );
+          }
+        }
+      },
+      child: content,
     );
   }
 }
@@ -140,10 +203,13 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
   late final TextEditingController _priceController;
   late final TextEditingController _videoController;
   late final TextEditingController _instagramController;
-  late final TextEditingController _tagsController;
+  late Set<String> _selectedTags;
+  late final PropertyTagCatalog _tagCatalog;
   late String _segment;
   late String? _brokerId;
   bool _responsibleChanged = false;
+  late String _initialForm;
+  bool get hasChanges => jsonEncode(_buildForm().toJson()) != _initialForm;
   late double _bedrooms;
   late double _bathrooms;
   late double _garageSpaces;
@@ -184,7 +250,10 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     _priceController = TextEditingController(text: property.price.toString());
     _videoController = TextEditingController(text: property.videoUrl);
     _instagramController = TextEditingController(text: property.instagramUrl);
-    _tagsController = TextEditingController(text: property.tags.join(', '));
+    _selectedTags = property.tags.toSet();
+    _tagCatalog = PropertyTagCatalog(
+      Module.get<MainModule>().injector.get<RestClient>(),
+    );
     _segment = property.segment;
     _brokerId = property.broker?.id;
     _bedrooms = property.bedrooms.toDouble();
@@ -193,6 +262,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     _propertyAgeYears = property.propertyAgeYears.toDouble();
     _isFeatured = property.isFeatured;
     _isNewDevelopment = property.tags.contains('na-planta');
+    _initialForm = jsonEncode(_buildForm().toJson());
   }
 
   @override
@@ -209,7 +279,6 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     _priceController.dispose();
     _videoController.dispose();
     _instagramController.dispose();
-    _tagsController.dispose();
     super.dispose();
   }
 
@@ -347,7 +416,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
                   Expanded(
                     child: _field(
                       _privateAreaController,
-                      'Área privativa (m²)',
+                      'Ãrea privativa (mÂ²)',
                       integersOnly: true,
                     ),
                   ),
@@ -355,7 +424,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
                   Expanded(
                     child: _field(
                       _totalAreaController,
-                      'Área total (m²)',
+                      'Ãrea total (mÂ²)',
                       integersOnly: true,
                     ),
                   ),
@@ -444,7 +513,12 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
             children: <Widget>[
               _field(_videoController, 'Video YouTube opcional'),
               _field(_instagramController, 'Link do Instagram opcional'),
-              _field(_tagsController, 'Tags separadas por virgula'),
+              PropertyTagSelector(
+                catalog: _tagCatalog,
+                selected: _selectedTags,
+                isAdmin: widget.isAdmin,
+                onChanged: (tags) => setState(() => _selectedTags = tags),
+              ),
               CheckboxListTile(
                 value: _isFeatured,
                 onChanged: (value) {
@@ -564,6 +638,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     );
 
     if (!mounted) return;
+    if (wasSaved) _initialForm = jsonEncode(_buildForm().toJson());
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -668,7 +743,41 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
       return;
     }
 
-    final images = await pickPropertyImages();
+    final source = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Escolher da galeria'),
+              onTap: () => Navigator.pop(context, false),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Usar camera'),
+              onTap: () => Navigator.pop(context, true),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    List<PickedPropertyImage> images;
+    try {
+      images = await pickPropertyImages(camera: source);
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Nao foi possivel acessar as fotos. Verifique as permissoes e tente novamente.',
+            ),
+          ),
+        );
+      return;
+    }
     if (images.isEmpty) return;
 
     var uploaded = 0;
@@ -684,9 +793,23 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
               image: upload,
             )
           : await widget.controller.uploadImage(upload);
-      if (wasUploaded) uploaded++;
+      if (wasUploaded) {
+        uploaded++;
+      } else if (mounted) {
+        _showMessage(
+          widget.controller.store.errorMessage ??
+              'Nao foi possivel enviar a foto. Verifique o formato e o tamanho.',
+        );
+        return;
+      }
     }
 
+    if (images.length > remaining && mounted) {
+      _showMessage(
+        'Apenas $remaining foto(s) puderam ser enviadas: o limite e de 12 fotos.',
+      );
+      return;
+    }
     if (uploaded > 0 && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$uploaded imagem(ns) enviada(s).')),
@@ -695,11 +818,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
   }
 
   BrokerPropertyFormEntity _buildForm() {
-    final tags = _tagsController.text
-        .split(',')
-        .map((tag) => tag.trim())
-        .where((tag) => tag.isNotEmpty)
-        .toList();
+    final tags = _selectedTags.toList();
 
     return BrokerPropertyFormEntity(
       title: _titleController.text,

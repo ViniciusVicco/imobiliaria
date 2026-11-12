@@ -99,7 +99,6 @@ class _PropertySegmentsHomePageState
                           controller.onNewDevelopmentsPressed(),
                       onContactPressed: () => _scrollTo(_contactKey),
                       onAboutPressed: () => _scrollTo(_aboutKey),
-                      onMissionPressed: () => _scrollTo(_missionKey),
                       onWhatsappPressed: () => controller.onWhatsappPressed(),
                     ),
                   ),

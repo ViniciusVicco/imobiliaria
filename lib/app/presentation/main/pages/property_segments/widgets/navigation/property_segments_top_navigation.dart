@@ -1,6 +1,7 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:imobiliaria/app/assets/custom_assets.dart';
 import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/session_action.dart';
 
@@ -11,16 +12,16 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
     required this.onNewDevelopmentsPressed,
     required this.onContactPressed,
     required this.onAboutPressed,
-    required this.onMissionPressed,
     required this.onWhatsappPressed,
+    this.sessionAction = const SessionAction(),
   });
 
   final VoidCallback onStockPressed;
   final VoidCallback onNewDevelopmentsPressed;
   final VoidCallback onContactPressed;
   final VoidCallback onAboutPressed;
-  final VoidCallback onMissionPressed;
   final VoidCallback onWhatsappPressed;
+  final Widget sessionAction;
 
   @override
   Widget build(BuildContext context) {
@@ -49,12 +50,11 @@ class PropertySegmentsTopNavigation extends StatelessWidget {
                   onNewDevelopmentsPressed: onNewDevelopmentsPressed,
                   onContactPressed: onContactPressed,
                   onAboutPressed: onAboutPressed,
-                  onMissionPressed: onMissionPressed,
                 );
                 final whatsappButton = _WhatsappButton(
                   onPressed: onWhatsappPressed,
                 );
-                const loginButton = SessionAction();
+                final loginButton = sessionAction;
 
                 if (isCompact) {
                   return Column(
@@ -128,7 +128,6 @@ class _NavigationLinks extends StatelessWidget {
     required this.onNewDevelopmentsPressed,
     required this.onContactPressed,
     required this.onAboutPressed,
-    required this.onMissionPressed,
   });
 
   final bool isCompact;
@@ -136,7 +135,6 @@ class _NavigationLinks extends StatelessWidget {
   final VoidCallback onNewDevelopmentsPressed;
   final VoidCallback onContactPressed;
   final VoidCallback onAboutPressed;
-  final VoidCallback onMissionPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +149,16 @@ class _NavigationLinks extends StatelessWidget {
       ),
       _NavigationLinkButton(onPressed: onContactPressed, label: 'Contatos'),
       _NavigationLinkButton(onPressed: onAboutPressed, label: 'Sobre nós'),
-      _NavigationLinkButton(onPressed: onMissionPressed, label: 'Missão'),
+      const _SocialButton(
+        label: 'Instagram da Seletta',
+        icon: BootstrapIcons.instagram,
+        url: 'https://www.instagram.com/seletta.imobiliaria/',
+      ),
+      const _SocialButton(
+        label: 'YouTube da Seletta',
+        icon: BootstrapIcons.youtube,
+        url: 'https://www.youtube.com/@selettaimobiliaria',
+      ),
     ];
 
     if (isCompact) {
@@ -163,9 +170,18 @@ class _NavigationLinks extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             spacing: DSSpacing.xs,
             runSpacing: DSSpacing.xs,
-            children: linkButtons
-                .map((button) => SizedBox(width: itemWidth, child: button))
-                .toList(),
+            children: <Widget>[
+              ...linkButtons
+                  .take(4)
+                  .map((button) => SizedBox(width: itemWidth, child: button)),
+              SizedBox(
+                width: constraints.maxWidth,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: linkButtons.skip(4).toList(),
+                ),
+              ),
+            ],
           );
         },
       );
@@ -235,4 +251,37 @@ class _WhatsappButton extends StatelessWidget {
       label: const Text('Contate-nos'),
     );
   }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.label,
+    required this.icon,
+    required this.url,
+  });
+  final String label, url;
+  final IconData icon;
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: label,
+    icon: Icon(icon),
+    onPressed: () async {
+      try {
+        if (await launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
+          webOnlyWindowName: Uri.parse(url).host == 'www.youtube.com'
+              ? '_self'
+              : null,
+        ))
+          return;
+      } catch (_) {}
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nao foi possivel abrir a rede social.'),
+          ),
+        );
+    },
+  );
 }

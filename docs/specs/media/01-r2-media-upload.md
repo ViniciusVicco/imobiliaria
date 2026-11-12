@@ -376,3 +376,7 @@ Regras:
 - `pending_review` existe no backend e nao aparece publicamente.
 - Admin consegue aprovar publicacao.
 - Spec 4.0 deixa de depender de URLs manuais como fluxo final de midia.
+
+## Ajustes transversais de 2026-11-05
+
+Consulte [Ajustes de imoveis, navegacao e midia](../adjustments/01-property-navigation-media.md) para o contrato e os limites de validacao atuais.

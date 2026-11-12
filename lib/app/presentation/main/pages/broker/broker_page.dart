@@ -1,5 +1,6 @@
 import '../widgets/profile/profile_photo_editor.dart';
 import 'helpers/property_image_picker_types.dart';
+import '../../main_routes.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:imobiliaria/app/domain/broker/entities/broker_property_entity.dart';
@@ -77,6 +78,41 @@ class _BrokerPageState
                             ),
                           ),
                           const SizedBox(width: DSSpacing.md),
+                          IconButton(
+                            tooltip: 'Ir para o inicio',
+                            icon: const Icon(Icons.home_outlined),
+                            onPressed: () async {
+                              if (controller.store.hasProfileChanges) {
+                                final leave = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Descartar alteracoes?'),
+                                    content: const Text(
+                                      'As alteracoes nao salvas serao perdidas.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text('Continuar editando'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text('Sair'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (leave != true) return;
+                              }
+                              Module.get<MainModule>().navigator
+                                  .pushNamedAndRemoveUntil(
+                                    MainRoutes.home,
+                                    (route) => false,
+                                  );
+                            },
+                          ),
                           const SessionAction(compact: true),
                         ],
                       ),

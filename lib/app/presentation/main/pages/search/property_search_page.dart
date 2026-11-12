@@ -58,7 +58,21 @@ class _PropertySearchPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Imóveis a venda')),
+      appBar: AppBar(
+        title: const Text('Im\u00f3veis a venda'),
+        leadingWidth: Navigator.of(context).canPop() ? 104 : 56,
+        leading: Row(
+          children: [
+            if (Navigator.of(context).canPop()) const BackButton(),
+            IconButton(
+              tooltip: 'Ir para o inicio',
+              icon: const Icon(Icons.home_outlined),
+              onPressed: () => Module.get<MainModule>().navigator
+                  .pushNamedAndRemoveUntil(MainRoutes.home, (route) => false),
+            ),
+          ],
+        ),
+      ),
       body: ValueListenableBuilder<AppStateEnum>(
         valueListenable: controller.store.state,
         builder: (context, state, child) {

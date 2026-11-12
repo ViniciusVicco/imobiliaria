@@ -1,0 +1,1 @@
+INSERT INTO property_tags (slug, label, description, is_active, sort_order) VALUES ('abaixo-do-preco', 'Abaixo do preco', 'Imoveis abaixo do preco de mercado.', true, 35) ON CONFLICT (slug) DO NOTHING;

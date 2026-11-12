@@ -20,7 +20,7 @@ test('public detail contract, publication filter, media authorization and contac
     assert.equal(args.where.status, 'published');
     assert.deepEqual(args.include.media.where, { status: 'active', deletedAt: null });
     return available ? {
-      id: 'property', title: 'Casa', description: 'Descrição', segment: 'residential', propertyType: 'Casa',
+      id: 'property', instagramUrl: 'https://instagram.com/p/test/', title: 'Casa', description: 'Descrição', segment: 'residential', propertyType: 'Casa',
       city: 'Palmas', neighborhood: 'Sul', subNeighborhood: '', coverUrl: 'old-cover.jpg',
       privateAreaM2: 130, totalAreaM2: 252, bedrooms: 3, bathrooms: 2, garageSpaces: 2, propertyAgeYears: 1,
       price: 820000, tagSlugs: [], broker,
@@ -42,6 +42,7 @@ test('public detail contract, publication filter, media authorization and contac
     assert.equal(json.brokerContact.avatarUrl, broker.avatarUrl);
     assert.equal(json.coverUrl, json.media[0].url);
     assert.match(json.coverUrl, /\/api\/v1\/properties\/property\/media\/cover$/);
+    assert.equal(json.instagramUrl, 'https://instagram.com/p/test/');
     assert.equal(json.facts.privateAreaM2, 130);
     assert.equal(json.facts.totalAreaM2, 252);
     broker = { name: 'Sem telefone', phone: null, avatarUrl: 'private-avatar' };

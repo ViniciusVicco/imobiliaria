@@ -25,11 +25,8 @@ class PropertySegmentsHomeController extends Controller {
   final GetFeaturedPropertiesUseCase getFeaturedProperties;
   final GetHomeBrandContentUseCase getHomeBrandContent;
   final AppNavigator _navigator;
-  bool _hasLoadedHome = false;
 
   Future<void> loadHome() async {
-    if (_hasLoadedHome) return;
-    _hasLoadedHome = true;
     store.setLoading();
 
     final featuredResult = await getFeaturedProperties.call();
@@ -88,6 +85,7 @@ class PropertySegmentsHomeController extends Controller {
     final wasOpened = await launchUrl(
       uri,
       mode: LaunchMode.externalApplication,
+      webOnlyWindowName: '_self',
     );
     if (!wasOpened) {
       store.setError('Nao foi possivel abrir o video da Seletta.');

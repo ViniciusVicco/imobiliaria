@@ -6,5 +6,5 @@ export 'property_image_picker_types.dart';
 
 Future<PickedPropertyImage?> pickPropertyImage() => pickPropertyImageImpl();
 
-Future<List<PickedPropertyImage>> pickPropertyImages() =>
-    pickPropertyImagesImpl();
+Future<List<PickedPropertyImage>> pickPropertyImages({bool camera = false}) =>
+    pickPropertyImagesImpl(camera: camera);

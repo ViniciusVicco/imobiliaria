@@ -14,6 +14,7 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { homeRoutes } from './modules/home/home.routes.js';
 import { mediaRoutes } from './modules/media/media.routes.js';
+import { propertyTagsRoutes } from './modules/properties/property-tags.routes.js';
 import { propertiesRoutes } from './modules/properties/properties.routes.js';
 import { protectedPropertiesRoutes } from './modules/properties/protected-properties.routes.js';
 import { sendApiError } from './shared/http/errors.js';
@@ -93,6 +94,7 @@ export async function buildApp() {
       await api.register(adminNotificationsRoutes);
       await api.register(homeRoutes);
       await api.register(propertiesRoutes);
+      await api.register(propertyTagsRoutes);
       await api.register(protectedPropertiesRoutes);
       await api.register(mediaRoutes);
     },

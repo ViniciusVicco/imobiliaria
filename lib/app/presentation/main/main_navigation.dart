@@ -29,7 +29,7 @@ class _MainNavigationState extends State<MainNavigation>
   Future<bool> didPopRoute() async {
     final nav = widget.module.navigator;
     if (!nav.canPop()) return false;
-    nav.pop();
+    await nav.navigatorKey.currentState?.maybePop();
     return true;
   }
 

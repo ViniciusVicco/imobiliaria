@@ -93,3 +93,7 @@ Campo opcional abaixo do YouTube, disponível para admin e corretor. A API aceit
 A migração `20261023120000_add_property_instagram_url` adiciona `properties.instagram_url` com padrão vazio e deve ser aplicada antes de executar o backend atualizado. A migração não foi aplicada a um banco nesta alteração.
 
 Validação: 86 testes Flutter e 16 backend aprovados, incluindo criação, edição, remoção, URL inválida e aprovação de revisão com Instagram. Builds web e backend aprovados. Análise dos quatro arquivos Dart principais alterados apresentou somente quatro apontamentos informativos preexistentes.
+
+## Ajustes transversais de 2026-11-05
+
+Consulte [Ajustes de imoveis, navegacao e midia](../adjustments/01-property-navigation-media.md) para o contrato e os limites de validacao atuais.

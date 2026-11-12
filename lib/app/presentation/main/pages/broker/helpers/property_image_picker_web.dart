@@ -10,13 +10,18 @@ Future<PickedPropertyImage?> pickPropertyImageImpl() async {
   return images.isEmpty ? null : images.first;
 }
 
-Future<List<PickedPropertyImage>> pickPropertyImagesImpl() =>
-    _pickImages(multiple: true);
+Future<List<PickedPropertyImage>> pickPropertyImagesImpl({
+  bool camera = false,
+}) => _pickImages(multiple: !camera, camera: camera);
 
-Future<List<PickedPropertyImage>> _pickImages({required bool multiple}) async {
+Future<List<PickedPropertyImage>> _pickImages({
+  required bool multiple,
+  bool camera = false,
+}) async {
   final input = html.FileUploadInputElement()
     ..accept = 'image/jpeg,image/png,image/webp'
     ..multiple = multiple;
+  if (camera) input.setAttribute('capture', 'environment');
   final selected = Completer<void>();
   void complete(html.Event _) {
     if (!selected.isCompleted) selected.complete();
