@@ -47,7 +47,6 @@ class _PropertyBrandCardsSectionState extends State<PropertyBrandCardsSection> {
         : suppliedValues;
     final contact = content?.contact;
     final contacts = <(String, String)>[
-      ('Telefone', contact?.phone.trim() ?? ''),
       ('WhatsApp', contact?.whatsapp.trim() ?? ''),
       ('E-mail', contact?.email.trim() ?? ''),
     ].where((entry) => entry.$2.isNotEmpty).toList();

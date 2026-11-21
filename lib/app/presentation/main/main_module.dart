@@ -6,6 +6,7 @@ import 'package:imobiliaria/app/domain/users/entities/authenticated_user_entity.
 
 import 'pages/admin/admin_brokers_page.dart';
 import 'pages/admin/admin_home_page.dart';
+import 'pages/admin/admin_outbound_links_page.dart';
 import 'pages/admin/admin_properties_page.dart';
 import 'pages/broker/broker_page.dart';
 import 'pages/broker/property_form_page.dart';
@@ -89,6 +90,11 @@ class MainModule extends Module {
       requiredRole: UserRole.admin,
       requestedRoute: MainRoutes.adminReview,
       child: AdminPropertiesPage(reviewOnly: true),
+    ),
+    MainRoutes.adminOutboundLinks: (context, arguments) => const AuthGuardPage(
+      requiredRole: UserRole.admin,
+      requestedRoute: MainRoutes.adminOutboundLinks,
+      child: AdminOutboundLinksPage(),
     ),
     MainRoutes.adminPropertyNew: (context, arguments) => const AuthGuardPage(
       requiredRole: UserRole.admin,

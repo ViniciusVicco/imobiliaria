@@ -1,7 +1,9 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:imobiliaria/app/domain/outbound_links/external_link_service.dart';
+import 'package:imobiliaria/app/presentation/main/main_module.dart';
+import 'package:legend_core/legend_core.dart';
 import 'package:imobiliaria/app/assets/custom_assets.dart';
 import 'package:imobiliaria/app/presentation/main/pages/widgets/auth/session_action.dart';
 
@@ -267,21 +269,24 @@ class _SocialButton extends StatelessWidget {
     icon: Icon(icon),
     onPressed: () async {
       try {
-        if (await launchUrl(
-          Uri.parse(url),
-          mode: LaunchMode.externalApplication,
-          webOnlyWindowName: Uri.parse(url).host == 'www.youtube.com'
-              ? '_self'
-              : null,
-        ))
+        if (await Module.get<MainModule>().injector
+            .get<ExternalLinkService>()
+            .open(
+              url,
+              source: icon == BootstrapIcons.youtube
+                  ? 'header_youtube'
+                  : 'header_instagram',
+            )) {
           return;
+        }
       } catch (_) {}
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Nao foi possivel abrir a rede social.'),
           ),
         );
+      }
     },
   );
 }

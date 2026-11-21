@@ -32,6 +32,8 @@ model User {
   reviewedRevisions PropertyRevision[] @relation("RevisionReviewer")
   notifications AdminNotification[]
   statusHistory PropertyStatusHistory[]
+  outboundClicks OutboundClick[]
+  outboundLeads OutboundLead[]
 
   @@map("users")
 }
@@ -83,12 +85,50 @@ model Property {
   revisions PropertyRevision[]
   statusHistory PropertyStatusHistory[]
   notifications AdminNotification[]
+  outboundClicks OutboundClick[]
+  outboundLeads OutboundLead[]
 
   @@index([status, isFeatured])
   @@index([city, segment, propertyType])
   @@index([neighborhood])
   @@index([subNeighborhood])
   @@map("properties")
+}
+
+model OutboundClick {
+  id        String   @id @default(uuid())
+  targetUrl String   @map("target_url")
+  source    String
+  userId    String?  @map("user_id")
+  userRole  UserRole? @map("user_role")
+  propertyId String? @map("property_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  property Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  lead     OutboundLead?
+
+  @@index([createdAt, id])
+  @@index([userId, createdAt])
+  @@index([propertyId, createdAt])
+  @@map("outbound_clicks")
+}
+
+model OutboundLead {
+  id         String   @id @default(uuid())
+  clickId    String   @unique @map("click_id")
+  userId     String?  @map("user_id")
+  propertyId String?  @map("property_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  click    OutboundClick @relation(fields: [clickId], references: [id], onDelete: Cascade)
+  user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  property Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([propertyId, createdAt])
+  @@map("outbound_leads")
 }
 
 model PropertyRevision {

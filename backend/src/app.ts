@@ -14,6 +14,7 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { homeRoutes } from './modules/home/home.routes.js';
 import { mediaRoutes } from './modules/media/media.routes.js';
+import { outboundLinksRoutes } from './modules/outbound-links/outbound-links.routes.js';
 import { propertyTagsRoutes } from './modules/properties/property-tags.routes.js';
 import { propertiesRoutes } from './modules/properties/properties.routes.js';
 import { protectedPropertiesRoutes } from './modules/properties/protected-properties.routes.js';
@@ -97,6 +98,7 @@ export async function buildApp() {
       await api.register(propertyTagsRoutes);
       await api.register(protectedPropertiesRoutes);
       await api.register(mediaRoutes);
+      await api.register(outboundLinksRoutes);
     },
     { prefix: '/api/v1' },
   );

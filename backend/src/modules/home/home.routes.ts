@@ -47,7 +47,42 @@ export async function homeRoutes(app: FastifyInstance) {
       },
       orderBy: { updatedAt: 'desc' },
       take: query.limit,
+      include: {
+        media: {
+          where: { type: 'image', status: 'active', deletedAt: null },
+          orderBy: { sortOrder: 'asc' },
+          take: 1,
+        },
+      },
     });
+
+    const r2BaseUrl = (process.env['R2_PUBLIC_BASE_URL'] ?? '').replace(/\/$/, '');
+
+    function resolveCoverUrl(property: (typeof properties)[number]) {
+      const stored = property.coverUrl?.trim() ?? '';
+      if (stored) {
+        const firstMedia = property.media[0];
+        if (firstMedia && r2BaseUrl && stored.startsWith(`${r2BaseUrl}/`)) {
+          const forwardedProto = request.headers['x-forwarded-proto'];
+          const forwardedHost = request.headers['x-forwarded-host'];
+          const protocol =
+            (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)
+              ?.split(',')[0]
+              ?.trim() || request.protocol;
+          const host =
+            (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)
+              ?.split(',')[0]
+              ?.trim() ||
+            request.headers.host ||
+            request.hostname;
+          return `${protocol}://${host}/api/v1/properties/${property.id}/cover`;
+        }
+        return stored;
+      }
+      // Fallback: first active image media public URL
+      const fallback = property.media[0];
+      return fallback?.publicUrl ?? fallback?.url ?? '';
+    }
 
     return {
       items: properties.map((property) => ({
@@ -58,7 +93,7 @@ export async function homeRoutes(app: FastifyInstance) {
         city: property.city,
         neighborhood: property.neighborhood,
         subNeighborhood: property.subNeighborhood ?? '',
-        coverUrl: property.coverUrl,
+        coverUrl: resolveCoverUrl(property),
         tags: property.tagSlugs.slice(0, 3),
         areaM2: property.areaM2,
         privateAreaM2: property.privateAreaM2,

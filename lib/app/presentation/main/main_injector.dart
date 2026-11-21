@@ -1,6 +1,8 @@
 import 'package:imobiliaria/app/domain/admin/usecases/get_property_responsibles_use_case.dart';
 import 'package:imobiliaria/app/domain/admin/usecases/edit_admin_broker_use_case.dart';
 import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:imobiliaria/app/domain/outbound_links/external_link_service.dart';
 import 'package:imobiliaria/app/data/property_segments/repositories/property_detail_repository.dart';
 import 'package:imobiliaria/app/domain/property_segments/usecases/get_property_detail_use_case.dart';
 import 'pages/property_resume/property_resume_controller.dart';
@@ -101,6 +103,7 @@ class MainInjector extends ModuleInjector<MainModule> {
         getFeaturedProperties: get<GetFeaturedPropertiesUseCase>(),
         getHomeBrandContent: get<GetHomeBrandContentUseCase>(),
         navigator: get<AppNavigator>(),
+        externalLinks: get<ExternalLinkService>(),
       ),
     );
     registerFactory(
@@ -188,6 +191,26 @@ class MainInjector extends ModuleInjector<MainModule> {
 
   @override
   void core() {
+    registerFactory(
+      () => ExternalLinkService(
+        launch: (uri) => launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+          webOnlyWindowName: '_blank',
+        ),
+        record: (uri, source, propertyId) async {
+          final data = <String, dynamic>{
+            'targetUrl': uri.toString(),
+            'source': source,
+          };
+          if (propertyId != null) data['propertyId'] = propertyId;
+          await get<RestClient>().post<Map<String, dynamic>>(
+            '/outbound-links/clicks',
+            data: data,
+          );
+        },
+      ),
+    );
     registerSingleton<AppNavigator>(Module.get<MainModule>().navigator);
     registerFactory(
       () => RestClient(

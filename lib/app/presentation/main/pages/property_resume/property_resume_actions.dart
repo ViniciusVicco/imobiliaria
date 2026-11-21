@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:imobiliaria/app/domain/outbound_links/external_link_service.dart';
 
 Uri? propertyWhatsappUri(String phone, String title, {required bool visit}) {
   var number = phone.replaceAll(RegExp(r'\D'), '');
@@ -19,11 +19,19 @@ Future<String?> openPropertyWhatsapp(
   String phone,
   String title, {
   required bool visit,
+  required String propertyId,
+  required ExternalLinkService externalLinks,
 }) async {
   final uri = propertyWhatsappUri(phone, title, visit: visit);
   if (uri == null) return 'Contato indisponível.';
   try {
-    if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return null;
+    if (await externalLinks.open(
+      uri.toString(),
+      source: 'property_whatsapp',
+      propertyId: propertyId,
+    )) {
+      return null;
+    }
   } catch (_) {
     /* Report launch failures to the page. */
   }

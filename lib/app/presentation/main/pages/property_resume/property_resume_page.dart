@@ -6,6 +6,7 @@ import '../../main_routes.dart';
 import '../property_segments/widgets/navigation/property_segments_top_navigation.dart';
 import 'property_resume_controller.dart';
 import 'property_resume_actions.dart';
+import 'package:imobiliaria/app/domain/outbound_links/external_link_service.dart';
 import 'widgets/property_detail_content.dart';
 
 class PropertyResumePage extends StatefulWidget {
@@ -60,6 +61,9 @@ class _PropertyResumePageState
         property.whatsapp,
         property.title,
         visit: visit,
+        propertyId: property.id,
+        externalLinks: Module.get<MainModule>().injector
+            .get<ExternalLinkService>(),
       ),
     );
   }
@@ -89,8 +93,7 @@ class _PropertyResumePageState
                     children: [
                       TextButton.icon(
                         onPressed: () {
-                          final navigator = Module.get<MainModule>()
-                              .navigator;
+                          final navigator = Module.get<MainModule>().navigator;
                           if (navigator.canPop()) {
                             navigator.pop();
                           } else {

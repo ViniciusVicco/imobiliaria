@@ -7,7 +7,7 @@ import 'package:imobiliaria/app/domain/property_segments/usecases/resolve_proper
 import 'package:imobiliaria/app/presentation/main/main_routes.dart';
 import 'package:imobiliaria/app/presentation/main/pages/property_segments/property_segments_home_store.dart';
 import 'package:legend_core/legend_core.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:imobiliaria/app/domain/outbound_links/external_link_service.dart';
 
 class PropertySegmentsHomeController extends Controller {
   PropertySegmentsHomeController({
@@ -17,7 +17,9 @@ class PropertySegmentsHomeController extends Controller {
     required this.getFeaturedProperties,
     required this.getHomeBrandContent,
     required AppNavigator navigator,
-  }) : _navigator = navigator;
+    required ExternalLinkService externalLinks,
+  }) : _navigator = navigator,
+       _externalLinks = externalLinks;
 
   final PropertySegmentsHomeStore store;
   final ResolvePropertySegmentRouteUseCase resolveSegmentRoute;
@@ -25,6 +27,7 @@ class PropertySegmentsHomeController extends Controller {
   final GetFeaturedPropertiesUseCase getFeaturedProperties;
   final GetHomeBrandContentUseCase getHomeBrandContent;
   final AppNavigator _navigator;
+  final ExternalLinkService _externalLinks;
 
   Future<void> loadHome() async {
     store.setLoading();
@@ -81,12 +84,7 @@ class PropertySegmentsHomeController extends Controller {
     final videoUrl = store.brandContent?.videoUrl;
     if (videoUrl == null || videoUrl.isEmpty) return;
 
-    final uri = Uri.parse(videoUrl);
-    final wasOpened = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-      webOnlyWindowName: '_self',
-    );
+    final wasOpened = await _externalLinks.open(videoUrl, source: 'home_video');
     if (!wasOpened) {
       store.setError('Nao foi possivel abrir o video da Seletta.');
     }
@@ -95,6 +93,7 @@ class PropertySegmentsHomeController extends Controller {
   Future<void> onWhatsappPressed() async {
     await _openWhatsappWithMessage(
       'Olá, vi seus destaques do site e quero falar com a Seletta sobre imoveis em Palmas.',
+      source: 'home_whatsapp',
     );
   }
 
@@ -103,10 +102,16 @@ class PropertySegmentsHomeController extends Controller {
   ) async {
     await _openWhatsappWithMessage(
       'Vi uma oportunidade ${property.title} - ${property.id} e gostaria de saber mais',
+      source: 'home_property_whatsapp',
+      propertyId: property.id,
     );
   }
 
-  Future<void> _openWhatsappWithMessage(String message) async {
+  Future<void> _openWhatsappWithMessage(
+    String message, {
+    required String source,
+    String? propertyId,
+  }) async {
     final rawWhatsapp = store.brandContent?.contact.whatsapp;
     final whatsappNumber = _normalizeBrazilianWhatsapp(rawWhatsapp);
     if (whatsappNumber == null) {
@@ -117,9 +122,10 @@ class PropertySegmentsHomeController extends Controller {
     final uri = Uri.https('wa.me', '/$whatsappNumber', <String, String>{
       'text': message,
     });
-    final wasOpened = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
+    final wasOpened = await _externalLinks.open(
+      uri.toString(),
+      source: source,
+      propertyId: propertyId,
     );
     if (!wasOpened) {
       store.setError('Nao foi possivel abrir o WhatsApp da Seletta.');
