@@ -1,5 +1,3 @@
-import 'package:imobiliaria/app/data/api/broker_properties_endpoints.dart';
-
 mixin class AdminReviewEndpoints {
   String get adminProperties => '/admin/properties';
   String get adminReviewProperties => '/admin/properties/review';

@@ -108,28 +108,6 @@ class _BrokerPropertiesPageState
     }
   }
 
-  Future<void> _openForm([BrokerPropertyEntity? property]) async {
-    final wasSaved = await showDialog<bool>(
-      context: context,
-      builder: (context) => PropertyFormDialog(
-        title: property == null ? 'Novo imovel' : 'Editar imovel',
-        initialValue: property?.toForm() ?? BrokerPropertyFormEntity.empty(),
-        onSave: (form) =>
-            controller.saveProperty(id: property?.id, property: form),
-      ),
-    );
-
-    if (wasSaved == true && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Imovel salvo.')));
-    } else if (mounted && controller.store.errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(controller.store.errorMessage!)));
-    }
-  }
-
   Future<void> _confirmStatus({
     required BrokerPropertyEntity property,
     required String status,

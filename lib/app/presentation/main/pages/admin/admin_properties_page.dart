@@ -224,9 +224,10 @@ class _AdminPropertiesPageState
     noteController.dispose();
     if (note == null) return;
     final ok = await controller.reject(id: property.id, note: note);
-    if (ok && mounted)
+    if (ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Imovel devolvido para correcao.')),
       );
+    }
   }
 }

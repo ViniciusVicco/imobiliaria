@@ -82,7 +82,6 @@ class ApiFailureMapper {
   static void _debugLog(DioException error, String message) {
     if (!kDebugMode) return;
 
-    final data = error.response?.data;
     final apiCode = error.response?.statusCode;
     debugPrint(
       '[api-error] type=${error.type} status=${error.response?.statusCode} code=$apiCode message=$message path=${error.requestOptions.uri}',

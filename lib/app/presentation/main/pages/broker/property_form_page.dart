@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:design_system/design_system.dart';
@@ -61,11 +60,12 @@ class _PropertyFormPageState
   }
 
   Future<void> _goHome() async {
-    if (await _confirmHome() && mounted)
+    if (await _confirmHome() && mounted) {
       Module.get<MainModule>().navigator.pushNamedAndRemoveUntil(
         MainRoutes.home,
         (route) => false,
       );
+    }
   }
 
   String get _propertyId => widget.routeData?.pathParameters['id'] ?? '';
@@ -358,6 +358,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
                 children: <Widget>[
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
                       value: _segment,
                       decoration: const InputDecoration(labelText: 'Segmento'),
                       items: const <DropdownMenuItem<String>>[
@@ -768,7 +769,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
     try {
       images = await pickPropertyImages(camera: source);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -776,6 +777,7 @@ class _PropertyFormContentState extends State<_PropertyFormContent> {
             ),
           ),
         );
+      }
       return;
     }
     if (images.isEmpty) return;
@@ -947,7 +949,7 @@ class _FormFeedbackBanner extends StatelessWidget {
     final color = isError ? DSColors.error : DSColors.primary;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         border: Border.all(color: color),
         borderRadius: DSRadius.sm,
       ),
@@ -985,7 +987,7 @@ class _FormValidationBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: DSColors.error.withOpacity(0.12),
+        color: DSColors.error.withValues(alpha: 0.12),
         border: Border.all(color: DSColors.error),
         borderRadius: DSRadius.sm,
       ),

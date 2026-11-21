@@ -29,11 +29,12 @@ class _PropertyTagSelectorState extends State<PropertyTagSelector> {
   Future<void> load() async {
     try {
       final result = await widget.catalog.load(admin: widget.isAdmin);
-      if (mounted)
+      if (mounted) {
         setState(() {
           tags = result;
           failed = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => failed = true);
     }
@@ -86,8 +87,9 @@ class _PropertyTagSelectorState extends State<PropertyTagSelector> {
                 if (label.text.trim().isEmpty ||
                     !RegExp(
                       r'^[a-z0-9]+(?:-[a-z0-9]+)*$',
-                    ).hasMatch(slug.text.trim()))
+                    ).hasMatch(slug.text.trim())) {
                   return;
+                }
                 Navigator.pop(
                   context,
                   PropertyTag(
@@ -113,7 +115,7 @@ class _PropertyTagSelectorState extends State<PropertyTagSelector> {
       await widget.catalog.save(value, isNew: tag == null);
       await load();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -121,19 +123,21 @@ class _PropertyTagSelectorState extends State<PropertyTagSelector> {
             ),
           ),
         );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final available = tags;
-    if (failed)
+    if (failed) {
       return TextButton(
         onPressed: load,
         child: const Text(
           'Nao foi possivel carregar as tags. Tentar novamente',
         ),
       );
+    }
     if (available == null) return const LinearProgressIndicator();
     final visible = available
         .where((t) => t.isActive || widget.selected.contains(t.slug))

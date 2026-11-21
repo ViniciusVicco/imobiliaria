@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -669,6 +667,7 @@ class _PropertyFormDialogState extends State<PropertyFormDialog> {
                 children: <Widget>[
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
                       value: _segment,
                       decoration: const InputDecoration(labelText: 'Segmento'),
                       items: const <DropdownMenuItem<String>>[

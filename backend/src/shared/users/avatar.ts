@@ -1,9 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
+import sharp from 'sharp';
 import { prisma } from '../database/prisma.js';
 import { buildBrokerCode } from './broker-code.js';
 import { buildR2PublicUrl, deleteR2Object, getAllowedImageMimeTypes,
   getMaxImageSizeBytes, getR2Object, listR2Objects, uploadR2Object } from '../storage/r2-client.js';
+
+const AVATAR_SIZE = 400; // px — square, good quality, ~20–50 KB as WebP
+
+async function normalizeAvatar(input: Buffer): Promise<{ content: Buffer; mimeType: string }> {
+  const content = await sharp(input)
+    .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover', position: 'centre' })
+    .webp({ quality: 85 })
+    .toBuffer();
+  return { content, mimeType: 'image/webp' };
+}
 
 export class AvatarError extends Error {
   constructor(public code: string, message: string, public statusCode = 400) { super(message); }
@@ -47,7 +58,8 @@ export async function cleanupLegacyAvatars(id: string) {
 // Row locks serialize uploads and migration across API instances, including admin edits.
 export async function replaceAvatar(id: string, actorId: string,
   body: z.infer<typeof uploadAvatarBodySchema>, brokerOnly = false) {
-  const content = validateAvatar(body);
+  const raw = validateAvatar(body);
+  const { content, mimeType } = await normalizeAvatar(raw);
   const key = avatarKey(id);
   const url = buildR2PublicUrl(key);
   return prisma.$transaction(async (tx) => {
@@ -57,7 +69,7 @@ export async function replaceAvatar(id: string, actorId: string,
       throw new AvatarError('USER_NOT_FOUND', 'Corretor nao encontrado.', 404);
     }
     const previous = user.avatarUrl?.split('?')[0] === url ? await getR2Object(key) : null;
-    await uploadR2Object({ storageKey: key, body: content, contentType: body.mimeType, cacheControl: 'no-store' });
+    await uploadR2Object({ storageKey: key, body: content, contentType: mimeType, cacheControl: 'no-store' });
     try {
       return await tx.user.update({
         where: { id },

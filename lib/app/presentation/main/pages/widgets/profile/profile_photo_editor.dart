@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import '../../broker/helpers/property_image_picker.dart';
+import 'avatar_crop_dialog.dart';
 import 'profile_avatar.dart';
 
 /// Owns selection and local preview; persistence stays with the caller.
@@ -55,7 +56,7 @@ class _ProfilePhotoEditorState extends State<ProfilePhotoEditor> {
       _error = null;
     });
     try {
-      final image = await widget.pickImage();
+      final image = await pickAndCropAvatar(context);
       if (!mounted || image == null) return;
       final bytes = base64Decode(image.contentBase64);
       setState(() {
